@@ -1,0 +1,52 @@
+[
+  {
+    "id": "scout_drone",
+    "name": "Scout Drone",
+    "enemy_type": "Scout",
+    "tier": 1,
+    "threat_value": 1,
+    "base_health": 15.0,
+    "speed": 80.0,
+    "scrap_reward": 5.0
+  },
+  {
+    "id": "assault_drone",
+    "name": "Assault Drone",
+    "enemy_type": "Drone",
+    "tier": 1,
+    "threat_value": 2,
+    "base_health": 30.0,
+    "speed": 50.0,
+    "scrap_reward": 10.0
+  },
+  {
+    "id": "siege_walker",
+    "name": "Siege Walker",
+    "enemy_type": "HeavyUnit",
+    "tier": 2,
+    "threat_value": 5,
+    "base_health": 80.0,
+    "speed": 25.0,
+    "scrap_reward": 25.0
+  },
+  {
+    "id": "infiltrator",
+    "name": "Infiltrator",
+    "enemy_type": "Saboteur",
+    "tier": 2,
+    "threat_value": 4,
+    "base_health": 20.0,
+    "speed": 70.0,
+    "scrap_reward": 15.0
+  },
+  {
+    "id": "command_node",
+    "name": "Command Node",
+    "enemy_type": "Commander",
+    "tier": 3,
+    "threat_value": 10,
+    "base_health": 150.0,
+    "speed": 15.0,
+    "scrap_reward": 50.0
+  }
+]

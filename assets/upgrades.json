@@ -1,0 +1,173 @@
+[
+  {
+    "id": "surge_capacitors",
+    "name": "Surge Capacitors",
+    "sector": "power_core",
+    "description": "+30 power cap, +5/s generation",
+    "requires": [],
+    "cost_scrap": 60.0,
+    "cost_power": 0.0,
+    "difficulty_cost": 3.0,
+    "effects": {
+      "power_cap_bonus": 30.0,
+      "power_gen_bonus": 5.0
+    }
+  },
+  {
+    "id": "redundant_cooling",
+    "name": "Redundant Cooling",
+    "sector": "power_core",
+    "description": "+10/s power generation",
+    "requires": ["surge_capacitors"],
+    "cost_scrap": 100.0,
+    "cost_power": 0.0,
+    "difficulty_cost": 5.0,
+    "effects": {
+      "power_gen_bonus": 10.0
+    }
+  },
+  {
+    "id": "reinforced_frames",
+    "name": "Reinforced Frames",
+    "sector": "assembly_hall",
+    "description": "+15% tower damage",
+    "requires": [],
+    "cost_scrap": 50.0,
+    "cost_power": 0.0,
+    "difficulty_cost": 3.0,
+    "effects": {
+      "damage_mult_bonus": 0.15
+    }
+  },
+  {
+    "id": "hardened_munitions",
+    "name": "Hardened Munitions",
+    "sector": "assembly_hall",
+    "description": "+20% tower damage",
+    "requires": ["reinforced_frames"],
+    "cost_scrap": 90.0,
+    "cost_power": 0.0,
+    "difficulty_cost": 5.0,
+    "effects": {
+      "damage_mult_bonus": 0.20
+    }
+  },
+  {
+    "id": "calibration_suite",
+    "name": "Calibration Suite",
+    "sector": "research_lab",
+    "description": "Tower upgrades cost 20% less",
+    "requires": [],
+    "cost_scrap": 40.0,
+    "cost_power": 0.0,
+    "difficulty_cost": 2.0,
+    "effects": {
+      "upgrade_cost_reduction": 0.20
+    }
+  },
+  {
+    "id": "advanced_metallurgy",
+    "name": "Advanced Metallurgy",
+    "sector": "research_lab",
+    "description": "Max tower level +1",
+    "requires": ["calibration_suite"],
+    "cost_scrap": 80.0,
+    "cost_power": 0.0,
+    "difficulty_cost": 5.0,
+    "effects": {
+      "max_tower_level_bonus": 1.0
+    }
+  },
+  {
+    "id": "overclock_module",
+    "name": "Overclock Module",
+    "sector": "robotics_bay",
+    "description": "+20% fire rate",
+    "requires": [],
+    "cost_scrap": 50.0,
+    "cost_power": 0.0,
+    "difficulty_cost": 3.0,
+    "effects": {
+      "fire_rate_mult_bonus": 0.20
+    }
+  },
+  {
+    "id": "efficient_servos",
+    "name": "Efficient Servos",
+    "sector": "robotics_bay",
+    "description": "Towers drain 25% less power",
+    "requires": ["overclock_module"],
+    "cost_scrap": 90.0,
+    "cost_power": 0.0,
+    "difficulty_cost": 4.0,
+    "effects": {
+      "tower_power_drain_reduction": 0.25
+    }
+  },
+  {
+    "id": "sensor_array",
+    "name": "Sensor Array",
+    "sector": "ai_vault",
+    "description": "+25% tower range",
+    "requires": [],
+    "cost_scrap": 60.0,
+    "cost_power": 0.0,
+    "difficulty_cost": 3.0,
+    "effects": {
+      "range_mult_bonus": 0.25
+    }
+  },
+  {
+    "id": "predictive_targeting",
+    "name": "Predictive Targeting",
+    "sector": "ai_vault",
+    "description": "+15% damage, +10% range",
+    "requires": ["sensor_array"],
+    "cost_scrap": 100.0,
+    "cost_power": 0.0,
+    "difficulty_cost": 6.0,
+    "effects": {
+      "damage_mult_bonus": 0.15,
+      "range_mult_bonus": 0.10
+    }
+  },
+  {
+    "id": "water_recycler",
+    "name": "Water Recycler",
+    "sector": "logistics_hub",
+    "description": "+50% food from waves",
+    "requires": [],
+    "cost_scrap": 40.0,
+    "cost_power": 0.0,
+    "difficulty_cost": 2.0,
+    "effects": {
+      "food_mult_bonus": 0.50
+    }
+  },
+  {
+    "id": "salvage_crews",
+    "name": "Salvage Crews",
+    "sector": "logistics_hub",
+    "description": "+30% scrap from kills",
+    "requires": ["water_recycler"],
+    "cost_scrap": 70.0,
+    "cost_power": 0.0,
+    "difficulty_cost": 3.0,
+    "effects": {
+      "scrap_mult_bonus": 0.30
+    }
+  },
+  {
+    "id": "hydroponics_bay",
+    "name": "Hydroponics Bay",
+    "sector": "logistics_hub",
+    "description": "Passive +0.5 food/s",
+    "requires": ["water_recycler"],
+    "cost_scrap": 100.0,
+    "cost_power": 0.0,
+    "difficulty_cost": 4.0,
+    "effects": {
+      "passive_food_per_sec": 0.50
+    }
+  }
+]

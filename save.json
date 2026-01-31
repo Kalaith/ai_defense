@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "wave_reached": 2,
+  "resources": {
+    "power": 0.0,
+    "scrap": 159.4802,
+    "data_cores": 0
+  },
+  "population": {
+    "count": 10,
+    "morale": 50.0,
+    "health": 80.0,
+    "food_supply": 121.30025
+  },
+  "threat": {
+    "energy": 0.0,
+    "heat": 0.0,
+    "data": 0.0,
+    "corruption": 0.0,
+    "noise": 0.0,
+    "territory": 0.3400617
+  },
+  "sectors": [
+    {
+      "id": "power_core",
+      "unlocked": true,
+      "integrity": 100.0
+    },
+    {
+      "id": "assembly_hall",
+      "unlocked": true,
+      "integrity": 80.0
+    },
+    {
+      "id": "research_lab",
+      "unlocked": false,
+      "integrity": 60.0
+    },
+    {
+      "id": "robotics_bay",
+      "unlocked": false,
+      "integrity": 70.0
+    },
+    {
+      "id": "ai_vault",
+      "unlocked": false,
+      "integrity": 50.0
+    },
+    {
+      "id": "logistics_hub",
+      "unlocked": true,
+      "integrity": 90.0
+    }
+  ],
+  "towers": [
+    {
+      "tower_id": "ballistic_turret",
+      "x": 520.0,
+      "y": 200.0,
+      "level": 1
+    },
+    {
+      "tower_id": "laser_emitter",
+      "x": 440.0,
+      "y": 480.0,
+      "level": 1
+    },
+    {
+      "tower_id": "ballistic_turret",
+      "x": 640.0,
+      "y": 480.0,
+      "level": 1
+    }
+  ]
+}

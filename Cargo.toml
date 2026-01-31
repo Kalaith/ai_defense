@@ -1,0 +1,12 @@
+[package]
+name = "ai_defense"
+version = "0.1.0"
+edition = "2021"
+description = "Last Assembly - Tower defense and factory management during an AI uprising"
+
+[dependencies]
+macroquad = "0.4"
+macroquad-toolkit = { path = "../macroquad-toolkit" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+rand = "0.8"

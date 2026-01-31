@@ -1,0 +1,44 @@
+[
+  {
+    "id": "power_core",
+    "name": "Power Core",
+    "starts_unlocked": true,
+    "max_integrity": 100.0,
+    "base_power_cost": 0.0
+  },
+  {
+    "id": "assembly_hall",
+    "name": "Assembly Hall",
+    "starts_unlocked": true,
+    "max_integrity": 80.0,
+    "base_power_cost": 10.0
+  },
+  {
+    "id": "research_lab",
+    "name": "Research Lab",
+    "starts_unlocked": false,
+    "max_integrity": 60.0,
+    "base_power_cost": 15.0
+  },
+  {
+    "id": "robotics_bay",
+    "name": "Robotics Bay",
+    "starts_unlocked": false,
+    "max_integrity": 70.0,
+    "base_power_cost": 20.0
+  },
+  {
+    "id": "ai_vault",
+    "name": "AI Vault",
+    "starts_unlocked": false,
+    "max_integrity": 50.0,
+    "base_power_cost": 30.0
+  },
+  {
+    "id": "logistics_hub",
+    "name": "Logistics Hub",
+    "starts_unlocked": false,
+    "max_integrity": 90.0,
+    "base_power_cost": 8.0
+  }
+]
