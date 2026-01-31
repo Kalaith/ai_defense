@@ -6,7 +6,7 @@ mod render;
 mod ui;
 mod helpers;
 
-use crate::data::{GameConstants, GameData};
+use crate::data::{GameConstants, GameData, UpgradeDef};
 use crate::engine::beacon::BeaconPhase;
 use crate::engine::factory::Factory;
 use crate::engine::population::Population;
@@ -72,6 +72,9 @@ pub struct GameplayState {
 
     pub shutdown_triggered: bool,
     pub beacon_active: bool,
+
+    pub upgrade_defs: Vec<UpgradeDef>,
+    pub expanded_sector: Option<String>,
 }
 
 pub struct Resources {
@@ -174,6 +177,9 @@ impl GameplayState {
 
             shutdown_triggered: false,
             beacon_active: false,
+
+            upgrade_defs: data.upgrade_defs.clone(),
+            expanded_sector: None,
         }
     }
 
@@ -269,6 +275,7 @@ impl GameplayState {
                 power: self.resources.power,
                 scrap: self.resources.scrap,
                 data_cores: self.resources.data_cores,
+                water: 0.0,
             },
             population: SavedPopulation {
                 count: self.population.count,
@@ -304,6 +311,8 @@ impl GameplayState {
                     level: t.level,
                 })
                 .collect(),
+            slots: Vec::new(),
+            buildings: Vec::new(),
         }
     }
 

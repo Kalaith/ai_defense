@@ -30,7 +30,9 @@ impl GameplayState {
             sector_x,
             self.constants.ui.hud_height,
             self.constants.ui.sector_panel_w,
-            &self.factory.sectors,
+            &self.factory,
+            &self.upgrade_defs,
+            &self.expanded_sector,
             self.resources.scrap,
             power_gen,
         );
@@ -38,6 +40,16 @@ impl GameplayState {
             match action {
                 SectorPanelAction::Unlock(sector_id) => self.unlock_sector(&sector_id),
                 SectorPanelAction::Repair(sector_id) => self.repair_sector(&sector_id),
+                SectorPanelAction::ToggleExpand(sector_id) => {
+                    if self.expanded_sector.as_deref() == Some(&sector_id) {
+                        self.expanded_sector = None;
+                    } else {
+                        self.expanded_sector = Some(sector_id);
+                    }
+                }
+                SectorPanelAction::PurchaseUpgrade(upgrade_id) => {
+                    self.purchase_upgrade(&upgrade_id);
+                }
             }
         }
     }
@@ -253,6 +265,16 @@ impl GameplayState {
         }
 
         self.selected_tower = selected;
+    }
+
+    fn purchase_upgrade(&mut self, upgrade_id: &str) {
+        let def = self.upgrade_defs.iter().find(|u| u.id == upgrade_id).cloned();
+        if let Some(def) = def {
+            if self.factory.can_purchase(&def, self.resources.scrap, self.resources.power) {
+                self.resources.scrap -= def.cost_scrap;
+                self.factory.purchase_upgrade(&def);
+            }
+        }
     }
 
     fn unlock_sector(&mut self, sector_id: &str) {
