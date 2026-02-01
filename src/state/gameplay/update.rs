@@ -7,11 +7,13 @@ use crate::engine::wave::WaveEvent;
 use crate::state::{RunSummary, StateTransition};
 use macroquad::prelude::*;
 use macroquad::rand::gen_range;
+use std::collections::HashMap;
 
 use super::GameplayState;
 
 impl GameplayState {
     pub fn update(&mut self) -> Option<StateTransition> {
+        self.handle_camera_input();
         self.handle_input();
         if self.paused {
             return None;
@@ -32,6 +34,7 @@ impl GameplayState {
         self.update_combat(dt);
         self.update_power(dt);
         self.update_population(dt);
+        self.update_building_boons(dt);
         self.update_threat(dt);
         self.update_factory();
         self.update_notifications(dt);
@@ -52,6 +55,47 @@ impl GameplayState {
         None
     }
 
+    fn handle_camera_input(&mut self) {
+        let dt = get_frame_time();
+        let pan_speed = 400.0 / self.camera_zoom;
+
+        // WASD panning
+        if is_key_down(KeyCode::W) { self.camera_offset.y -= pan_speed * dt; }
+        if is_key_down(KeyCode::S) { self.camera_offset.y += pan_speed * dt; }
+        if is_key_down(KeyCode::A) { self.camera_offset.x -= pan_speed * dt; }
+        if is_key_down(KeyCode::D) { self.camera_offset.x += pan_speed * dt; }
+
+        // Middle-mouse drag
+        let (mx, my) = mouse_position();
+        let mouse_pos = vec2(mx, my);
+        if is_mouse_button_down(MouseButton::Middle) {
+            let delta = self.prev_mouse_pos - mouse_pos;
+            self.camera_offset += delta / self.camera_zoom;
+        }
+        self.prev_mouse_pos = mouse_pos;
+
+        // Scroll wheel zoom
+        let (_, scroll_y) = mouse_wheel();
+        if scroll_y != 0.0 {
+            let factor = if scroll_y > 0.0 { 1.1 } else { 1.0 / 1.1 };
+            self.camera_zoom = (self.camera_zoom * factor).clamp(0.25, 2.0);
+        }
+
+        // Clamp camera to map bounds
+        let map_w = self.map_state.map_size.x;
+        let map_h = self.map_state.map_size.y;
+        self.camera_offset.x = self.camera_offset.x.clamp(0.0, map_w);
+        self.camera_offset.y = self.camera_offset.y.clamp(0.0, map_h);
+    }
+
+    pub fn screen_to_world(&self, screen_pos: Vec2) -> Vec2 {
+        let sw = screen_width();
+        let sh = screen_height();
+        let world_x = self.camera_offset.x + (screen_pos.x - sw / 2.0) / self.camera_zoom;
+        let world_y = self.camera_offset.y + (screen_pos.y - sh / 2.0) / self.camera_zoom;
+        vec2(world_x, world_y)
+    }
+
     fn handle_input(&mut self) {
         if is_key_pressed(KeyCode::Escape) {
             if self.placing_tower.is_some() {
@@ -68,6 +112,8 @@ impl GameplayState {
         if is_mouse_button_pressed(MouseButton::Right) {
             self.placing_tower = None;
             self.selected_tower = None;
+            self.selected_slot = None;
+            self.selected_building = None;
         }
     }
 
@@ -94,7 +140,15 @@ impl GameplayState {
             return;
         }
 
-        let spawn_point = self.map_path.first().copied().unwrap_or(vec2(0.0, 0.0));
+        let spawn_points: Vec<(String, Vec2)> = self.map_state.active_paths()
+            .iter()
+            .map(|p| (p.id.clone(), p.entrance))
+            .collect();
+
+        if spawn_points.is_empty() {
+            return;
+        }
+
         let force_commander = self.beacon_phase == BeaconPhase::TerminalHowl;
         self.wave_manager.generate_wave(
             self.current_wave,
@@ -104,7 +158,7 @@ impl GameplayState {
             self.beacon_phase.tier_floor(),
             self.constants.waves.budget_multiplier,
             force_commander,
-            spawn_point,
+            &spawn_points,
         );
         self.threat.add_from_wave(self.current_wave);
         self.wave_flash_timer = self.constants.ui.wave_flash_duration;
@@ -112,7 +166,12 @@ impl GameplayState {
     }
 
     fn tick_wave(&mut self, dt: f32) {
-        let event = self.wave_manager.tick(dt, &self.map_path);
+        let paths: HashMap<String, Vec<Vec2>> = self.map_state.paths.iter()
+            .filter(|p| p.active)
+            .map(|p| (p.id.clone(), p.points.clone()))
+            .collect();
+
+        let event = self.wave_manager.tick(dt, &paths);
         match event {
             WaveEvent::EnemyReachedEnd { enemy_type, .. } => self.handle_breach(enemy_type),
             WaveEvent::WaveComplete => self.handle_wave_complete(),
@@ -166,7 +225,8 @@ impl GameplayState {
     }
 
     fn update_power(&mut self, dt: f32) {
-        let gen = self.factory.power_generation();
+        let building_power = self.map_state.total_boon().power_per_sec;
+        let gen = self.factory.power_generation() + building_power;
         let tower_drain: f32 = self.towers.iter().filter(|t| t.is_active).map(|t| t.power_drain).sum();
         let consume = self.factory.power_consumption() + tower_drain;
         self.resources.power = (self.resources.power + (gen - consume) * dt).clamp(0.0, self.constants.economy.power_cap);
@@ -198,7 +258,19 @@ impl GameplayState {
         self.resources.scrap += self.population.productivity(&self.constants) * self.constants.economy.productivity_scrap_rate * dt;
     }
 
+    fn update_building_boons(&mut self, dt: f32) {
+        let boon = self.map_state.total_boon();
+        self.resources.scrap += boon.scrap_per_sec * dt;
+        self.population.food_supply += boon.food_per_sec * dt;
+    }
+
     fn update_threat(&mut self, dt: f32) {
+        // Building threat contribution
+        let building_threat = self.map_state.total_threat_per_sec();
+        if building_threat > 0.0 {
+            self.threat.add_noise(building_threat * dt);
+        }
+
         self.threat.tick_decay(dt);
         let current_tier = self.threat.reaction_tier();
         if super::helpers::reaction_tier_rank(&current_tier)

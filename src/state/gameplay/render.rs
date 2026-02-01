@@ -1,20 +1,34 @@
 use crate::data::GameData;
 use crate::engine::enemy::EnemyType;
+use crate::engine::map::{BuildingState, SlotState, TraceNode};
 use macroquad::prelude::*;
 use macroquad_toolkit::colors::dark;
 
-use super::helpers::{beacon_color, enemy_label, tower_label};
+use super::helpers::{beacon_color, enemy_label};
 use super::GameplayState;
 
 impl GameplayState {
     pub fn draw(&mut self, data: &GameData) {
-        self.draw_grid();
-        self.draw_path();
+        // --- World-space rendering (with camera) ---
+        let sw = screen_width();
+        let sh = screen_height();
+        let cam = Camera2D {
+            target: self.camera_offset,
+            zoom: vec2(self.camera_zoom * 2.0 / sw, self.camera_zoom * 2.0 / sh),
+            ..Default::default()
+        };
+        set_camera(&cam);
+
+        self.draw_circuit_board();
         self.draw_towers();
         self.draw_enemies();
         self.draw_shot_effects();
         self.draw_particles();
         self.draw_placement_ghost(data);
+
+        // --- Screen-space rendering (UI) ---
+        set_default_camera();
+
         self.draw_hud();
         self.draw_wave_start_flash();
         self.draw_wave_status();
@@ -22,52 +36,142 @@ impl GameplayState {
         self.draw_shutdown_ui();
         self.draw_build_panel(data);
         self.draw_sector_panel();
-        self.handle_placement_click(data);
-        self.handle_selection_click();
+        self.draw_slot_panel(data);
+        self.handle_map_click(data);
         self.draw_selected_tower_panel(data);
     }
 
-    fn draw_grid(&self) {
-        let grid_color = Color::new(0.15, 0.15, 0.18, 1.0);
-        let step = self.constants.placement.grid;
-        let mut x = 0.0;
-        while x < screen_width() {
-            draw_line(x, 0.0, x, screen_height(), 1.0, grid_color);
-            x += step;
+    fn draw_circuit_board(&self) {
+        let map_w = self.map_state.map_size.x;
+        let map_h = self.map_state.map_size.y;
+
+        // 1. PCB background
+        draw_rectangle(0.0, 0.0, map_w, map_h, Color::new(0.02, 0.08, 0.04, 1.0));
+
+        // 2. Traces
+        for trace in &self.map_state.traces {
+            let powered = self.map_state.trace_powered(trace);
+            let from_pos = self.trace_node_pos(&trace.from);
+            let to_pos = self.trace_node_pos(&trace.to);
+
+            let mut points = Vec::new();
+            points.push(from_pos);
+            for p in &trace.via {
+                points.push(*p);
+            }
+            points.push(to_pos);
+
+            for i in 0..points.len().saturating_sub(1) {
+                let a = points[i];
+                let b = points[i + 1];
+                if powered {
+                    draw_line(a.x, a.y, b.x, b.y, 6.0, Color::new(0.0, 0.6, 0.2, 0.15));
+                    draw_line(a.x, a.y, b.x, b.y, 2.0, Color::new(0.2, 1.0, 0.4, 0.8));
+                } else {
+                    draw_line(a.x, a.y, b.x, b.y, 2.0, Color::new(0.1, 0.25, 0.1, 0.4));
+                }
+            }
         }
-        let mut y = 0.0;
-        while y < screen_height() {
-            draw_line(0.0, y, screen_width(), y, 1.0, grid_color);
-            y += step;
+
+        // 3. Enemy paths
+        for path in &self.map_state.paths {
+            let alpha = if path.active { 0.8 } else { 0.2 };
+            let color = Color::new(0.5, 0.35, 0.15, alpha);
+
+            for i in 0..path.points.len().saturating_sub(1) {
+                let a = path.points[i];
+                let b = path.points[i + 1];
+                draw_line(a.x, a.y, b.x, b.y, 4.0, color);
+            }
         }
+
+        // 4. Entrance markers
+        for path in &self.map_state.paths {
+            if path.active {
+                draw_circle(path.entrance.x, path.entrance.y, 10.0, Color::new(0.9, 0.2, 0.1, 0.8));
+                draw_circle_lines(path.entrance.x, path.entrance.y, 12.0, 2.0, Color::new(0.9, 0.2, 0.1, 0.5));
+            } else {
+                draw_circle(path.entrance.x, path.entrance.y, 6.0, Color::new(0.5, 0.15, 0.1, 0.3));
+            }
+        }
+
+        // 5. Tower slots
+        for (idx, slot) in self.map_state.slots.iter().enumerate() {
+            let selected = self.selected_slot == Some(idx);
+            match slot.state {
+                SlotState::Debris => {
+                    draw_circle(slot.position.x, slot.position.y, 8.0, Color::new(0.35, 0.25, 0.15, 0.8));
+                    // X cross lines
+                    let s = 5.0;
+                    draw_line(slot.position.x - s, slot.position.y - s, slot.position.x + s, slot.position.y + s, 1.5, Color::new(0.5, 0.3, 0.1, 0.6));
+                    draw_line(slot.position.x + s, slot.position.y - s, slot.position.x - s, slot.position.y + s, 1.5, Color::new(0.5, 0.3, 0.1, 0.6));
+                    // Gold ring hint for slots that open entrances
+                    if slot.opens_entrance.is_some() {
+                        draw_circle_lines(slot.position.x, slot.position.y, 11.0, 1.5, Color::new(0.9, 0.75, 0.2, 0.6));
+                    }
+                }
+                SlotState::Cleared => {
+                    draw_circle_lines(slot.position.x, slot.position.y, 10.0, 1.5, Color::new(0.3, 0.4, 0.7, 0.6));
+                }
+                SlotState::Powered => {
+                    if slot.tower_index.is_some() {
+                        // Tower is placed here; tower rendering handles the visual
+                        draw_circle(slot.position.x, slot.position.y, 12.0, Color::new(0.05, 0.15, 0.05, 0.5));
+                    } else {
+                        draw_circle(slot.position.x, slot.position.y, 10.0, Color::new(0.05, 0.15, 0.05, 0.8));
+                        let pulse = 0.5 + 0.3 * (get_time() as f32 * 2.0).sin().abs();
+                        draw_circle_lines(slot.position.x, slot.position.y, 11.0, 2.0, Color::new(0.2, 0.8, 0.3, pulse));
+                    }
+                }
+            }
+
+            if selected {
+                draw_circle_lines(slot.position.x, slot.position.y, 15.0, 2.0, WHITE);
+            }
+        }
+
+        // 6. Buildings
+        for (idx, building) in self.map_state.buildings.iter().enumerate() {
+            let selected = self.selected_building == Some(idx);
+            let (bg_color, border_color) = match building.state {
+                BuildingState::Broken => (Color::new(0.3, 0.05, 0.05, 0.8), Color::new(0.5, 0.1, 0.1, 0.8)),
+                BuildingState::Repaired => (Color::new(0.3, 0.3, 0.05, 0.8), Color::new(0.5, 0.5, 0.1, 0.8)),
+                BuildingState::Powered => (Color::new(0.05, 0.2, 0.3, 0.9), Color::new(0.2, 0.7, 0.9, 0.9)),
+                BuildingState::Disabled => (Color::new(0.15, 0.15, 0.15, 0.6), Color::new(0.3, 0.3, 0.3, 0.6)),
+            };
+
+            let w = 40.0;
+            let h = 30.0;
+            draw_rectangle(building.position.x - w / 2.0, building.position.y - h / 2.0, w, h, bg_color);
+            draw_rectangle_lines(building.position.x - w / 2.0, building.position.y - h / 2.0, w, h, 2.0, border_color);
+
+            // Label
+            let label = &building.building_type;
+            let short = if label.len() > 8 { &label[..8] } else { label };
+            draw_text(short, building.position.x - w / 2.0, building.position.y + h / 2.0 + 12.0, 10.0, dark::TEXT_DIM);
+
+            if selected {
+                draw_rectangle_lines(building.position.x - w / 2.0 - 2.0, building.position.y - h / 2.0 - 2.0, w + 4.0, h + 4.0, 2.0, WHITE);
+            }
+        }
+
+        // 7. Factory core
+        let core = self.map_state.factory_core;
+        let pulse = 0.6 + 0.4 * (get_time() as f32 * 3.0).sin().abs();
+        draw_circle(core.x, core.y, 20.0, Color::new(0.1, 0.5, 0.2, pulse));
+        draw_circle_lines(core.x, core.y, 22.0, 2.0, Color::new(0.3, 0.9, 0.4, 0.8));
+        draw_text("FACTORY", core.x - 25.0, core.y + 30.0, 12.0, Color::new(0.3, 0.9, 0.4, 0.8));
     }
 
-    fn draw_path(&self) {
-        if self.map_path.len() < 2 {
-            return;
-        }
-
-        for i in 0..self.map_path.len() - 1 {
-            let a = self.map_path[i];
-            let b = self.map_path[i + 1];
-            draw_line(a.x, a.y, b.x, b.y, 6.0, Color::new(0.3, 0.25, 0.2, 0.8));
-            draw_line(a.x, a.y, b.x, b.y, 2.0, Color::new(0.5, 0.45, 0.35, 0.6));
-        }
-
-        for (i, p) in self.map_path.iter().enumerate() {
-            let color = if i == 0 {
-                dark::POSITIVE
-            } else if i == self.map_path.len() - 1 {
-                dark::NEGATIVE
-            } else {
-                dark::TEXT_DIM
-            };
-            draw_circle(p.x, p.y, 4.0, color);
+    fn trace_node_pos(&self, node: &TraceNode) -> Vec2 {
+        match node {
+            TraceNode::FactoryCore => self.map_state.factory_core,
+            TraceNode::Slot(idx) => self.map_state.slots.get(*idx).map_or(Vec2::ZERO, |s| s.position),
         }
     }
 
     fn draw_towers(&self) {
-        let (mx, my) = mouse_position();
+        let world_mouse = self.screen_to_world(vec2(mouse_position().0, mouse_position().1));
         let range_mult = if self.factory.is_sector_active("ai_vault") { 1.2 } else { 1.0 };
         for tower in &self.towers {
             let mut col = tower.color();
@@ -86,7 +190,7 @@ impl GameplayState {
                 draw_circle_lines(tower.position.x, tower.position.y, ring_radius, 1.5, col);
             }
 
-            let dist = ((mx - tower.position.x).powi(2) + (my - tower.position.y).powi(2)).sqrt();
+            let dist = (world_mouse - tower.position).length();
             if dist < self.constants.ui.tower_hover_dist {
                 let range_alpha = if tower.is_active { 0.3 } else { 0.15 };
                 draw_circle_lines(
@@ -96,26 +200,7 @@ impl GameplayState {
                     1.0,
                     Color::new(col.r, col.g, col.b, range_alpha),
                 );
-                self.draw_tower_tooltip(tower, range_mult, mx, my);
             }
-        }
-    }
-
-    fn draw_tower_tooltip(&self, tower: &crate::engine::tower::Tower, range_mult: f32, mx: f32, my: f32) {
-        let tooltip_x = mx + 12.0;
-        let tooltip_y = my + 12.0;
-        let lines = [
-            format!("{} (Lv {})", tower_label(&tower.tower_type), tower.level),
-            format!("Dmg: {:.1}", tower.damage),
-            format!("Rng: {:.0}", tower.range * range_mult),
-            format!("Rate: {:.2}/s", tower.fire_rate),
-        ];
-        let width = self.constants.ui.tooltip_w;
-        let height = self.constants.ui.tooltip_h;
-        draw_rectangle(tooltip_x, tooltip_y, width, height, Color::new(0.05, 0.05, 0.08, 0.9));
-        draw_rectangle_lines(tooltip_x, tooltip_y, width, height, 1.0, dark::TEXT_DIM);
-        for (i, line) in lines.iter().enumerate() {
-            draw_text(line, tooltip_x + 6.0, tooltip_y + 14.0 + i as f32 * 12.0, 11.0, dark::TEXT);
         }
     }
 
@@ -189,7 +274,7 @@ impl GameplayState {
         let mut x = self.constants.ui.build_panel_w + 10.0;
         let spacing = 140.0;
 
-        let gen = self.factory.power_generation();
+        let gen = self.factory.power_generation() + self.map_state.total_boon().power_per_sec;
         let tower_drain: f32 = self.towers.iter().filter(|t| t.is_active).map(|t| t.power_drain).sum();
         let net_rate = gen - self.factory.power_consumption() - tower_drain;
         let power_text = if net_rate >= 0.0 {
@@ -319,6 +404,84 @@ impl GameplayState {
             let col = Color::new(dark::TEXT_BRIGHT.r, dark::TEXT_BRIGHT.g, dark::TEXT_BRIGHT.b, alpha);
             draw_text(&note.text, self.constants.ui.build_panel_w + 10.0, y, 16.0, col);
             y += 18.0;
+        }
+    }
+
+    fn draw_slot_panel(&self, _data: &GameData) {
+        // Show context info at bottom-center for selected slot or building
+        let panel_w = 300.0;
+        let panel_h = 80.0;
+        let panel_x = (screen_width() - panel_w) / 2.0;
+        let panel_y = screen_height() - panel_h - 10.0;
+
+        if let Some(idx) = self.selected_slot {
+            if let Some(slot) = self.map_state.slots.get(idx) {
+                draw_rectangle(panel_x, panel_y, panel_w, panel_h, Color::new(0.08, 0.08, 0.1, 0.9));
+                draw_rectangle_lines(panel_x, panel_y, panel_w, panel_h, 1.0, dark::TEXT_DIM);
+
+                let text_x = panel_x + 10.0;
+                let mut text_y = panel_y + 18.0;
+
+                draw_text(&format!("Slot: {}", slot.id), text_x, text_y, 14.0, dark::TEXT_BRIGHT);
+                text_y += 16.0;
+
+                match slot.state {
+                    SlotState::Debris => {
+                        let hint = if slot.opens_entrance.is_some() { " [Opens path!]" } else { "" };
+                        draw_text(&format!("Debris - Clear: {:.0} scrap{}", slot.clear_cost, hint), text_x, text_y, 12.0, dark::WARNING);
+                        text_y += 14.0;
+                        draw_text("Click to clear debris", text_x, text_y, 11.0, dark::TEXT_DIM);
+                    }
+                    SlotState::Cleared => {
+                        draw_text(&format!("Cleared - Power: {:.0} scrap", slot.power_cost), text_x, text_y, 12.0, dark::ACCENT);
+                        text_y += 14.0;
+                        draw_text("Click to power slot", text_x, text_y, 11.0, dark::TEXT_DIM);
+                    }
+                    SlotState::Powered => {
+                        if slot.tower_index.is_some() {
+                            draw_text("Tower placed", text_x, text_y, 12.0, dark::POSITIVE);
+                        } else if self.placing_tower.is_some() {
+                            draw_text("Powered - Click to place tower here", text_x, text_y, 12.0, dark::POSITIVE);
+                        } else {
+                            draw_text("Powered - Select tower from Build panel", text_x, text_y, 12.0, dark::POSITIVE);
+                        }
+                    }
+                }
+            }
+        } else if let Some(idx) = self.selected_building {
+            if let Some(building) = self.map_state.buildings.get(idx) {
+                draw_rectangle(panel_x, panel_y, panel_w, panel_h, Color::new(0.08, 0.08, 0.1, 0.9));
+                draw_rectangle_lines(panel_x, panel_y, panel_w, panel_h, 1.0, dark::TEXT_DIM);
+
+                let text_x = panel_x + 10.0;
+                let mut text_y = panel_y + 18.0;
+
+                draw_text(&format!("{} ({})", building.id, building.building_type), text_x, text_y, 14.0, dark::TEXT_BRIGHT);
+                text_y += 16.0;
+
+                match building.state {
+                    BuildingState::Broken => {
+                        draw_text(&format!("Broken - Repair: {:.0} scrap", building.repair_cost), text_x, text_y, 12.0, dark::NEGATIVE);
+                    }
+                    BuildingState::Repaired => {
+                        draw_text(&format!("Repaired - Power: {:.0} scrap", building.power_cost), text_x, text_y, 12.0, dark::WARNING);
+                    }
+                    BuildingState::Powered => {
+                        let b = &building.boon;
+                        let mut parts = Vec::new();
+                        if b.scrap_per_sec > 0.0 { parts.push(format!("+{:.1} scrap/s", b.scrap_per_sec)); }
+                        if b.food_per_sec > 0.0 { parts.push(format!("+{:.1} food/s", b.food_per_sec)); }
+                        if b.water_per_sec > 0.0 { parts.push(format!("+{:.1} water/s", b.water_per_sec)); }
+                        if b.power_per_sec > 0.0 { parts.push(format!("+{:.1} power/s", b.power_per_sec)); }
+                        draw_text(&format!("Active: {}", parts.join(", ")), text_x, text_y, 12.0, dark::POSITIVE);
+                        text_y += 14.0;
+                        draw_text(&format!("Threat: +{:.2}/s", building.threat_per_sec), text_x, text_y, 11.0, dark::NEGATIVE);
+                    }
+                    BuildingState::Disabled => {
+                        draw_text("Disabled", text_x, text_y, 12.0, dark::TEXT_DIM);
+                    }
+                }
+            }
         }
     }
 }

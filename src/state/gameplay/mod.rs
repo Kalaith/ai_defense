@@ -9,13 +9,14 @@ mod helpers;
 use crate::data::{GameConstants, GameData, UpgradeDef};
 use crate::engine::beacon::BeaconPhase;
 use crate::engine::factory::Factory;
+use crate::engine::map::MapState;
 use crate::engine::population::Population;
 use crate::engine::enemy::EnemyTuning;
 use crate::engine::threat::{ReactionTier, ThreatSignature};
 use crate::engine::tower::{ShotEffect, Tower, TowerType};
 use crate::engine::wave::{WaveManager, WaveTuning};
-use crate::save::{SaveData, SavedPopulation, SavedResources, SavedSector, SavedThreat, SavedTower};
-use macroquad::prelude::Vec2;
+use crate::save::{SaveData, SavedBuilding, SavedPopulation, SavedResources, SavedSector, SavedSlot, SavedThreat, SavedTower};
+use macroquad::prelude::{Vec2, vec2};
 
 pub struct GameplayState {
     pub constants: GameConstants,
@@ -28,7 +29,7 @@ pub struct GameplayState {
     pub paused: bool,
 
     pub towers: Vec<Tower>,
-    pub map_path: Vec<Vec2>,
+    pub map_state: MapState,
 
     pub shot_effects: Vec<ShotEffect>,
 
@@ -63,6 +64,8 @@ pub struct GameplayState {
     // Placement
     pub placing_tower: Option<String>,
     pub selected_tower: Option<usize>,
+    pub selected_slot: Option<usize>,
+    pub selected_building: Option<usize>,
 
     // Loss tracking
     pub factory_integrity: f32,
@@ -75,6 +78,11 @@ pub struct GameplayState {
 
     pub upgrade_defs: Vec<UpgradeDef>,
     pub expanded_sector: Option<String>,
+
+    // Camera
+    pub camera_offset: Vec2,
+    pub camera_zoom: f32,
+    pub prev_mouse_pos: Vec2,
 }
 
 pub struct Resources {
@@ -97,7 +105,7 @@ pub struct Particle {
 impl GameplayState {
     pub fn new(data: &GameData) -> Self {
         let constants = data.constants.clone();
-        let map_path = constants.map_path_vec2();
+        let map_state = MapState::from_def(data.map_def.clone());
 
         let mut factory = Factory::new();
         factory.init_sectors(&data.sector_defs);
@@ -136,7 +144,7 @@ impl GameplayState {
             paused: false,
 
             towers: Vec::new(),
-            map_path,
+            map_state,
 
             shot_effects: Vec::new(),
 
@@ -169,6 +177,8 @@ impl GameplayState {
 
             placing_tower: None,
             selected_tower: None,
+            selected_slot: None,
+            selected_building: None,
 
             factory_integrity: 100.0,
 
@@ -180,6 +190,10 @@ impl GameplayState {
 
             upgrade_defs: data.upgrade_defs.clone(),
             expanded_sector: None,
+
+            camera_offset: vec2(600.0, 400.0),
+            camera_zoom: 0.5,
+            prev_mouse_pos: vec2(0.0, 0.0),
         }
     }
 
@@ -218,6 +232,20 @@ impl GameplayState {
         }
         self.factory.check_awakening();
 
+        // Restore slot states
+        for saved_slot in &save.slots {
+            if let Some(slot) = self.map_state.slots.iter_mut().find(|s| s.id == saved_slot.id) {
+                slot.state = crate::engine::map::SlotState::from_str(&saved_slot.state);
+            }
+        }
+        // Restore building states
+        for saved_building in &save.buildings {
+            if let Some(building) = self.map_state.buildings.iter_mut().find(|b| b.id == saved_building.id) {
+                building.state = crate::engine::map::BuildingState::from_str(&saved_building.state);
+            }
+        }
+        self.map_state.rebuild_unlocks();
+
         self.towers.clear();
         for saved in save.towers {
             if let Some(def) = data.tower_def_by_id(&saved.tower_id) {
@@ -240,6 +268,14 @@ impl GameplayState {
                     def.cost_scrap,
                 );
                 helpers::apply_upgrade_levels(&mut tower, saved.level, &self.constants);
+                let tower_idx = self.towers.len();
+                // Link tower back to slot by position
+                for slot in self.map_state.slots.iter_mut() {
+                    if (slot.position - Vec2::new(saved.x, saved.y)).length() < 2.0 {
+                        slot.tower_index = Some(tower_idx);
+                        break;
+                    }
+                }
                 self.towers.push(tower);
             }
         }
@@ -264,6 +300,8 @@ impl GameplayState {
             threat_health_mult_per_awareness: self.constants.threat.health_mult_per_awareness,
         });
         self.selected_tower = None;
+        self.selected_slot = None;
+        self.selected_building = None;
         self.update_beacon();
     }
 
@@ -311,8 +349,24 @@ impl GameplayState {
                     level: t.level,
                 })
                 .collect(),
-            slots: Vec::new(),
-            buildings: Vec::new(),
+            slots: self
+                .map_state
+                .slots
+                .iter()
+                .map(|s| SavedSlot {
+                    id: s.id.clone(),
+                    state: s.state.as_str().to_string(),
+                })
+                .collect(),
+            buildings: self
+                .map_state
+                .buildings
+                .iter()
+                .map(|b| SavedBuilding {
+                    id: b.id.clone(),
+                    state: b.state.as_str().to_string(),
+                })
+                .collect(),
         }
     }
 

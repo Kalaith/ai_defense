@@ -34,6 +34,7 @@ pub struct Enemy {
     pub hit_flash_timer: f32,
     pub dodge_timer: f32,
     pub tuning: EnemyTuning,
+    pub path_id: String,
 }
 
 impl Enemy {
@@ -44,6 +45,7 @@ impl Enemy {
         speed: f32,
         scrap_reward: f32,
         tuning: EnemyTuning,
+        path_id: String,
     ) -> Self {
         Self {
             enemy_type,
@@ -58,6 +60,7 @@ impl Enemy {
             hit_flash_timer: 0.0,
             dodge_timer: 0.0,
             tuning,
+            path_id,
         }
     }
 

@@ -3,6 +3,7 @@
 use crate::data::EnemyDef;
 use crate::engine::enemy::{Enemy, EnemyType, EnemyTuning};
 use macroquad::prelude::Vec2;
+use std::collections::HashMap;
 
 pub enum WaveEvent {
     None,
@@ -46,6 +47,7 @@ pub struct SpawnEntry {
     pub speed: f32,
     pub scrap_reward: f32,
     pub spawn_point: Vec2,
+    pub path_id: String,
 }
 
 impl WaveManager {
@@ -77,7 +79,7 @@ impl WaveManager {
         tier_floor: u32,
         budget_multiplier: f32,
         force_commander: bool,
-        spawn_point: Vec2,
+        spawn_points: &[(String, Vec2)],
     ) {
         self.current_wave = wave_number;
         self.wave_active = true;
@@ -92,7 +94,7 @@ impl WaveManager {
             tier_floor,
             budget_multiplier,
             force_commander,
-            spawn_point,
+            spawn_points,
             self.wave_budget_base,
             self.wave_budget_per_wave,
             self.wave_commander_every,
@@ -110,7 +112,7 @@ impl WaveManager {
         tier_floor: u32,
         budget_multiplier: f32,
         force_commander: bool,
-        spawn_point: Vec2,
+        spawn_points: &[(String, Vec2)],
     ) {
         self.current_wave = wave_number;
         self.wave_active = true;
@@ -122,7 +124,7 @@ impl WaveManager {
             tier_floor,
             budget_multiplier,
             force_commander,
-            spawn_point,
+            spawn_points,
             self.wave_budget_base,
             self.wave_budget_per_wave,
             self.wave_commander_every,
@@ -132,7 +134,7 @@ impl WaveManager {
         self.spawn_queue.extend(queue);
     }
 
-    pub fn tick(&mut self, dt: f32, path: &[Vec2]) -> WaveEvent {
+    pub fn tick(&mut self, dt: f32, paths: &HashMap<String, Vec<Vec2>>) -> WaveEvent {
         if !self.wave_active {
             return WaveEvent::None;
         }
@@ -147,6 +149,7 @@ impl WaveManager {
                 entry.speed,
                 entry.scrap_reward,
                 self.enemy_tuning.clone(),
+                entry.path_id,
             ));
             self.spawn_timer = self.spawn_interval;
         }
@@ -175,7 +178,17 @@ impl WaveManager {
                 }
             }
 
-            let reached = enemy.move_along_path(path, dt, speed_mult);
+            // Look up this enemy's path
+            let reached = if let Some(path) = paths.get(&enemy.path_id) {
+                enemy.move_along_path(path, dt, speed_mult)
+            } else {
+                // Fallback: use any available path
+                if let Some((_id, path)) = paths.iter().next() {
+                    enemy.move_along_path(path, dt, speed_mult)
+                } else {
+                    false
+                }
+            };
             if reached {
                 enemy.is_alive = false;
                 reached_end_reward = Some((enemy.enemy_type.clone(), enemy.scrap_reward));
@@ -213,6 +226,7 @@ pub fn preview_wave(
     threat_budget_divisor: f32,
     threat_health_mult_per_awareness: f32,
 ) -> Vec<EnemyType> {
+    let dummy_spawn = vec![("preview".to_string(), Vec2::new(0.0, 0.0))];
     let queue = build_spawn_queue(
         wave_number,
         enemy_defs,
@@ -221,7 +235,7 @@ pub fn preview_wave(
         tier_floor,
         budget_multiplier,
         force_commander,
-        Vec2::new(0.0, 0.0),
+        &dummy_spawn,
         wave_budget_base,
         wave_budget_per_wave,
         wave_commander_every,
@@ -242,13 +256,14 @@ fn parse_enemy_type(s: &str) -> EnemyType {
     }
 }
 
-fn push_spawn(queue: &mut Vec<SpawnEntry>, def: &EnemyDef, health_scale: f32, spawn_point: Vec2) {
+fn push_spawn(queue: &mut Vec<SpawnEntry>, def: &EnemyDef, health_scale: f32, spawn_point: Vec2, path_id: String) {
     queue.push(SpawnEntry {
         enemy_type: parse_enemy_type(&def.enemy_type),
         health: def.base_health * health_scale,
         speed: def.speed,
         scrap_reward: def.scrap_reward,
         spawn_point,
+        path_id,
     });
 }
 
@@ -260,13 +275,17 @@ fn build_spawn_queue(
     tier_floor: u32,
     budget_multiplier: f32,
     force_commander: bool,
-    spawn_point: Vec2,
+    spawn_points: &[(String, Vec2)],
     wave_budget_base: u32,
     wave_budget_per_wave: u32,
     wave_commander_every: u32,
     threat_budget_divisor: f32,
     threat_health_mult_per_awareness: f32,
 ) -> Vec<SpawnEntry> {
+    if spawn_points.is_empty() {
+        return Vec::new();
+    }
+
     let threat_health_bonus = 1.0 + threat_awareness * threat_health_mult_per_awareness;
     let scale = base_health_scale.powi(wave_number as i32) * threat_health_bonus;
 
@@ -292,11 +311,14 @@ fn build_spawn_queue(
     eligible.sort_by(|a, b| b.threat_value.cmp(&a.threat_value));
 
     let mut queue = Vec::new();
+    let mut path_robin = 0usize;
 
     if (wave_number > 0 && wave_number % wave_commander_every == 0) || force_commander {
         if let Some(boss) = eligible.iter().find(|d| d.enemy_type == "Commander") {
-            push_spawn(&mut queue, boss, scale, spawn_point);
+            let (ref pid, sp) = spawn_points[path_robin % spawn_points.len()];
+            push_spawn(&mut queue, boss, scale, sp, pid.clone());
             budget -= boss.threat_value as i32;
+            path_robin += 1;
         }
     }
 
@@ -312,7 +334,9 @@ fn build_spawn_queue(
         match pick {
             Some(def) => {
                 budget -= def.threat_value as i32;
-                push_spawn(&mut queue, def, scale, spawn_point);
+                let (ref pid, sp) = spawn_points[path_robin % spawn_points.len()];
+                push_spawn(&mut queue, def, scale, sp, pid.clone());
+                path_robin += 1;
             }
             None => break,
         }

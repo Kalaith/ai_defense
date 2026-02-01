@@ -288,6 +288,8 @@ pub struct BuildingSlotDef {
     pub power_cost: f32,
     pub boon: BuildingBoon,
     pub threat_per_sec: f32,
+    #[serde(default)]
+    pub opens_entrance: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default)]

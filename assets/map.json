@@ -125,7 +125,8 @@
       "repair_cost": 60.0,
       "power_cost": 20.0,
       "boon": { "scrap_per_sec": 0.0, "food_per_sec": 0.0, "water_per_sec": 0.0, "power_per_sec": 3.0 },
-      "threat_per_sec": 0.25
+      "threat_per_sec": 0.25,
+      "opens_entrance": "south_gate"
     },
     {
       "id": "building_05",
@@ -145,7 +146,8 @@
       "repair_cost": 65.0,
       "power_cost": 40.0,
       "boon": { "scrap_per_sec": 0.0, "food_per_sec": 0.0, "water_per_sec": 2.5, "power_per_sec": 0.0 },
-      "threat_per_sec": 0.35
+      "threat_per_sec": 0.35,
+      "opens_entrance": "east_breach"
     },
     {
       "id": "building_07",

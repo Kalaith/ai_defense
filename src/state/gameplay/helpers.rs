@@ -69,18 +69,6 @@ pub fn tower_label(tower_type: &TowerType) -> &'static str {
     }
 }
 
-pub fn point_to_segment_dist(p: Vec2, a: Vec2, b: Vec2) -> f32 {
-    let ab = b - a;
-    let ap = p - a;
-    let len_sq = ab.length_squared();
-    if len_sq < f32::EPSILON {
-        return ap.length();
-    }
-    let t = (ap.dot(ab) / len_sq).clamp(0.0, 1.0);
-    let closest = a + ab * t;
-    (p - closest).length()
-}
-
 pub fn apply_upgrade_levels(tower: &mut Tower, level: u32, constants: &crate::data::GameConstants) {
     if level <= 1 {
         return;

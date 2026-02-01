@@ -76,6 +76,7 @@ pub struct MapBuilding {
     pub power_cost: f32,
     pub boon: BuildingBoon,
     pub threat_per_sec: f32,
+    pub opens_entrance: Option<String>,
 }
 
 impl MapBuilding {
@@ -89,6 +90,7 @@ impl MapBuilding {
             power_cost: def.power_cost,
             boon: def.boon,
             threat_per_sec: def.threat_per_sec,
+            opens_entrance: def.opens_entrance,
         }
     }
 
@@ -311,11 +313,37 @@ impl MapState {
         Vec::new()
     }
 
+    pub fn set_building_state(&mut self, idx: usize, state: BuildingState) -> Vec<String> {
+        let mut entrance_to_unlock = None;
+        {
+            let Some(building) = self.buildings.get_mut(idx) else { return Vec::new(); };
+            if building.state == state {
+                return Vec::new();
+            }
+            building.state = state;
+            if building.state == BuildingState::Powered {
+                entrance_to_unlock = building.opens_entrance.clone();
+            }
+        }
+
+        if let Some(entrance) = entrance_to_unlock {
+            return self.unlock_entrance(&entrance);
+        }
+        Vec::new()
+    }
+
     pub fn rebuild_unlocks(&mut self) {
         self.unlocked_entrances.clear();
         for slot in &self.slots {
             if slot.state != SlotState::Debris {
                 if let Some(ref entrance) = slot.opens_entrance {
+                    self.unlocked_entrances.insert(entrance.clone());
+                }
+            }
+        }
+        for building in &self.buildings {
+            if building.state == BuildingState::Powered {
+                if let Some(ref entrance) = building.opens_entrance {
                     self.unlocked_entrances.insert(entrance.clone());
                 }
             }

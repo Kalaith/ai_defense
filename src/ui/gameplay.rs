@@ -1,4 +1,5 @@
 use crate::data::GameData;
+use crate::engine::map::{BuildingState, SlotState};
 use crate::engine::tower::TowerType;
 use crate::ui::{self, SectorPanelAction};
 use macroquad::prelude::*;
@@ -57,37 +58,36 @@ impl GameplayState {
     pub fn draw_placement_ghost(&self, data: &GameData) {
         if let Some(ref tower_id) = self.placing_tower {
             if let Some(def) = data.tower_def_by_id(tower_id) {
-                let (mx, my) = mouse_position();
-                let pos = self.snap_to_grid(mx, my);
+                let world_mouse = self.screen_to_world(vec2(mouse_position().0, mouse_position().1));
 
-                let on_path = self.is_on_path(pos);
-                let occupied = self
-                    .towers
-                    .iter()
-                    .any(|t| (t.position - pos).length() < self.constants.placement.tower_min_spacing);
-                let blocked = on_path || occupied;
+                // Find nearest powered empty slot
+                let mut best_slot = None;
+                let mut best_dist = self.map_state.slot_interact_radius;
+                for (idx, slot) in self.map_state.slots.iter().enumerate() {
+                    if slot.state != SlotState::Powered || slot.tower_index.is_some() {
+                        continue;
+                    }
+                    let dist = (slot.position - world_mouse).length();
+                    if dist < best_dist {
+                        best_dist = dist;
+                        best_slot = Some(idx);
+                    }
+                }
 
-                let ghost_color = if blocked {
-                    Color::new(0.9, 0.2, 0.2, 0.5)
-                } else {
+                if let Some(idx) = best_slot {
+                    let pos = self.map_state.slots[idx].position;
                     let c = tower_type_color(&def.tower_type);
-                    Color::new(c.r, c.g, c.b, 0.5)
-                };
+                    let ghost_color = Color::new(c.r, c.g, c.b, 0.5);
+                    let range_color = Color::new(c.r, c.g, c.b, 0.3);
 
-                let range_color = if blocked {
-                    Color::new(0.9, 0.2, 0.2, 0.2)
-                } else {
-                    let c = tower_type_color(&def.tower_type);
-                    Color::new(c.r, c.g, c.b, 0.3)
-                };
+                    let range_mult = if self.factory.is_sector_active("ai_vault") { 1.2 } else { 1.0 };
+                    let radius = self.constants.ui.tower_base_radius;
+                    draw_circle(pos.x, pos.y, radius, ghost_color);
+                    draw_circle_lines(pos.x, pos.y, def.base_range * range_mult, 1.0, range_color);
+                }
 
-                let range_mult = if self.factory.is_sector_active("ai_vault") { 1.2 } else { 1.0 };
-                let radius = self.constants.ui.tower_base_radius;
-                draw_circle(pos.x, pos.y, radius, ghost_color);
-                draw_circle_lines(pos.x, pos.y, def.base_range * range_mult, 1.0, range_color);
-
-                let hint = format!("Place {} - Click to confirm, Right-click to cancel", def.name);
-                draw_text(&hint, self.constants.ui.build_panel_w + 10.0, screen_height() - 15.0, 14.0, dark::TEXT_DIM);
+                // Hint text is drawn in screen space - need to return to default camera for this
+                // (handled by caller since this is called in world-space section)
             }
         }
     }
@@ -175,16 +175,14 @@ impl GameplayState {
         }
     }
 
-    pub fn handle_placement_click(&mut self, data: &GameData) {
-        if self.placing_tower.is_none() {
-            return;
-        }
-
+    pub fn handle_map_click(&mut self, data: &GameData) {
         if !is_mouse_button_pressed(MouseButton::Left) {
             return;
         }
 
         let (mx, my) = mouse_position();
+
+        // Skip if click is in UI panels
         if mx < self.constants.ui.build_panel_w
             || mx > screen_width() - self.constants.ui.sector_panel_w
             || my < self.constants.ui.hud_height
@@ -192,79 +190,196 @@ impl GameplayState {
             return;
         }
 
-        let tower_id = self.placing_tower.as_ref().unwrap().clone();
-        if let Some(def) = data.tower_def_by_id(&tower_id) {
-            if self.resources.scrap < def.cost_scrap {
-                return;
+        // Skip if in bottom slot panel area
+        let panel_w = 300.0;
+        let panel_h = 80.0;
+        let panel_x = (screen_width() - panel_w) / 2.0;
+        let panel_y = screen_height() - panel_h - 10.0;
+        if mx >= panel_x && mx <= panel_x + panel_w && my >= panel_y && my <= panel_y + panel_h {
+            // Check for slot/building action buttons
+            if let Some(idx) = self.selected_slot {
+                if let Some(slot) = self.map_state.slots.get(idx).map(|s| (s.state, s.clear_cost, s.power_cost)) {
+                    match slot.0 {
+                        SlotState::Debris => {
+                            if self.resources.scrap >= slot.1 {
+                                self.clear_slot(idx);
+                            }
+                            return;
+                        }
+                        SlotState::Cleared => {
+                            if self.resources.scrap >= slot.2 {
+                                self.power_slot(idx);
+                            }
+                            return;
+                        }
+                        _ => {}
+                    }
+                }
             }
-
-            let gen = self.factory.power_generation();
-            let current_drain: f32 = self.factory.power_consumption()
-                + self.towers.iter().filter(|t| t.is_active).map(|t| t.power_drain).sum::<f32>();
-            let net_after = gen - current_drain - def.cost_power;
-            if net_after < 0.0 && self.resources.power < self.constants.economy.power_buffer_min_for_build {
-                return;
+            if let Some(idx) = self.selected_building {
+                if let Some(building) = self.map_state.buildings.get(idx).map(|b| (b.state, b.repair_cost, b.power_cost)) {
+                    match building.0 {
+                        BuildingState::Broken => {
+                            if self.resources.scrap >= building.1 {
+                                self.repair_building(idx);
+                            }
+                            return;
+                        }
+                        BuildingState::Repaired => {
+                            if self.resources.scrap >= building.2 {
+                                self.power_building(idx);
+                            }
+                            return;
+                        }
+                        _ => {}
+                    }
+                }
             }
+            return;
+        }
 
-            let pos = self.snap_to_grid(mx, my);
-            let occupied = self.towers.iter().any(|t| (t.position - pos).length() < 20.0);
-            let on_path = self.is_on_path(pos);
-            if !occupied && !on_path {
-                self.resources.scrap -= def.cost_scrap;
+        let world_pos = self.screen_to_world(vec2(mx, my));
 
-                let tt = match def.tower_type.as_str() {
-                    "Ballistic" => TowerType::Ballistic,
-                    "Laser" => TowerType::Laser,
-                    "Emp" => TowerType::Emp,
-                    "AreaDenial" => TowerType::AreaDenial,
-                    "Subversion" => TowerType::Subversion,
-                    _ => TowerType::Ballistic,
-                };
+        // If placing tower and clicked a powered empty slot -> place tower
+        if let Some(ref tower_id) = self.placing_tower.clone() {
+            if let Some((slot_idx, _)) = self.map_state.nearest_slot(world_pos) {
+                let slot = &self.map_state.slots[slot_idx];
+                if slot.state == SlotState::Powered && slot.tower_index.is_none() {
+                    self.try_place_tower_on_slot(slot_idx, tower_id, data);
+                    return;
+                }
+            }
+        }
 
-                self.towers.push(crate::engine::tower::Tower::new(
-                    tt,
-                    def.id.clone(),
-                    pos,
-                    def.base_range,
-                    def.base_damage,
-                    def.fire_rate,
-                    def.cost_power,
-                    def.cost_scrap,
-                ));
-                self.threat.add_noise(0.5);
-                self.placing_tower = None;
+        // Try to find nearest slot or building for selection
+        let slot_result = self.map_state.nearest_slot(world_pos);
+        let building_result = self.map_state.nearest_building(world_pos);
+
+        // Pick the closer of slot vs building
+        match (slot_result, building_result) {
+            (Some((si, sd)), Some((bi, bd))) => {
+                if sd <= bd {
+                    self.selected_slot = Some(si);
+                    self.selected_building = None;
+                    self.selected_tower = self.map_state.slots[si].tower_index;
+                } else {
+                    self.selected_building = Some(bi);
+                    self.selected_slot = None;
+                    self.selected_tower = None;
+                }
+            }
+            (Some((si, _)), None) => {
+                self.selected_slot = Some(si);
+                self.selected_building = None;
+                self.selected_tower = self.map_state.slots[si].tower_index;
+            }
+            (None, Some((bi, _))) => {
+                self.selected_building = Some(bi);
+                self.selected_slot = None;
+                self.selected_tower = None;
+            }
+            (None, None) => {
+                self.selected_slot = None;
+                self.selected_building = None;
+                self.selected_tower = None;
             }
         }
     }
 
-    pub fn handle_selection_click(&mut self) {
-        if self.placing_tower.is_some() {
+    fn clear_slot(&mut self, idx: usize) {
+        let cost = self.map_state.slots[idx].clear_cost;
+        if self.resources.scrap < cost {
+            return;
+        }
+        self.resources.scrap -= cost;
+        let newly_active = self.map_state.set_slot_state(idx, SlotState::Cleared);
+        for path_id in &newly_active {
+            self.push_notification(format!("New path opened: {}", path_id));
+        }
+    }
+
+    fn power_slot(&mut self, idx: usize) {
+        let cost = self.map_state.slots[idx].power_cost;
+        if self.resources.scrap < cost {
+            return;
+        }
+        self.resources.scrap -= cost;
+        let newly_active = self.map_state.set_slot_state(idx, SlotState::Powered);
+        for path_id in &newly_active {
+            self.push_notification(format!("New path opened: {}", path_id));
+        }
+    }
+
+    fn try_place_tower_on_slot(&mut self, slot_idx: usize, tower_id: &str, data: &GameData) {
+        let slot = &self.map_state.slots[slot_idx];
+        if slot.state != SlotState::Powered || slot.tower_index.is_some() {
             return;
         }
 
-        if !is_mouse_button_pressed(MouseButton::Left) {
+        let Some(def) = data.tower_def_by_id(tower_id) else { return; };
+        if self.resources.scrap < def.cost_scrap {
             return;
         }
 
-        let (mx, my) = mouse_position();
-        if mx < self.constants.ui.build_panel_w
-            || mx > screen_width() - self.constants.ui.sector_panel_w
-            || my < self.constants.ui.hud_height
-        {
+        let gen = self.factory.power_generation();
+        let current_drain: f32 = self.factory.power_consumption()
+            + self.towers.iter().filter(|t| t.is_active).map(|t| t.power_drain).sum::<f32>();
+        let net_after = gen - current_drain - def.cost_power;
+        if net_after < 0.0 && self.resources.power < self.constants.economy.power_buffer_min_for_build {
             return;
         }
 
-        let mut selected = None;
-        let mut best_dist = self.constants.ui.tower_select_radius;
-        for (i, tower) in self.towers.iter().enumerate() {
-            let dist = (tower.position - vec2(mx, my)).length();
-            if dist < best_dist {
-                best_dist = dist;
-                selected = Some(i);
-            }
-        }
+        self.resources.scrap -= def.cost_scrap;
+        let pos = slot.position;
 
-        self.selected_tower = selected;
+        let tt = match def.tower_type.as_str() {
+            "Ballistic" => TowerType::Ballistic,
+            "Laser" => TowerType::Laser,
+            "Emp" => TowerType::Emp,
+            "AreaDenial" => TowerType::AreaDenial,
+            "Subversion" => TowerType::Subversion,
+            _ => TowerType::Ballistic,
+        };
+
+        let tower_idx = self.towers.len();
+        self.towers.push(crate::engine::tower::Tower::new(
+            tt,
+            def.id.clone(),
+            pos,
+            def.base_range,
+            def.base_damage,
+            def.fire_rate,
+            def.cost_power,
+            def.cost_scrap,
+        ));
+
+        self.map_state.slots[slot_idx].tower_index = Some(tower_idx);
+        self.threat.add_noise(0.5);
+        self.placing_tower = None;
+        self.selected_tower = Some(tower_idx);
+    }
+
+    fn repair_building(&mut self, idx: usize) {
+        let cost = self.map_state.buildings[idx].repair_cost;
+        if self.resources.scrap < cost {
+            return;
+        }
+        self.resources.scrap -= cost;
+        self.map_state.set_building_state(idx, BuildingState::Repaired);
+        self.push_notification(format!("{} repaired", self.map_state.buildings[idx].id));
+    }
+
+    fn power_building(&mut self, idx: usize) {
+        let cost = self.map_state.buildings[idx].power_cost;
+        if self.resources.scrap < cost {
+            return;
+        }
+        self.resources.scrap -= cost;
+        let newly_active = self.map_state.set_building_state(idx, BuildingState::Powered);
+        self.push_notification(format!("{} powered on", self.map_state.buildings[idx].id));
+        for path_id in &newly_active {
+            self.push_notification(format!("New entrance opened: {}", path_id));
+        }
     }
 
     fn purchase_upgrade(&mut self, upgrade_id: &str) {
@@ -325,22 +440,5 @@ impl GameplayState {
         self.wave_manager.spawn_queue.clear();
         self.between_waves = false;
         self.push_notification("Beacon shut down. No new waves incoming.".to_string());
-    }
-
-    fn snap_to_grid(&self, x: f32, y: f32) -> Vec2 {
-        let grid = self.constants.placement.grid;
-        vec2((x / grid).round() * grid, (y / grid).round() * grid)
-    }
-
-    fn is_on_path(&self, pos: Vec2) -> bool {
-        let min_dist = self.constants.placement.path_min_dist;
-        for i in 0..self.map_path.len().saturating_sub(1) {
-            let a = self.map_path[i];
-            let b = self.map_path[i + 1];
-            if super::helpers::point_to_segment_dist(pos, a, b) < min_dist {
-                return true;
-            }
-        }
-        false
     }
 }
