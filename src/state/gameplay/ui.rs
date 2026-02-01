@@ -1,12 +1,10 @@
 use crate::data::GameData;
-use crate::engine::tower::TowerType;
 use crate::ui::{self, SectorPanelAction};
 use macroquad::prelude::*;
 use macroquad::rand::gen_range;
 use macroquad_toolkit::colors::dark;
 use macroquad_toolkit::ui::button;
 
-use super::helpers::tower_type_color;
 use super::GameplayState;
 
 impl GameplayState {
@@ -59,14 +57,14 @@ impl GameplayState {
                 let ghost_color = if blocked {
                     Color::new(0.9, 0.2, 0.2, 0.5)
                 } else {
-                    let c = tower_type_color(&def.tower_type);
+                    let c = def.color();
                     Color::new(c.r, c.g, c.b, 0.5)
                 };
 
                 let range_color = if blocked {
                     Color::new(0.9, 0.2, 0.2, 0.2)
                 } else {
-                    let c = tower_type_color(&def.tower_type);
+                    let c = def.color();
                     Color::new(c.r, c.g, c.b, 0.3)
                 };
 
@@ -204,14 +202,7 @@ impl GameplayState {
             if !occupied && !on_path {
                 self.resources.scrap -= def.cost_scrap;
 
-                let tt = match def.tower_type.as_str() {
-                    "Ballistic" => TowerType::Ballistic,
-                    "Laser" => TowerType::Laser,
-                    "Emp" => TowerType::Emp,
-                    "AreaDenial" => TowerType::AreaDenial,
-                    "Subversion" => TowerType::Subversion,
-                    _ => TowerType::Ballistic,
-                };
+        let tt = def.tower_type.clone();
 
                 self.towers.push(crate::engine::tower::Tower::new(
                     tt,
@@ -222,6 +213,7 @@ impl GameplayState {
                     def.fire_rate,
                     def.cost_power,
                     def.cost_scrap,
+                    def.color(),
                 ));
                 self.threat.add_noise(0.5);
                 self.placing_tower = None;

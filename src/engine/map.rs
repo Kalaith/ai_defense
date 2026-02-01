@@ -240,22 +240,6 @@ impl MapState {
         self.paths.iter().filter(|p| p.active).collect()
     }
 
-    pub fn active_path_points(&self) -> Vec<Vec<Vec2>> {
-        self.paths
-            .iter()
-            .filter(|p| p.active)
-            .map(|p| p.points.clone())
-            .collect()
-    }
-
-    pub fn all_path_points(&self) -> Vec<Vec<Vec2>> {
-        self.paths.iter().map(|p| p.points.clone()).collect()
-    }
-
-    pub fn active_path_entrances(&self) -> Vec<Vec2> {
-        self.paths.iter().filter(|p| p.active).map(|p| p.entrance).collect()
-    }
-
     pub fn nearest_slot(&self, pos: Vec2) -> Option<(usize, f32)> {
         let mut best = None;
         let mut best_dist = self.slot_interact_radius;
@@ -269,18 +253,6 @@ impl MapState {
         best.map(|idx| (idx, best_dist))
     }
 
-    pub fn nearest_building(&self, pos: Vec2) -> Option<(usize, f32)> {
-        let mut best = None;
-        let mut best_dist = self.building_interact_radius;
-        for (idx, building) in self.buildings.iter().enumerate() {
-            let dist = (building.position - pos).length();
-            if dist <= best_dist {
-                best_dist = dist;
-                best = Some(idx);
-            }
-        }
-        best.map(|idx| (idx, best_dist))
-    }
 
     pub fn trace_powered(&self, trace: &MapTrace) -> bool {
         let from_powered = match trace.from {
@@ -349,27 +321,6 @@ impl MapState {
             }
         }
         self.refresh_path_activity();
-    }
-
-    pub fn total_boon(&self) -> BuildingBoon {
-        let mut boon = BuildingBoon::default();
-        for building in &self.buildings {
-            if building.is_active() {
-                boon.scrap_per_sec += building.boon.scrap_per_sec;
-                boon.food_per_sec += building.boon.food_per_sec;
-                boon.water_per_sec += building.boon.water_per_sec;
-                boon.power_per_sec += building.boon.power_per_sec;
-            }
-        }
-        boon
-    }
-
-    pub fn total_threat_per_sec(&self) -> f32 {
-        self.buildings
-            .iter()
-            .filter(|b| b.is_active())
-            .map(|b| b.threat_per_sec)
-            .sum()
     }
 
     fn unlock_entrance(&mut self, entrance: &str) -> Vec<String> {

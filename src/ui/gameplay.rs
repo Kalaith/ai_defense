@@ -1,12 +1,10 @@
 use crate::data::GameData;
 use crate::engine::map::{BuildingState, SlotState};
-use crate::engine::tower::TowerType;
 use crate::ui::{self, SectorPanelAction};
 use macroquad::prelude::*;
 use macroquad_toolkit::colors::dark;
 use macroquad_toolkit::ui::button;
 
-use super::helpers::tower_type_color;
 use super::GameplayState;
 
 impl GameplayState {
@@ -70,7 +68,7 @@ impl GameplayState {
 
                 if let Some(idx) = best_slot {
                     let pos = self.map_state.slots[idx].position;
-                    let c = tower_type_color(&def.tower_type);
+                    let c = def.color();
                     let ghost_color = Color::new(c.r, c.g, c.b, 0.5);
                     let range_color = Color::new(c.r, c.g, c.b, 0.3);
 
@@ -322,14 +320,7 @@ impl GameplayState {
         self.resources.scrap -= def.cost_scrap;
         let pos = slot.position;
 
-        let tt = match def.tower_type.as_str() {
-            "Ballistic" => TowerType::Ballistic,
-            "Laser" => TowerType::Laser,
-            "Emp" => TowerType::Emp,
-            "AreaDenial" => TowerType::AreaDenial,
-            "Subversion" => TowerType::Subversion,
-            _ => TowerType::Ballistic,
-        };
+        let tt = def.tower_type.clone();
 
         let tower_idx = self.towers.len();
         self.towers.push(crate::engine::tower::Tower::new(
@@ -341,6 +332,7 @@ impl GameplayState {
             def.fire_rate,
             def.cost_power,
             def.cost_scrap,
+            def.color(),
         ));
 
         self.map_state.slots[slot_idx].tower_index = Some(tower_idx);

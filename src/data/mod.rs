@@ -2,6 +2,9 @@
 
 pub mod loader;
 
+use crate::engine::enemy::EnemyType;
+use crate::engine::tower::TowerType;
+use macroquad::prelude::Color;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -38,10 +41,6 @@ impl GameData {
 
     pub fn tower_def_by_id(&self, id: &str) -> Option<&TowerDef> {
         self.tower_defs.iter().find(|t| t.id == id)
-    }
-
-    pub fn enemy_def_by_id(&self, id: &str) -> Option<&EnemyDef> {
-        self.enemy_defs.iter().find(|e| e.id == id)
     }
 }
 
@@ -231,16 +230,6 @@ pub struct MapConstants {
     pub path: Vec<[f32; 2]>,
 }
 
-impl GameConstants {
-    pub fn map_path_vec2(&self) -> Vec<macroquad::prelude::Vec2> {
-        self.map
-            .path
-            .iter()
-            .map(|p| macroquad::prelude::vec2(p[0], p[1]))
-            .collect()
-    }
-}
-
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct MapDef {
     pub map_size: [f32; 2],
@@ -307,7 +296,8 @@ pub struct BuildingBoon {
 pub struct TowerDef {
     pub id: String,
     pub name: String,
-    pub tower_type: String,
+    pub tower_type: TowerType,
+    pub color: [f32; 4],
     pub cost_scrap: f32,
     pub cost_power: f32,
     pub base_damage: f32,
@@ -316,11 +306,17 @@ pub struct TowerDef {
     pub description: String,
 }
 
+impl TowerDef {
+    pub fn color(&self) -> Color {
+        Color::from(self.color)
+    }
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct EnemyDef {
     pub id: String,
     pub name: String,
-    pub enemy_type: String,
+    pub enemy_type: EnemyType,
     #[serde(default = "default_tier")]
     pub tier: u32,
     #[serde(default = "default_threat_value")]

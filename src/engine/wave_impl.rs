@@ -7,7 +7,7 @@ use std::collections::HashMap;
 
 pub enum WaveEvent {
     None,
-    EnemyReachedEnd { enemy_type: EnemyType, scrap_reward: f32 },
+    EnemyReachedEnd { enemy_type: EnemyType },
     WaveComplete,
 }
 
@@ -103,37 +103,6 @@ impl WaveManager {
         );
     }
 
-    pub fn append_wave(
-        &mut self,
-        wave_number: u32,
-        enemy_defs: &[EnemyDef],
-        base_health_scale: f32,
-        threat_awareness: f32,
-        tier_floor: u32,
-        budget_multiplier: f32,
-        force_commander: bool,
-        spawn_points: &[(String, Vec2)],
-    ) {
-        self.current_wave = wave_number;
-        self.wave_active = true;
-        let queue = build_spawn_queue(
-            wave_number,
-            enemy_defs,
-            base_health_scale,
-            threat_awareness,
-            tier_floor,
-            budget_multiplier,
-            force_commander,
-            spawn_points,
-            self.wave_budget_base,
-            self.wave_budget_per_wave,
-            self.wave_commander_every,
-            self.threat_budget_divisor,
-            self.threat_health_mult_per_awareness,
-        );
-        self.spawn_queue.extend(queue);
-    }
-
     pub fn tick(&mut self, dt: f32, paths: &HashMap<String, Vec<Vec2>>) -> WaveEvent {
         if !self.wave_active {
             return WaveEvent::None;
@@ -154,7 +123,7 @@ impl WaveManager {
             self.spawn_timer = self.spawn_interval;
         }
 
-        let mut reached_end_reward = None;
+        let mut reached_end = None;
         let commander_positions: Vec<Vec2> = self
             .enemies
             .iter()
@@ -191,12 +160,12 @@ impl WaveManager {
             };
             if reached {
                 enemy.is_alive = false;
-                reached_end_reward = Some((enemy.enemy_type.clone(), enemy.scrap_reward));
+                reached_end = Some(enemy.enemy_type.clone());
             }
         }
 
-        if let Some((enemy_type, reward)) = reached_end_reward {
-            return WaveEvent::EnemyReachedEnd { enemy_type, scrap_reward: reward };
+        if let Some(enemy_type) = reached_end {
+            return WaveEvent::EnemyReachedEnd { enemy_type };
         }
 
         if self.spawn_queue.is_empty() && self.enemies.iter().all(|e| !e.is_alive) {
@@ -245,20 +214,9 @@ pub fn preview_wave(
     queue.into_iter().map(|e| e.enemy_type).collect()
 }
 
-fn parse_enemy_type(s: &str) -> EnemyType {
-    match s {
-        "Scout" => EnemyType::Scout,
-        "Drone" => EnemyType::Drone,
-        "HeavyUnit" => EnemyType::HeavyUnit,
-        "Saboteur" => EnemyType::Saboteur,
-        "Commander" => EnemyType::Commander,
-        _ => EnemyType::Drone,
-    }
-}
-
 fn push_spawn(queue: &mut Vec<SpawnEntry>, def: &EnemyDef, health_scale: f32, spawn_point: Vec2, path_id: String) {
     queue.push(SpawnEntry {
-        enemy_type: parse_enemy_type(&def.enemy_type),
+        enemy_type: def.enemy_type.clone(),
         health: def.base_health * health_scale,
         speed: def.speed,
         scrap_reward: def.scrap_reward,
@@ -314,7 +272,7 @@ fn build_spawn_queue(
     let mut path_robin = 0usize;
 
     if (wave_number > 0 && wave_number % wave_commander_every == 0) || force_commander {
-        if let Some(boss) = eligible.iter().find(|d| d.enemy_type == "Commander") {
+        if let Some(boss) = eligible.iter().find(|d| d.enemy_type == EnemyType::Commander) {
             let (ref pid, sp) = spawn_points[path_robin % spawn_points.len()];
             push_spawn(&mut queue, boss, scale, sp, pid.clone());
             budget -= boss.threat_value as i32;

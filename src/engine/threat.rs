@@ -57,10 +57,6 @@ impl ThreatSignature {
         }
     }
 
-    pub fn add_energy(&mut self, amount: f32) {
-        self.energy += amount;
-    }
-
     pub fn add_heat(&mut self, amount: f32) {
         self.heat += amount;
     }
@@ -71,10 +67,6 @@ impl ThreatSignature {
 
     pub fn add_territory(&mut self, amount: f32) {
         self.territory += amount;
-    }
-
-    pub fn add_corruption(&mut self, amount: f32) {
-        self.corruption += amount;
     }
 
     pub fn tick_decay(&mut self, dt: f32) {

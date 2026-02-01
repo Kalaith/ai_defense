@@ -2,8 +2,10 @@
 
 use macroquad::prelude::Vec2;
 use macroquad::rand::gen_range;
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "PascalCase")]
 pub enum EnemyType {
     Scout,
     Drone,

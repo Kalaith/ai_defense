@@ -240,6 +240,7 @@ impl GameplayState {
                     def.fire_rate,
                     def.cost_power,
                     def.cost_scrap,
+                    def.color(),
                 );
                 helpers::apply_upgrade_levels(&mut tower, saved.level, &self.constants);
                 self.towers.push(tower);

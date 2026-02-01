@@ -6,14 +6,14 @@ mod render;
 mod ui;
 mod helpers;
 
-use crate::data::{GameConstants, GameData, UpgradeDef};
+use crate::data::{EnemyDef, GameConstants, GameData, UpgradeDef};
 use crate::engine::beacon::BeaconPhase;
 use crate::engine::factory::Factory;
 use crate::engine::map::MapState;
 use crate::engine::population::Population;
 use crate::engine::enemy::EnemyTuning;
 use crate::engine::threat::{ReactionTier, ThreatSignature};
-use crate::engine::tower::{ShotEffect, Tower, TowerType};
+use crate::engine::tower::{ShotEffect, Tower};
 use crate::engine::wave::{WaveManager, WaveTuning};
 use crate::save::{SaveData, SavedBuilding, SavedPopulation, SavedResources, SavedSector, SavedSlot, SavedThreat, SavedTower};
 use macroquad::prelude::{Vec2, vec2};
@@ -81,6 +81,7 @@ pub struct GameplayState {
     pub upgrade_defs: Vec<UpgradeDef>,
     pub beacon_start_difficulty_bonus: f32,
     pub unlocks: crate::data::UnlocksDef,
+    pub enemy_defs: Vec<EnemyDef>,
 
     // Camera
     pub camera_offset: Vec2,
@@ -196,6 +197,7 @@ impl GameplayState {
             upgrade_defs: data.upgrade_defs.clone(),
             beacon_start_difficulty_bonus: 0.0,
             unlocks: data.unlocks.clone(),
+            enemy_defs: data.enemy_defs.clone(),
 
             camera_offset: vec2(600.0, 400.0),
             camera_zoom: 0.5,
@@ -256,14 +258,7 @@ impl GameplayState {
         self.towers.clear();
         for saved in save.towers {
             if let Some(def) = data.tower_def_by_id(&saved.tower_id) {
-                let tt = match def.tower_type.as_str() {
-                    "Ballistic" => TowerType::Ballistic,
-                    "Laser" => TowerType::Laser,
-                    "Emp" => TowerType::Emp,
-                    "AreaDenial" => TowerType::AreaDenial,
-                    "Subversion" => TowerType::Subversion,
-                    _ => TowerType::Ballistic,
-                };
+                let tt = def.tower_type.clone();
                 let mut tower = Tower::new(
                     tt,
                     def.id.clone(),
@@ -273,6 +268,7 @@ impl GameplayState {
                     def.fire_rate,
                     def.cost_power,
                     def.cost_scrap,
+                    def.color(),
                 );
                 helpers::apply_upgrade_levels(&mut tower, saved.level, &self.constants);
                 let tower_idx = self.towers.len();

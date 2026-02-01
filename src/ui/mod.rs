@@ -6,29 +6,11 @@ use macroquad::prelude::*;
 use macroquad_toolkit::colors::dark;
 use macroquad_toolkit::ui::button;
 
-pub enum UiAction {
-    StartCampaign,
-    Pause,
-    Resume,
-    ReturnToMenu,
-    PlaceTower(String),
-    UpgradeTower(usize),
-    UnlockSector(String),
-}
-
 pub fn draw_resource_bar(x: f32, y: f32, w: f32, h: f32, current: f32, max: f32, color: Color) {
     draw_rectangle(x, y, w, h, dark::PANEL);
     let fill = (current / max).clamp(0.0, 1.0);
     draw_rectangle(x, y, w * fill, h, color);
     draw_rectangle_lines(x, y, w, h, 1.0, dark::TEXT_DIM);
-}
-
-pub fn draw_label(x: f32, y: f32, text: &str, font_size: f32) {
-    draw_text(text, x, y + font_size, font_size, dark::TEXT);
-}
-
-pub fn draw_label_colored(x: f32, y: f32, text: &str, font_size: f32, color: Color) {
-    draw_text(text, x, y + font_size, font_size, color);
 }
 
 /// Draw tower build panel on the left sidebar. Returns tower id if one was clicked.

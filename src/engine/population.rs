@@ -7,7 +7,6 @@ pub struct Population {
     pub morale: f32,
     pub health: f32,
     pub food_supply: f32,
-    pub food_consumption_per_person: f32,
     pub death_timer: f32,
 }
 
@@ -18,7 +17,6 @@ impl Population {
             morale: constants.starting.morale,
             health: constants.starting.health,
             food_supply: constants.starting.food_supply,
-            food_consumption_per_person: constants.population.food_consumption_per_person,
             death_timer: 0.0,
         }
     }
@@ -31,24 +29,6 @@ impl Population {
         };
         let health_factor = self.health / 100.0;
         self.count as f32 * morale_factor * health_factor
-    }
-
-    pub fn daily_food_cost(&self) -> f32 {
-        self.count as f32 * self.food_consumption_per_person
-    }
-
-    pub fn consume_food(&mut self) {
-        let cost = self.daily_food_cost();
-        if self.food_supply >= cost {
-            self.food_supply -= cost;
-        } else {
-            self.food_supply = 0.0;
-            self.morale -= 5.0;
-            self.health -= 3.0;
-        }
-
-        self.morale = self.morale.clamp(0.0, 100.0);
-        self.health = self.health.clamp(0.0, 100.0);
     }
 
     pub fn tick(&mut self, dt: f32, constants: &GameConstants) {

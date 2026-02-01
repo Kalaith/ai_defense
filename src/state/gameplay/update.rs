@@ -1,4 +1,3 @@
-use crate::data::loader::load_enemy_defs;
 use crate::engine::beacon::{phase_from_strength, BeaconPhase};
 use crate::engine::enemy::EnemyType;
 use crate::engine::tower::tick_towers;
@@ -166,7 +165,7 @@ impl GameplayState {
         let budget_multiplier = self.constants.waves.budget_multiplier + self.beacon_start_difficulty_bonus;
         self.wave_manager.generate_wave(
             self.current_wave,
-            &load_enemy_defs(),
+            &self.enemy_defs,
             self.base_health_scale_per_wave,
             self.threat.awareness_level(),
             self.beacon_phase.tier_floor(),
@@ -187,7 +186,7 @@ impl GameplayState {
 
         let event = self.wave_manager.tick(dt, &paths);
         match event {
-            WaveEvent::EnemyReachedEnd { enemy_type, .. } => self.handle_breach(enemy_type),
+            WaveEvent::EnemyReachedEnd { enemy_type } => self.handle_breach(enemy_type),
             WaveEvent::WaveComplete => self.handle_wave_complete(),
             WaveEvent::None => {}
         }

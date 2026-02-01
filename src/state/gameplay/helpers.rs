@@ -3,7 +3,7 @@ use crate::engine::beacon::BeaconPhase;
 use crate::engine::enemy::EnemyType;
 use crate::engine::map::{BuildingState, MapBuilding};
 use crate::engine::threat::{ReactionTier, ThreatSignature};
-use crate::engine::tower::{Tower, TowerType};
+use crate::engine::tower::Tower;
 use crate::engine::wave::preview_wave;
 use macroquad::prelude::*;
 use macroquad::rand::gen_range;
@@ -50,17 +50,6 @@ pub fn beacon_color(phase: &BeaconPhase) -> Color {
     }
 }
 
-pub fn tower_type_color(tower_type: &str) -> Color {
-    match tower_type {
-        "Ballistic" => ORANGE,
-        "Laser" => RED,
-        "Emp" => SKYBLUE,
-        "AreaDenial" => YELLOW,
-        "Subversion" => PURPLE,
-        _ => WHITE,
-    }
-}
-
 pub fn enemy_label(enemy_type: &EnemyType) -> &'static str {
     match enemy_type {
         EnemyType::Scout => "Scout",
@@ -68,16 +57,6 @@ pub fn enemy_label(enemy_type: &EnemyType) -> &'static str {
         EnemyType::HeavyUnit => "Heavy",
         EnemyType::Saboteur => "Saboteur",
         EnemyType::Commander => "Commander",
-    }
-}
-
-pub fn tower_label(tower_type: &TowerType) -> &'static str {
-    match tower_type {
-        TowerType::Ballistic => "Ballistic",
-        TowerType::Laser => "Laser",
-        TowerType::Emp => "EMP",
-        TowerType::AreaDenial => "Flak Field",
-        TowerType::Subversion => "Subversion",
     }
 }
 
@@ -207,7 +186,7 @@ impl GameplayState {
         };
         let preview = preview_wave(
             next_wave,
-            &crate::data::loader::load_enemy_defs(),
+            &self.enemy_defs,
             self.base_health_scale_per_wave,
             self.threat.awareness_level(),
             self.beacon_phase.tier_floor(),

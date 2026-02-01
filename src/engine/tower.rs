@@ -2,8 +2,10 @@
 
 use crate::engine::enemy::{Enemy, EnemyType};
 use macroquad::prelude::{Color, Vec2};
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "PascalCase")]
 pub enum TowerType {
     Ballistic,
     Laser,
@@ -24,6 +26,7 @@ pub struct Tower {
     pub is_active: bool,
     pub power_drain: f32,
     pub base_scrap_cost: f32,
+    pub color: Color,
 }
 
 #[derive(Clone, Debug)]
@@ -119,6 +122,7 @@ impl Tower {
         fire_rate: f32,
         power_drain: f32,
         base_scrap_cost: f32,
+        color: Color,
     ) -> Self {
         Self {
             tower_type,
@@ -132,6 +136,7 @@ impl Tower {
             is_active: true,
             power_drain,
             base_scrap_cost,
+            color,
         }
     }
 
@@ -150,31 +155,8 @@ impl Tower {
         }
     }
 
-    pub fn nearest_enemy<'a>(&self, enemies: &'a [Enemy]) -> Option<usize> {
-        let mut best_idx = None;
-        let mut best_dist = f32::MAX;
-        for (i, enemy) in enemies.iter().enumerate() {
-            if !enemy.is_alive {
-                continue;
-            }
-            let dist = (enemy.position - self.position).length();
-            if dist <= self.range && dist < best_dist {
-                best_dist = dist;
-                best_idx = Some(i);
-            }
-        }
-        best_idx
-    }
-
     pub fn color(&self) -> macroquad::prelude::Color {
-        use macroquad::prelude::*;
-        match self.tower_type {
-            TowerType::Ballistic => ORANGE,
-            TowerType::Laser => RED,
-            TowerType::Emp => SKYBLUE,
-            TowerType::AreaDenial => YELLOW,
-            TowerType::Subversion => PURPLE,
-        }
+        self.color
     }
 }
 

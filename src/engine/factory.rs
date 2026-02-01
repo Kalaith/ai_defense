@@ -21,26 +21,6 @@ impl FactoryPhase {
             Self::TranscendentEntity => "Transcendent Entity",
         }
     }
-
-    pub fn tier(&self) -> u32 {
-        match self {
-            Self::DormantRuin => 0,
-            Self::StirringMachine => 1,
-            Self::FunctionalSystem => 2,
-            Self::SentientStructure => 3,
-            Self::TranscendentEntity => 4,
-        }
-    }
-}
-
-#[derive(Clone, Debug)]
-pub enum ModuleBranch {
-    PowerCore,
-    Assembly,
-    Research,
-    Robotics,
-    AiVault,
-    Logistics,
 }
 
 pub struct Sector {
@@ -49,7 +29,6 @@ pub struct Sector {
     pub unlocked: bool,
     pub integrity: f32,
     pub max_integrity: f32,
-    pub modules: Vec<ModuleBranch>,
     pub power_cost: f32,
     pub unlock_cost: f32,
 }
@@ -57,8 +36,6 @@ pub struct Sector {
 pub struct Factory {
     pub phase: FactoryPhase,
     pub sectors: Vec<Sector>,
-    pub total_power_generated: f32,
-    pub total_power_consumed: f32,
     pub purchased_upgrades: Vec<String>,
     pub difficulty_modifier: f32,
 }
@@ -68,8 +45,6 @@ impl Factory {
         Self {
             phase: FactoryPhase::DormantRuin,
             sectors: Vec::new(),
-            total_power_generated: 0.0,
-            total_power_consumed: 0.0,
             purchased_upgrades: Vec::new(),
             difficulty_modifier: 0.0,
         }
@@ -84,15 +59,10 @@ impl Factory {
                 unlocked: sd.starts_unlocked,
                 integrity: sd.max_integrity,
                 max_integrity: sd.max_integrity,
-                modules: Vec::new(),
                 power_cost: sd.base_power_cost,
                 unlock_cost: sd.base_power_cost * 5.0,
             })
             .collect();
-    }
-
-    pub fn net_power(&self) -> f32 {
-        self.total_power_generated - self.total_power_consumed
     }
 
     pub fn unlocked_count(&self) -> usize {
