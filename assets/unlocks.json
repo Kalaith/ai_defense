@@ -1,0 +1,22 @@
+{
+  "towers": {
+    "ballistic_turret": { "requires": [] },
+    "laser_emitter": { "requires": ["research_lab"] },
+    "emp_pylon": { "requires": ["robotics_bay"] },
+    "flak_field": { "requires": ["logistics_hub"] },
+    "signal_jammer": { "requires": ["ai_vault"] }
+  },
+  "buildings": {
+    "scrap_converter": { "requires": ["logistics_hub"] },
+    "water_reclaimer": { "requires": ["logistics_hub"] },
+    "nutrient_vats": { "requires": ["research_lab"] },
+    "power_turbine": { "requires": ["robotics_bay"] }
+  },
+  "difficulty_weights": {
+    "per_sector": 0.05,
+    "per_tower": 0.03,
+    "per_building_type": 0.03,
+    "per_repaired_building": 0.02,
+    "per_upgrade": 0.03
+  }
+}

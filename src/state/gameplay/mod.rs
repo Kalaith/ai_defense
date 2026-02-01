@@ -66,6 +66,8 @@ pub struct GameplayState {
     pub selected_tower: Option<usize>,
     pub selected_slot: Option<usize>,
     pub selected_building: Option<usize>,
+    pub selected_core: bool,
+    pub selected_upgrade: Option<String>,
 
     // Loss tracking
     pub factory_integrity: f32,
@@ -77,7 +79,8 @@ pub struct GameplayState {
     pub beacon_active: bool,
 
     pub upgrade_defs: Vec<UpgradeDef>,
-    pub expanded_sector: Option<String>,
+    pub beacon_start_difficulty_bonus: f32,
+    pub unlocks: crate::data::UnlocksDef,
 
     // Camera
     pub camera_offset: Vec2,
@@ -179,6 +182,8 @@ impl GameplayState {
             selected_tower: None,
             selected_slot: None,
             selected_building: None,
+            selected_core: false,
+            selected_upgrade: None,
 
             factory_integrity: 100.0,
 
@@ -189,7 +194,8 @@ impl GameplayState {
             beacon_active: false,
 
             upgrade_defs: data.upgrade_defs.clone(),
-            expanded_sector: None,
+            beacon_start_difficulty_bonus: 0.0,
+            unlocks: data.unlocks.clone(),
 
             camera_offset: vec2(600.0, 400.0),
             camera_zoom: 0.5,
@@ -230,6 +236,7 @@ impl GameplayState {
                 sector.integrity = saved.integrity;
             }
         }
+        self.factory.set_purchased_upgrades(save.purchased_upgrades, &self.upgrade_defs);
         self.factory.check_awakening();
 
         // Restore slot states
@@ -302,6 +309,8 @@ impl GameplayState {
         self.selected_tower = None;
         self.selected_slot = None;
         self.selected_building = None;
+        self.selected_core = false;
+        self.selected_upgrade = None;
         self.update_beacon();
     }
 
@@ -339,6 +348,7 @@ impl GameplayState {
                     integrity: s.integrity,
                 })
                 .collect(),
+            purchased_upgrades: self.factory.purchased_upgrades.clone(),
             towers: self
                 .towers
                 .iter()

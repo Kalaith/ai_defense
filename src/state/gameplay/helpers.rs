@@ -1,5 +1,7 @@
+use crate::data::BuildingBoon;
 use crate::engine::beacon::BeaconPhase;
 use crate::engine::enemy::EnemyType;
+use crate::engine::map::{BuildingState, MapBuilding};
 use crate::engine::threat::{ReactionTier, ThreatSignature};
 use crate::engine::tower::{Tower, TowerType};
 use crate::engine::wave::preview_wave;
@@ -8,6 +10,16 @@ use macroquad::rand::gen_range;
 use macroquad_toolkit::colors::dark;
 
 use super::{GameplayState, Particle};
+
+pub fn entrance_label(id: &str) -> &str {
+    match id {
+        "north_gate" => "North Gate",
+        "south_gate" => "South Gate",
+        "east_breach" => "East Breach",
+        "northwest_breach" => "Northwest Breach",
+        _ => id,
+    }
+}
 
 pub fn reaction_tier_rank(tier: &ReactionTier) -> u32 {
     match tier {
@@ -81,16 +93,125 @@ pub fn apply_upgrade_levels(tower: &mut Tower, level: u32, constants: &crate::da
 }
 
 impl GameplayState {
+    pub fn is_tower_unlocked(&self, tower_id: &str) -> bool {
+        match self.unlocks.towers.get(tower_id) {
+            Some(rule) => self.unlock_requires_met(&rule.requires),
+            None => false,
+        }
+    }
+
+    pub fn is_building_unlocked(&self, building: &MapBuilding) -> bool {
+        self.is_building_type_unlocked(&building.building_type)
+    }
+
+    pub fn is_building_type_unlocked(&self, building_type: &str) -> bool {
+        match self.unlocks.buildings.get(building_type) {
+            Some(rule) => self.unlock_requires_met(&rule.requires),
+            None => false,
+        }
+    }
+
+    fn unlock_requires_met(&self, requires: &[String]) -> bool {
+        requires.iter().all(|req| {
+            self.factory.is_sector_unlocked(req) || self.factory.has_upgrade(req)
+        })
+    }
+
+    pub fn unlocked_building_boon(&self) -> BuildingBoon {
+        let mut boon = BuildingBoon::default();
+        for building in &self.map_state.buildings {
+            if !self.is_building_unlocked(building) || !building.is_active() {
+                continue;
+            }
+            boon.scrap_per_sec += building.boon.scrap_per_sec;
+            boon.food_per_sec += building.boon.food_per_sec;
+            boon.water_per_sec += building.boon.water_per_sec;
+            boon.power_per_sec += building.boon.power_per_sec;
+        }
+        boon
+    }
+
+    pub fn unlocked_building_threat_per_sec(&self) -> f32 {
+        self.map_state
+            .buildings
+            .iter()
+            .filter(|b| self.is_building_unlocked(b) && b.is_active())
+            .map(|b| b.threat_per_sec)
+            .sum()
+    }
+
+    pub fn nearest_unlocked_building(&self, pos: Vec2) -> Option<(usize, f32)> {
+        let mut best = None;
+        let mut best_dist = self.map_state.building_interact_radius;
+        for (idx, building) in self.map_state.buildings.iter().enumerate() {
+            if !self.is_building_unlocked(building) {
+                continue;
+            }
+            let dist = (building.position - pos).length();
+            if dist <= best_dist {
+                best_dist = dist;
+                best = Some(idx);
+            }
+        }
+        best.map(|idx| (idx, best_dist))
+    }
+
+    pub fn available_upgrades(&self) -> Vec<&crate::data::UpgradeDef> {
+        let mut upgrades: Vec<&crate::data::UpgradeDef> = self
+            .upgrade_defs
+            .iter()
+            .filter(|u| self.factory.is_sector_unlocked(&u.sector))
+            .filter(|u| self.factory.has_upgrade(&u.id) || self.factory.prereqs_met(u))
+            .collect();
+        upgrades.sort_by(|a, b| a.id.cmp(&b.id));
+        upgrades
+    }
+
+    pub fn compute_beacon_start_difficulty_bonus(&self) -> f32 {
+        let unlocked_sectors = self.factory.sectors.iter().filter(|s| s.unlocked).count() as f32;
+        let unlocked_towers = self
+            .unlocks
+            .towers
+            .keys()
+            .filter(|id| self.is_tower_unlocked(id))
+            .count() as f32;
+        let unlocked_building_types = self
+            .unlocks
+            .buildings
+            .keys()
+            .filter(|t| self.is_building_type_unlocked(t))
+            .count() as f32;
+        let repaired_buildings = self
+            .map_state
+            .buildings
+            .iter()
+            .filter(|b| self.is_building_unlocked(b) && b.state != BuildingState::Broken)
+            .count() as f32;
+        let purchased_upgrades = self.factory.purchased_upgrades.len() as f32;
+        let weights = &self.unlocks.difficulty_weights;
+
+        (unlocked_sectors * weights.per_sector)
+            + (unlocked_towers * weights.per_tower)
+            + (unlocked_building_types * weights.per_building_type)
+            + (repaired_buildings * weights.per_repaired_building)
+            + (purchased_upgrades * weights.per_upgrade)
+    }
+
     pub fn build_wave_preview(&self) -> Vec<(EnemyType, usize)> {
         let next_wave = self.current_wave + 1;
         let force_commander = self.beacon_phase == BeaconPhase::TerminalHowl;
+        let budget_bonus = if self.beacon_active {
+            self.beacon_start_difficulty_bonus
+        } else {
+            0.0
+        };
         let preview = preview_wave(
             next_wave,
             &crate::data::loader::load_enemy_defs(),
             self.base_health_scale_per_wave,
             self.threat.awareness_level(),
             self.beacon_phase.tier_floor(),
-            1.0,
+            1.0 + budget_bonus,
             force_commander,
             self.constants.waves.budget_base,
             self.constants.waves.budget_per_wave,

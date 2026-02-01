@@ -114,6 +114,8 @@ impl GameplayState {
             self.selected_tower = None;
             self.selected_slot = None;
             self.selected_building = None;
+            self.selected_core = false;
+            self.selected_upgrade = None;
         }
     }
 
@@ -121,6 +123,17 @@ impl GameplayState {
         if let Some(idx) = self.selected_tower {
             if idx >= self.towers.len() {
                 self.selected_tower = None;
+            }
+        }
+        if let Some(idx) = self.selected_building {
+            let unlocked = self
+                .map_state
+                .buildings
+                .get(idx)
+                .map(|b| self.is_building_unlocked(b))
+                .unwrap_or(false);
+            if !unlocked {
+                self.selected_building = None;
             }
         }
     }
@@ -150,13 +163,14 @@ impl GameplayState {
         }
 
         let force_commander = self.beacon_phase == BeaconPhase::TerminalHowl;
+        let budget_multiplier = self.constants.waves.budget_multiplier + self.beacon_start_difficulty_bonus;
         self.wave_manager.generate_wave(
             self.current_wave,
             &load_enemy_defs(),
             self.base_health_scale_per_wave,
             self.threat.awareness_level(),
             self.beacon_phase.tier_floor(),
-            self.constants.waves.budget_multiplier,
+            budget_multiplier,
             force_commander,
             &spawn_points,
         );
@@ -225,7 +239,7 @@ impl GameplayState {
     }
 
     fn update_power(&mut self, dt: f32) {
-        let building_power = self.map_state.total_boon().power_per_sec;
+        let building_power = self.unlocked_building_boon().power_per_sec;
         let gen = self.factory.power_generation() + building_power;
         let tower_drain: f32 = self.towers.iter().filter(|t| t.is_active).map(|t| t.power_drain).sum();
         let consume = self.factory.power_consumption() + tower_drain;
@@ -259,14 +273,14 @@ impl GameplayState {
     }
 
     fn update_building_boons(&mut self, dt: f32) {
-        let boon = self.map_state.total_boon();
+        let boon = self.unlocked_building_boon();
         self.resources.scrap += boon.scrap_per_sec * dt;
         self.population.food_supply += boon.food_per_sec * dt;
     }
 
     fn update_threat(&mut self, dt: f32) {
         // Building threat contribution
-        let building_threat = self.map_state.total_threat_per_sec();
+        let building_threat = self.unlocked_building_threat_per_sec();
         if building_threat > 0.0 {
             self.threat.add_noise(building_threat * dt);
         }

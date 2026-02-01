@@ -164,6 +164,16 @@ impl Factory {
         self.difficulty_modifier += def.difficulty_cost;
     }
 
+    pub fn set_purchased_upgrades(&mut self, upgrades: Vec<String>, defs: &[UpgradeDef]) {
+        self.purchased_upgrades = upgrades;
+        self.difficulty_modifier = 0.0;
+        for upgrade_id in &self.purchased_upgrades {
+            if let Some(def) = defs.iter().find(|d| d.id == *upgrade_id) {
+                self.difficulty_modifier += def.difficulty_cost;
+            }
+        }
+    }
+
     /// Sum effect values for a given key across all purchased upgrades
     /// whose sector is currently active.
     pub fn upgrade_effect(&self, key: &str, defs: &[UpgradeDef]) -> f32 {

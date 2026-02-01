@@ -3,8 +3,9 @@ use crate::engine::enemy::EnemyType;
 use crate::engine::map::{BuildingState, SlotState, TraceNode};
 use macroquad::prelude::*;
 use macroquad_toolkit::colors::dark;
+use macroquad_toolkit::ui::button;
 
-use super::helpers::{beacon_color, enemy_label};
+use super::helpers::{beacon_color, enemy_label, entrance_label};
 use super::GameplayState;
 
 impl GameplayState {
@@ -37,6 +38,7 @@ impl GameplayState {
         self.draw_build_panel(data);
         self.draw_sector_panel();
         self.draw_slot_panel(data);
+        self.draw_hover_tooltip();
         self.handle_map_click(data);
         self.draw_selected_tower_panel(data);
     }
@@ -132,6 +134,9 @@ impl GameplayState {
 
         // 6. Buildings
         for (idx, building) in self.map_state.buildings.iter().enumerate() {
+            if !self.is_building_unlocked(building) {
+                continue;
+            }
             let selected = self.selected_building == Some(idx);
             let (bg_color, border_color) = match building.state {
                 BuildingState::Broken => (Color::new(0.3, 0.05, 0.05, 0.8), Color::new(0.5, 0.1, 0.1, 0.8)),
@@ -274,7 +279,7 @@ impl GameplayState {
         let mut x = self.constants.ui.build_panel_w + 10.0;
         let spacing = 140.0;
 
-        let gen = self.factory.power_generation() + self.map_state.total_boon().power_per_sec;
+        let gen = self.factory.power_generation() + self.unlocked_building_boon().power_per_sec;
         let tower_drain: f32 = self.towers.iter().filter(|t| t.is_active).map(|t| t.power_drain).sum();
         let net_rate = gen - self.factory.power_consumption() - tower_drain;
         let power_text = if net_rate >= 0.0 {
@@ -407,14 +412,110 @@ impl GameplayState {
         }
     }
 
-    fn draw_slot_panel(&self, _data: &GameData) {
+    fn draw_slot_panel(&mut self, _data: &GameData) {
         // Show context info at bottom-center for selected slot or building
         let panel_w = 300.0;
         let panel_h = 80.0;
         let panel_x = (screen_width() - panel_w) / 2.0;
         let panel_y = screen_height() - panel_h - 10.0;
 
-        if let Some(idx) = self.selected_slot {
+        if self.selected_core {
+            draw_rectangle(panel_x, panel_y, panel_w, panel_h, Color::new(0.08, 0.08, 0.1, 0.9));
+            draw_rectangle_lines(panel_x, panel_y, panel_w, panel_h, 1.0, dark::TEXT_DIM);
+
+            let text_x = panel_x + 10.0;
+            let mut text_y = panel_y + 18.0;
+            draw_text("Factory Console", text_x, text_y, 14.0, dark::TEXT_BRIGHT);
+            text_y += 16.0;
+            draw_text("Upgrades available", text_x, text_y, 12.0, dark::TEXT_DIM);
+
+            let upgrades: Vec<_> = self.available_upgrades().into_iter().collect();
+            let mut upgrade_click: Option<String> = None;
+            let mut upgrade_purchase: Option<String> = None;
+
+            let mut row_y = panel_y - 40.0;
+            for upg in &upgrades {
+                row_y -= 36.0;
+                if row_y < panel_y - 160.0 {
+                    break;
+                }
+                let purchased = self.factory.has_upgrade(&upg.id);
+                let selected = self.selected_upgrade.as_deref() == Some(&upg.id);
+                let row_x = panel_x - 10.0;
+                let row_w = panel_w + 20.0;
+                let row_h = 32.0;
+                let bg = if selected {
+                    Color::new(0.12, 0.14, 0.2, 0.95)
+                } else if purchased {
+                    Color::new(0.12, 0.18, 0.12, 0.9)
+                } else {
+                    Color::new(0.1, 0.1, 0.12, 0.85)
+                };
+                draw_rectangle(row_x, row_y, row_w, row_h, bg);
+                draw_rectangle_lines(row_x, row_y, row_w, row_h, 1.0, dark::TEXT_DIM);
+
+                let name = if purchased { format!("[x] {}", upg.name) } else { upg.name.clone() };
+                draw_text(&name, row_x + 8.0, row_y + 14.0, 12.0, dark::TEXT);
+                draw_text(&upg.description, row_x + 8.0, row_y + 26.0, 10.0, dark::TEXT_DIM);
+
+                let (mx, my) = mouse_position();
+                if mx >= row_x && mx <= row_x + row_w && my >= row_y && my <= row_y + row_h {
+                    if is_mouse_button_pressed(MouseButton::Left) {
+                        upgrade_click = Some(upg.id.clone());
+                    }
+                }
+            }
+
+            if let Some(selected_id) = self.selected_upgrade.clone() {
+                let selected = self.upgrade_defs.iter().find(|u| u.id == selected_id);
+                if let Some(selected) = selected {
+                    let can_afford = self.factory.can_purchase(selected, self.resources.scrap, self.resources.power);
+                    let purchased = self.factory.has_upgrade(&selected.id);
+                let detail_x = panel_x + 10.0;
+                let mut detail_y = panel_y + 40.0;
+                draw_text(&selected.name, detail_x, detail_y, 14.0, dark::TEXT_BRIGHT);
+                detail_y += 16.0;
+                draw_text(&selected.description, detail_x, detail_y, 12.0, dark::TEXT_DIM);
+                detail_y += 14.0;
+                draw_text(
+                    &format!("Cost: {}s / {}p", selected.cost_scrap as i32, selected.cost_power as i32),
+                    detail_x,
+                    detail_y,
+                    12.0,
+                    dark::WARNING,
+                );
+                detail_y += 14.0;
+                draw_text(
+                    &format!("Difficulty: +{:.0}", selected.difficulty_cost),
+                    detail_x,
+                    detail_y,
+                    12.0,
+                    dark::NEGATIVE,
+                );
+
+                if !purchased {
+                    let btn_w = 70.0;
+                    let btn_h = 22.0;
+                    let btn_x = panel_x + panel_w - btn_w - 10.0;
+                    let btn_y = panel_y + panel_h - btn_h - 8.0;
+                    if can_afford {
+                        if button(btn_x, btn_y, btn_w, btn_h, "Unlock") {
+                            upgrade_purchase = Some(selected.id.clone());
+                        }
+                    } else {
+                        draw_text("Need resources", btn_x - 10.0, btn_y - 6.0, 10.0, dark::TEXT_DIM);
+                    }
+                }
+                }
+            }
+
+            if let Some(id) = upgrade_click {
+                self.selected_upgrade = Some(id);
+            }
+            if let Some(id) = upgrade_purchase {
+                self.purchase_upgrade(&id);
+            }
+        } else if let Some(idx) = self.selected_slot {
             if let Some(slot) = self.map_state.slots.get(idx) {
                 draw_rectangle(panel_x, panel_y, panel_w, panel_h, Color::new(0.08, 0.08, 0.1, 0.9));
                 draw_rectangle_lines(panel_x, panel_y, panel_w, panel_h, 1.0, dark::TEXT_DIM);
@@ -430,12 +531,34 @@ impl GameplayState {
                         let hint = if slot.opens_entrance.is_some() { " [Opens path!]" } else { "" };
                         draw_text(&format!("Debris - Clear: {:.0} scrap{}", slot.clear_cost, hint), text_x, text_y, 12.0, dark::WARNING);
                         text_y += 14.0;
-                        draw_text("Click to clear debris", text_x, text_y, 11.0, dark::TEXT_DIM);
+                        let btn_label = format!("Clear ({:.0})", slot.clear_cost);
+                        let btn_w = 110.0;
+                        let btn_h = 22.0;
+                        let btn_x = panel_x + panel_w - btn_w - 10.0;
+                        let btn_y = panel_y + panel_h - btn_h - 8.0;
+                        if self.resources.scrap >= slot.clear_cost {
+                            if button(btn_x, btn_y, btn_w, btn_h, &btn_label) {
+                                self.clear_slot(idx);
+                            }
+                        } else {
+                            draw_text("Insufficient scrap", text_x, text_y, 11.0, dark::TEXT_DIM);
+                        }
                     }
                     SlotState::Cleared => {
                         draw_text(&format!("Cleared - Power: {:.0} scrap", slot.power_cost), text_x, text_y, 12.0, dark::ACCENT);
                         text_y += 14.0;
-                        draw_text("Click to power slot", text_x, text_y, 11.0, dark::TEXT_DIM);
+                        let btn_label = format!("Power ({:.0})", slot.power_cost);
+                        let btn_w = 110.0;
+                        let btn_h = 22.0;
+                        let btn_x = panel_x + panel_w - btn_w - 10.0;
+                        let btn_y = panel_y + panel_h - btn_h - 8.0;
+                        if self.resources.scrap >= slot.power_cost {
+                            if button(btn_x, btn_y, btn_w, btn_h, &btn_label) {
+                                self.power_slot(idx);
+                            }
+                        } else {
+                            draw_text("Insufficient scrap", text_x, text_y, 11.0, dark::TEXT_DIM);
+                        }
                     }
                     SlotState::Powered => {
                         if slot.tower_index.is_some() {
@@ -462,9 +585,29 @@ impl GameplayState {
                 match building.state {
                     BuildingState::Broken => {
                         draw_text(&format!("Broken - Repair: {:.0} scrap", building.repair_cost), text_x, text_y, 12.0, dark::NEGATIVE);
+                        let btn_label = format!("Repair ({:.0})", building.repair_cost);
+                        let btn_w = 110.0;
+                        let btn_h = 22.0;
+                        let btn_x = panel_x + panel_w - btn_w - 10.0;
+                        let btn_y = panel_y + panel_h - btn_h - 8.0;
+                        if self.resources.scrap >= building.repair_cost {
+                            if button(btn_x, btn_y, btn_w, btn_h, &btn_label) {
+                                self.repair_building(idx);
+                            }
+                        }
                     }
                     BuildingState::Repaired => {
                         draw_text(&format!("Repaired - Power: {:.0} scrap", building.power_cost), text_x, text_y, 12.0, dark::WARNING);
+                        let btn_label = format!("Power ({:.0})", building.power_cost);
+                        let btn_w = 110.0;
+                        let btn_h = 22.0;
+                        let btn_x = panel_x + panel_w - btn_w - 10.0;
+                        let btn_y = panel_y + panel_h - btn_h - 8.0;
+                        if self.resources.scrap >= building.power_cost {
+                            if button(btn_x, btn_y, btn_w, btn_h, &btn_label) {
+                                self.power_building(idx);
+                            }
+                        }
                     }
                     BuildingState::Powered => {
                         let b = &building.boon;
@@ -483,5 +626,44 @@ impl GameplayState {
                 }
             }
         }
+    }
+
+    fn draw_hover_tooltip(&self) {
+        let (mx, my) = mouse_position();
+        let world_mouse = self.screen_to_world(vec2(mx, my));
+
+        let mut tooltip = None;
+
+        let core_dist = (world_mouse - self.map_state.factory_core).length();
+        if core_dist <= 26.0 {
+            let next_upg = self
+                .available_upgrades()
+                .into_iter()
+                .find(|u| !self.factory.has_upgrade(&u.id));
+            if let Some(upg) = next_upg {
+                tooltip = Some(format!("{} - {} scrap", upg.name, upg.cost_scrap as i32));
+            } else {
+                tooltip = Some("Factory Console".to_string());
+            }
+        } else if let Some((slot_idx, _)) = self.map_state.nearest_slot(world_mouse) {
+            let slot = &self.map_state.slots[slot_idx];
+            if let Some(ref entrance) = slot.opens_entrance {
+                tooltip = Some(format!("Unlocks {}", entrance_label(entrance)));
+            }
+        } else if let Some((b_idx, _)) = self.nearest_unlocked_building(world_mouse) {
+            let building = &self.map_state.buildings[b_idx];
+            if let Some(ref entrance) = building.opens_entrance {
+                tooltip = Some(format!("Unlocks {}", entrance_label(entrance)));
+            }
+        }
+
+        let Some(text) = tooltip else { return; };
+        let w = self.constants.ui.tooltip_w;
+        let h = self.constants.ui.tooltip_h;
+        let x = (mx + 12.0).clamp(10.0, screen_width() - w - 10.0);
+        let y = (my + 12.0).clamp(10.0, screen_height() - h - 10.0);
+        draw_rectangle(x, y, w, h, Color::new(0.08, 0.08, 0.1, 0.9));
+        draw_rectangle_lines(x, y, w, h, 1.0, dark::TEXT_DIM);
+        draw_text(&text, x + 8.0, y + 16.0, 12.0, dark::TEXT);
     }
 }

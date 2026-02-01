@@ -11,6 +11,7 @@ pub struct GameData {
     pub enemy_defs: Vec<EnemyDef>,
     pub sector_defs: Vec<SectorData>,
     pub upgrade_defs: Vec<UpgradeDef>,
+    pub unlocks: UnlocksDef,
     pub map_def: MapDef,
 }
 
@@ -21,6 +22,7 @@ impl GameData {
         let enemy_defs = loader::load_enemy_defs();
         let sector_defs = loader::load_sector_defs();
         let upgrade_defs = loader::load_upgrade_defs();
+        let unlocks = loader::load_unlocks();
         let map_def = loader::load_map_def();
 
         Self {
@@ -29,6 +31,7 @@ impl GameData {
             enemy_defs,
             sector_defs,
             upgrade_defs,
+            unlocks,
             map_def,
         }
     }
@@ -355,4 +358,39 @@ pub struct UpgradeDef {
     pub cost_power: f32,
     pub difficulty_cost: f32,
     pub effects: HashMap<String, f32>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct UnlocksDef {
+    pub towers: HashMap<String, UnlockRule>,
+    pub buildings: HashMap<String, UnlockRule>,
+    #[serde(default)]
+    pub difficulty_weights: UnlockDifficultyWeights,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct UnlockRule {
+    #[serde(default)]
+    pub requires: Vec<String>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct UnlockDifficultyWeights {
+    pub per_sector: f32,
+    pub per_tower: f32,
+    pub per_building_type: f32,
+    pub per_repaired_building: f32,
+    pub per_upgrade: f32,
+}
+
+impl Default for UnlockDifficultyWeights {
+    fn default() -> Self {
+        Self {
+            per_sector: 0.05,
+            per_tower: 0.03,
+            per_building_type: 0.03,
+            per_repaired_building: 0.02,
+            per_upgrade: 0.03,
+        }
+    }
 }

@@ -10,6 +10,8 @@ pub struct SaveData {
     pub population: SavedPopulation,
     pub threat: SavedThreat,
     pub sectors: Vec<SavedSector>,
+    #[serde(default)]
+    pub purchased_upgrades: Vec<String>,
     pub towers: Vec<SavedTower>,
     #[serde(default)]
     pub slots: Vec<SavedSlot>,

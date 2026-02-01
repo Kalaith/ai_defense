@@ -11,11 +11,17 @@ use super::GameplayState;
 
 impl GameplayState {
     pub fn draw_build_panel(&mut self, data: &GameData) {
+        let unlocked_towers: Vec<_> = data
+            .tower_defs
+            .iter()
+            .filter(|t| self.is_tower_unlocked(&t.id))
+            .cloned()
+            .collect();
         let build_clicked = ui::draw_build_panel(
             0.0,
             self.constants.ui.hud_height,
             self.constants.ui.build_panel_w,
-            &data.tower_defs,
+            &unlocked_towers,
             self.resources.scrap,
             self.resources.power,
         );
@@ -32,8 +38,6 @@ impl GameplayState {
             self.constants.ui.hud_height,
             self.constants.ui.sector_panel_w,
             &self.factory,
-            &self.upgrade_defs,
-            &self.expanded_sector,
             self.resources.scrap,
             power_gen,
         );
@@ -41,16 +45,6 @@ impl GameplayState {
             match action {
                 SectorPanelAction::Unlock(sector_id) => self.unlock_sector(&sector_id),
                 SectorPanelAction::Repair(sector_id) => self.repair_sector(&sector_id),
-                SectorPanelAction::ToggleExpand(sector_id) => {
-                    if self.expanded_sector.as_deref() == Some(&sector_id) {
-                        self.expanded_sector = None;
-                    } else {
-                        self.expanded_sector = Some(sector_id);
-                    }
-                }
-                SectorPanelAction::PurchaseUpgrade(upgrade_id) => {
-                    self.purchase_upgrade(&upgrade_id);
-                }
             }
         }
     }
@@ -196,49 +190,32 @@ impl GameplayState {
         let panel_x = (screen_width() - panel_w) / 2.0;
         let panel_y = screen_height() - panel_h - 10.0;
         if mx >= panel_x && mx <= panel_x + panel_w && my >= panel_y && my <= panel_y + panel_h {
-            // Check for slot/building action buttons
-            if let Some(idx) = self.selected_slot {
-                if let Some(slot) = self.map_state.slots.get(idx).map(|s| (s.state, s.clear_cost, s.power_cost)) {
-                    match slot.0 {
-                        SlotState::Debris => {
-                            if self.resources.scrap >= slot.1 {
-                                self.clear_slot(idx);
-                            }
-                            return;
-                        }
-                        SlotState::Cleared => {
-                            if self.resources.scrap >= slot.2 {
-                                self.power_slot(idx);
-                            }
-                            return;
-                        }
-                        _ => {}
-                    }
-                }
+            return;
+        }
+        if self.selected_core {
+            let core_panel_x = panel_x - 10.0;
+            let core_panel_w = panel_w + 20.0;
+            let core_panel_top = panel_y - 160.0;
+            if mx >= core_panel_x && mx <= core_panel_x + core_panel_w && my >= core_panel_top && my <= panel_y + panel_h {
+                return;
             }
-            if let Some(idx) = self.selected_building {
-                if let Some(building) = self.map_state.buildings.get(idx).map(|b| (b.state, b.repair_cost, b.power_cost)) {
-                    match building.0 {
-                        BuildingState::Broken => {
-                            if self.resources.scrap >= building.1 {
-                                self.repair_building(idx);
-                            }
-                            return;
-                        }
-                        BuildingState::Repaired => {
-                            if self.resources.scrap >= building.2 {
-                                self.power_building(idx);
-                            }
-                            return;
-                        }
-                        _ => {}
-                    }
+        }
+
+        let world_pos = self.screen_to_world(vec2(mx, my));
+
+        let core_dist = (world_pos - self.map_state.factory_core).length();
+        if core_dist <= 26.0 {
+            self.selected_core = true;
+            self.selected_slot = None;
+            self.selected_building = None;
+            self.selected_tower = None;
+            if self.selected_upgrade.is_none() {
+                if let Some(upg) = self.available_upgrades().into_iter().find(|u| !self.factory.has_upgrade(&u.id)) {
+                    self.selected_upgrade = Some(upg.id.clone());
                 }
             }
             return;
         }
-
-        let world_pos = self.screen_to_world(vec2(mx, my));
 
         // If placing tower and clicked a powered empty slot -> place tower
         if let Some(ref tower_id) = self.placing_tower.clone() {
@@ -253,7 +230,7 @@ impl GameplayState {
 
         // Try to find nearest slot or building for selection
         let slot_result = self.map_state.nearest_slot(world_pos);
-        let building_result = self.map_state.nearest_building(world_pos);
+        let building_result = self.nearest_unlocked_building(world_pos);
 
         // Pick the closer of slot vs building
         match (slot_result, building_result) {
@@ -262,31 +239,41 @@ impl GameplayState {
                     self.selected_slot = Some(si);
                     self.selected_building = None;
                     self.selected_tower = self.map_state.slots[si].tower_index;
+                    self.selected_core = false;
+                    self.selected_upgrade = None;
                 } else {
                     self.selected_building = Some(bi);
                     self.selected_slot = None;
                     self.selected_tower = None;
+                    self.selected_core = false;
+                    self.selected_upgrade = None;
                 }
             }
             (Some((si, _)), None) => {
                 self.selected_slot = Some(si);
                 self.selected_building = None;
                 self.selected_tower = self.map_state.slots[si].tower_index;
+                self.selected_core = false;
+                self.selected_upgrade = None;
             }
             (None, Some((bi, _))) => {
                 self.selected_building = Some(bi);
                 self.selected_slot = None;
                 self.selected_tower = None;
+                self.selected_core = false;
+                self.selected_upgrade = None;
             }
             (None, None) => {
                 self.selected_slot = None;
                 self.selected_building = None;
                 self.selected_tower = None;
+                self.selected_core = false;
+                self.selected_upgrade = None;
             }
         }
     }
 
-    fn clear_slot(&mut self, idx: usize) {
+    pub(crate) fn clear_slot(&mut self, idx: usize) {
         let cost = self.map_state.slots[idx].clear_cost;
         if self.resources.scrap < cost {
             return;
@@ -298,7 +285,7 @@ impl GameplayState {
         }
     }
 
-    fn power_slot(&mut self, idx: usize) {
+    pub(crate) fn power_slot(&mut self, idx: usize) {
         let cost = self.map_state.slots[idx].power_cost;
         if self.resources.scrap < cost {
             return;
@@ -311,6 +298,9 @@ impl GameplayState {
     }
 
     fn try_place_tower_on_slot(&mut self, slot_idx: usize, tower_id: &str, data: &GameData) {
+        if !self.is_tower_unlocked(tower_id) {
+            return;
+        }
         let slot = &self.map_state.slots[slot_idx];
         if slot.state != SlotState::Powered || slot.tower_index.is_some() {
             return;
@@ -359,7 +349,16 @@ impl GameplayState {
         self.selected_tower = Some(tower_idx);
     }
 
-    fn repair_building(&mut self, idx: usize) {
+    pub(crate) fn repair_building(&mut self, idx: usize) {
+        if self
+            .map_state
+            .buildings
+            .get(idx)
+            .map(|b| !self.is_building_unlocked(b))
+            .unwrap_or(true)
+        {
+            return;
+        }
         let cost = self.map_state.buildings[idx].repair_cost;
         if self.resources.scrap < cost {
             return;
@@ -369,7 +368,16 @@ impl GameplayState {
         self.push_notification(format!("{} repaired", self.map_state.buildings[idx].id));
     }
 
-    fn power_building(&mut self, idx: usize) {
+    pub(crate) fn power_building(&mut self, idx: usize) {
+        if self
+            .map_state
+            .buildings
+            .get(idx)
+            .map(|b| !self.is_building_unlocked(b))
+            .unwrap_or(true)
+        {
+            return;
+        }
         let cost = self.map_state.buildings[idx].power_cost;
         if self.resources.scrap < cost {
             return;
@@ -382,7 +390,7 @@ impl GameplayState {
         }
     }
 
-    fn purchase_upgrade(&mut self, upgrade_id: &str) {
+    pub(crate) fn purchase_upgrade(&mut self, upgrade_id: &str) {
         let def = self.upgrade_defs.iter().find(|u| u.id == upgrade_id).cloned();
         if let Some(def) = def {
             if self.factory.can_purchase(&def, self.resources.scrap, self.resources.power) {
@@ -425,6 +433,7 @@ impl GameplayState {
         self.beacon_active = true;
         self.between_waves = true;
         self.wave_timer = self.constants.gameplay.beacon_start_delay;
+        self.beacon_start_difficulty_bonus = self.compute_beacon_start_difficulty_bonus();
         if self.scavengers_sent == 0 {
             self.scavengers_out = self.constants.scavenger.initial_scavengers;
             self.scavengers_sent = self.constants.scavenger.initial_scavengers;
@@ -435,6 +444,7 @@ impl GameplayState {
     fn trigger_shutdown(&mut self) {
         self.shutdown_triggered = true;
         self.beacon_active = false;
+        self.beacon_start_difficulty_bonus = 0.0;
         self.scavenger_recall_active = true;
         self.scavenger_recall_timer = 0.0;
         self.wave_manager.spawn_queue.clear();
