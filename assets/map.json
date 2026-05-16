@@ -1,90 +1,815 @@
 {
-  "map_size": [3440, 1440],
-  "factory_core": [3000, 720],
+  "map_size": [
+    3440,
+    1440
+  ],
+  "factory_core": [
+    3000,
+    720
+  ],
   "slot_interact_radius": 26.0,
   "building_interact_radius": 30.0,
   "slots": [
-    { "id": "slot_01", "x": 240.0, "y": 320.0, "initial_state": "powered", "clear_cost": 0.0, "power_cost": 0.0, "opens_entrance": null },
-    { "id": "slot_02", "x": 320.0, "y": 320.0, "initial_state": "powered", "clear_cost": 0.0, "power_cost": 0.0, "opens_entrance": null },
-    { "id": "slot_03", "x": 360.0, "y": 320.0, "initial_state": "powered", "clear_cost": 0.0, "power_cost": 0.0, "opens_entrance": null },
-    { "id": "slot_04", "x": 440.0, "y": 170.0, "initial_state": "powered", "clear_cost": 0.0, "power_cost": 0.0, "opens_entrance": null },
-    { "id": "slot_05", "x": 520.0, "y": 200.0, "initial_state": "powered", "clear_cost": 0.0, "power_cost": 0.0, "opens_entrance": null },
-    { "id": "slot_06", "x": 520.0, "y": 320.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 20.0, "opens_entrance": null },
-    { "id": "slot_07", "x": 520.0, "y": 360.0, "initial_state": "powered", "clear_cost": 0.0, "power_cost": 0.0, "opens_entrance": null },
-    { "id": "slot_08", "x": 560.0, "y": 360.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 20.0, "opens_entrance": null },
-    { "id": "slot_09", "x": 600.0, "y": 550.0, "initial_state": "powered", "clear_cost": 0.0, "power_cost": 0.0, "opens_entrance": null },
-    { "id": "slot_10", "x": 640.0, "y": 550.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 20.0, "opens_entrance": null },
-    { "id": "slot_11", "x": 700.0, "y": 520.0, "initial_state": "powered", "clear_cost": 0.0, "power_cost": 0.0, "opens_entrance": null },
-    { "id": "slot_12", "x": 760.0, "y": 520.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 20.0, "opens_entrance": null },
-    { "id": "slot_13", "x": 700.0, "y": 360.0, "initial_state": "powered", "clear_cost": 0.0, "power_cost": 0.0, "opens_entrance": null },
-    { "id": "slot_14", "x": 760.0, "y": 360.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 20.0, "opens_entrance": null },
-    { "id": "slot_15", "x": 800.0, "y": 250.0, "initial_state": "powered", "clear_cost": 0.0, "power_cost": 0.0, "opens_entrance": null },
-    { "id": "slot_16", "x": 870.0, "y": 320.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 20.0, "opens_entrance": null },
-    { "id": "slot_17", "x": 880.0, "y": 360.0, "initial_state": "powered", "clear_cost": 0.0, "power_cost": 0.0, "opens_entrance": null },
-    { "id": "slot_18", "x": 920.0, "y": 440.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 20.0, "opens_entrance": null },
-    { "id": "slot_19", "x": 760.0, "y": 440.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 20.0, "opens_entrance": null },
-    { "id": "slot_20", "x": 710.0, "y": 440.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 20.0, "opens_entrance": null },
-    { "id": "slot_21", "x": 360.0, "y": 120.0, "initial_state": "debris", "clear_cost": 15.0, "power_cost": 25.0, "opens_entrance": "northwest_breach" },
-    { "id": "slot_22", "x": 440.0, "y": 120.0, "initial_state": "debris", "clear_cost": 15.0, "power_cost": 25.0, "opens_entrance": null },
-    { "id": "slot_23", "x": 520.0, "y": 90.0, "initial_state": "debris", "clear_cost": 15.0, "power_cost": 25.0, "opens_entrance": "north_gate" },
-    { "id": "slot_24", "x": 600.0, "y": 90.0, "initial_state": "debris", "clear_cost": 15.0, "power_cost": 25.0, "opens_entrance": null },
-    { "id": "slot_25", "x": 360.0, "y": 160.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 20.0, "opens_entrance": null },
-    { "id": "slot_26", "x": 440.0, "y": 160.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 20.0, "opens_entrance": null },
-    { "id": "slot_27", "x": 520.0, "y": 160.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 20.0, "opens_entrance": null },
-    { "id": "slot_28", "x": 600.0, "y": 160.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 20.0, "opens_entrance": null },
-    { "id": "slot_29", "x": 680.0, "y": 160.0, "initial_state": "debris", "clear_cost": 15.0, "power_cost": 25.0, "opens_entrance": null },
-    { "id": "slot_30", "x": 760.0, "y": 160.0, "initial_state": "debris", "clear_cost": 15.0, "power_cost": 25.0, "opens_entrance": null },
-    { "id": "slot_31", "x": 760.0, "y": 200.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 20.0, "opens_entrance": null },
-    { "id": "slot_32", "x": 600.0, "y": 240.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 20.0, "opens_entrance": null },
-    { "id": "slot_33", "x": 520.0, "y": 240.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 20.0, "opens_entrance": null },
-    { "id": "slot_34", "x": 440.0, "y": 240.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 20.0, "opens_entrance": null },
-    { "id": "slot_35", "x": 360.0, "y": 520.0, "initial_state": "debris", "clear_cost": 15.0, "power_cost": 25.0, "opens_entrance": null },
-    { "id": "slot_36", "x": 400.0, "y": 520.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 20.0, "opens_entrance": null },
-    { "id": "slot_37", "x": 440.0, "y": 560.0, "initial_state": "debris", "clear_cost": 15.0, "power_cost": 25.0, "opens_entrance": null },
-    { "id": "slot_38", "x": 520.0, "y": 560.0, "initial_state": "debris", "clear_cost": 15.0, "power_cost": 25.0, "opens_entrance": null },
-    { "id": "slot_39", "x": 600.0, "y": 560.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 20.0, "opens_entrance": null },
-    { "id": "slot_40", "x": 680.0, "y": 560.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 20.0, "opens_entrance": null },
-    { "id": "slot_41", "x": 760.0, "y": 560.0, "initial_state": "debris", "clear_cost": 15.0, "power_cost": 25.0, "opens_entrance": "south_gate" },
-    { "id": "slot_42", "x": 840.0, "y": 560.0, "initial_state": "debris", "clear_cost": 15.0, "power_cost": 25.0, "opens_entrance": null },
-    { "id": "slot_43", "x": 920.0, "y": 520.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 20.0, "opens_entrance": null },
-    { "id": "slot_44", "x": 360.0, "y": 440.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 20.0, "opens_entrance": null },
-    { "id": "slot_45", "x": 240.0, "y": 440.0, "initial_state": "debris", "clear_cost": 15.0, "power_cost": 25.0, "opens_entrance": null },
-    { "id": "slot_46", "x": 200.0, "y": 320.0, "initial_state": "debris", "clear_cost": 15.0, "power_cost": 25.0, "opens_entrance": null },
-    { "id": "slot_47", "x": 240.0, "y": 280.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 20.0, "opens_entrance": null },
-    { "id": "slot_48", "x": 320.0, "y": 240.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 20.0, "opens_entrance": null },
-
-    { "id": "slot_49", "x": 1100.0, "y": 240.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 25.0, "opens_entrance": null },
-    { "id": "slot_50", "x": 1180.0, "y": 240.0, "initial_state": "debris", "clear_cost": 20.0, "power_cost": 30.0, "opens_entrance": null },
-    { "id": "slot_51", "x": 1260.0, "y": 240.0, "initial_state": "debris", "clear_cost": 20.0, "power_cost": 30.0, "opens_entrance": null },
-    { "id": "slot_52", "x": 1340.0, "y": 240.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 25.0, "opens_entrance": null },
-    { "id": "slot_53", "x": 1100.0, "y": 420.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 25.0, "opens_entrance": null },
-    { "id": "slot_54", "x": 1180.0, "y": 420.0, "initial_state": "debris", "clear_cost": 20.0, "power_cost": 30.0, "opens_entrance": null },
-    { "id": "slot_55", "x": 1260.0, "y": 420.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 25.0, "opens_entrance": null },
-    { "id": "slot_56", "x": 1340.0, "y": 420.0, "initial_state": "debris", "clear_cost": 20.0, "power_cost": 30.0, "opens_entrance": null },
-    { "id": "slot_57", "x": 1500.0, "y": 600.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 25.0, "opens_entrance": null },
-    { "id": "slot_58", "x": 1580.0, "y": 600.0, "initial_state": "debris", "clear_cost": 20.0, "power_cost": 30.0, "opens_entrance": null },
-    { "id": "slot_59", "x": 1660.0, "y": 600.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 25.0, "opens_entrance": null },
-    { "id": "slot_60", "x": 1740.0, "y": 600.0, "initial_state": "debris", "clear_cost": 20.0, "power_cost": 30.0, "opens_entrance": null },
-    { "id": "slot_61", "x": 1820.0, "y": 600.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 25.0, "opens_entrance": null },
-    { "id": "slot_62", "x": 1900.0, "y": 600.0, "initial_state": "debris", "clear_cost": 20.0, "power_cost": 30.0, "opens_entrance": null },
-    { "id": "slot_63", "x": 2100.0, "y": 420.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 30.0, "opens_entrance": null },
-    { "id": "slot_64", "x": 2180.0, "y": 420.0, "initial_state": "debris", "clear_cost": 25.0, "power_cost": 35.0, "opens_entrance": null },
-    { "id": "slot_65", "x": 2260.0, "y": 420.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 30.0, "opens_entrance": null },
-    { "id": "slot_66", "x": 2340.0, "y": 420.0, "initial_state": "debris", "clear_cost": 25.0, "power_cost": 35.0, "opens_entrance": null },
-    { "id": "slot_67", "x": 2420.0, "y": 420.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 30.0, "opens_entrance": null },
-    { "id": "slot_68", "x": 2600.0, "y": 520.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 35.0, "opens_entrance": null },
-    { "id": "slot_69", "x": 2680.0, "y": 520.0, "initial_state": "debris", "clear_cost": 25.0, "power_cost": 40.0, "opens_entrance": null },
-    { "id": "slot_70", "x": 2760.0, "y": 520.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 35.0, "opens_entrance": null },
-    { "id": "slot_71", "x": 2840.0, "y": 520.0, "initial_state": "debris", "clear_cost": 25.0, "power_cost": 40.0, "opens_entrance": null },
-    { "id": "slot_72", "x": 2920.0, "y": 520.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 35.0, "opens_entrance": null },
-    { "id": "slot_73", "x": 2680.0, "y": 720.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 35.0, "opens_entrance": null },
-    { "id": "slot_74", "x": 2760.0, "y": 720.0, "initial_state": "debris", "clear_cost": 25.0, "power_cost": 40.0, "opens_entrance": null },
-    { "id": "slot_75", "x": 2840.0, "y": 720.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 35.0, "opens_entrance": null },
-    { "id": "slot_76", "x": 2920.0, "y": 720.0, "initial_state": "debris", "clear_cost": 25.0, "power_cost": 40.0, "opens_entrance": null },
-    { "id": "slot_77", "x": 2600.0, "y": 860.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 35.0, "opens_entrance": null },
-    { "id": "slot_78", "x": 2680.0, "y": 860.0, "initial_state": "debris", "clear_cost": 25.0, "power_cost": 40.0, "opens_entrance": null },
-    { "id": "slot_79", "x": 2760.0, "y": 860.0, "initial_state": "cleared", "clear_cost": 0.0, "power_cost": 35.0, "opens_entrance": null },
-    { "id": "slot_80", "x": 2920.0, "y": 860.0, "initial_state": "debris", "clear_cost": 25.0, "power_cost": 40.0, "opens_entrance": "east_breach" }
+    {
+      "id": "slot_01",
+      "x": 240.0,
+      "y": 320.0,
+      "initial_state": "powered",
+      "clear_cost": 0.0,
+      "power_cost": 0.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_02",
+      "x": 320.0,
+      "y": 320.0,
+      "initial_state": "powered",
+      "clear_cost": 0.0,
+      "power_cost": 0.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_03",
+      "x": 360.0,
+      "y": 320.0,
+      "initial_state": "powered",
+      "clear_cost": 0.0,
+      "power_cost": 0.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_04",
+      "x": 440.0,
+      "y": 170.0,
+      "initial_state": "powered",
+      "clear_cost": 0.0,
+      "power_cost": 0.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_05",
+      "x": 520.0,
+      "y": 200.0,
+      "initial_state": "powered",
+      "clear_cost": 0.0,
+      "power_cost": 0.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_06",
+      "x": 520.0,
+      "y": 320.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 20.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_07",
+      "x": 520.0,
+      "y": 360.0,
+      "initial_state": "powered",
+      "clear_cost": 0.0,
+      "power_cost": 0.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_08",
+      "x": 560.0,
+      "y": 360.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 20.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_09",
+      "x": 600.0,
+      "y": 550.0,
+      "initial_state": "powered",
+      "clear_cost": 0.0,
+      "power_cost": 0.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_10",
+      "x": 640.0,
+      "y": 550.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 20.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_11",
+      "x": 700.0,
+      "y": 520.0,
+      "initial_state": "powered",
+      "clear_cost": 0.0,
+      "power_cost": 0.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_12",
+      "x": 760.0,
+      "y": 520.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 20.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_13",
+      "x": 700.0,
+      "y": 360.0,
+      "initial_state": "powered",
+      "clear_cost": 0.0,
+      "power_cost": 0.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_14",
+      "x": 760.0,
+      "y": 360.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 20.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_15",
+      "x": 800.0,
+      "y": 250.0,
+      "initial_state": "powered",
+      "clear_cost": 0.0,
+      "power_cost": 0.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_16",
+      "x": 870.0,
+      "y": 320.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 20.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_17",
+      "x": 880.0,
+      "y": 360.0,
+      "initial_state": "powered",
+      "clear_cost": 0.0,
+      "power_cost": 0.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_18",
+      "x": 920.0,
+      "y": 440.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 20.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_19",
+      "x": 760.0,
+      "y": 440.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 20.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_20",
+      "x": 710.0,
+      "y": 440.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 20.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_21",
+      "x": 360.0,
+      "y": 120.0,
+      "initial_state": "debris",
+      "clear_cost": 15.0,
+      "power_cost": 25.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_22",
+      "x": 440.0,
+      "y": 120.0,
+      "initial_state": "debris",
+      "clear_cost": 15.0,
+      "power_cost": 25.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_23",
+      "x": 520.0,
+      "y": 90.0,
+      "initial_state": "debris",
+      "clear_cost": 15.0,
+      "power_cost": 25.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_24",
+      "x": 600.0,
+      "y": 90.0,
+      "initial_state": "debris",
+      "clear_cost": 15.0,
+      "power_cost": 25.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_25",
+      "x": 360.0,
+      "y": 160.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 20.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_26",
+      "x": 440.0,
+      "y": 160.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 20.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_27",
+      "x": 520.0,
+      "y": 160.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 20.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_28",
+      "x": 600.0,
+      "y": 160.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 20.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_29",
+      "x": 680.0,
+      "y": 160.0,
+      "initial_state": "debris",
+      "clear_cost": 15.0,
+      "power_cost": 25.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_30",
+      "x": 760.0,
+      "y": 160.0,
+      "initial_state": "debris",
+      "clear_cost": 15.0,
+      "power_cost": 25.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_31",
+      "x": 760.0,
+      "y": 200.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 20.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_32",
+      "x": 600.0,
+      "y": 240.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 20.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_33",
+      "x": 520.0,
+      "y": 240.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 20.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_34",
+      "x": 440.0,
+      "y": 240.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 20.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_35",
+      "x": 360.0,
+      "y": 520.0,
+      "initial_state": "debris",
+      "clear_cost": 15.0,
+      "power_cost": 25.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_36",
+      "x": 400.0,
+      "y": 520.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 20.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_37",
+      "x": 440.0,
+      "y": 560.0,
+      "initial_state": "debris",
+      "clear_cost": 15.0,
+      "power_cost": 25.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_38",
+      "x": 520.0,
+      "y": 560.0,
+      "initial_state": "debris",
+      "clear_cost": 15.0,
+      "power_cost": 25.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_39",
+      "x": 600.0,
+      "y": 560.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 20.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_40",
+      "x": 680.0,
+      "y": 560.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 20.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_41",
+      "x": 760.0,
+      "y": 560.0,
+      "initial_state": "debris",
+      "clear_cost": 15.0,
+      "power_cost": 25.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_42",
+      "x": 840.0,
+      "y": 560.0,
+      "initial_state": "debris",
+      "clear_cost": 15.0,
+      "power_cost": 25.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_43",
+      "x": 920.0,
+      "y": 520.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 20.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_44",
+      "x": 360.0,
+      "y": 440.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 20.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_45",
+      "x": 240.0,
+      "y": 440.0,
+      "initial_state": "debris",
+      "clear_cost": 15.0,
+      "power_cost": 25.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_46",
+      "x": 200.0,
+      "y": 320.0,
+      "initial_state": "debris",
+      "clear_cost": 15.0,
+      "power_cost": 25.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_47",
+      "x": 240.0,
+      "y": 280.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 20.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_48",
+      "x": 320.0,
+      "y": 240.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 20.0,
+      "opens_entrance": null,
+      "requires_building_power": null
+    },
+    {
+      "id": "slot_49",
+      "x": 1100.0,
+      "y": 240.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 25.0,
+      "opens_entrance": null,
+      "requires_building_power": "building_02"
+    },
+    {
+      "id": "slot_50",
+      "x": 1180.0,
+      "y": 240.0,
+      "initial_state": "debris",
+      "clear_cost": 20.0,
+      "power_cost": 30.0,
+      "opens_entrance": null,
+      "requires_building_power": "building_02"
+    },
+    {
+      "id": "slot_51",
+      "x": 1260.0,
+      "y": 240.0,
+      "initial_state": "debris",
+      "clear_cost": 20.0,
+      "power_cost": 30.0,
+      "opens_entrance": null,
+      "requires_building_power": "building_02"
+    },
+    {
+      "id": "slot_52",
+      "x": 1340.0,
+      "y": 240.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 25.0,
+      "opens_entrance": null,
+      "requires_building_power": "building_02"
+    },
+    {
+      "id": "slot_53",
+      "x": 1100.0,
+      "y": 420.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 25.0,
+      "opens_entrance": null,
+      "requires_building_power": "building_02"
+    },
+    {
+      "id": "slot_54",
+      "x": 1180.0,
+      "y": 420.0,
+      "initial_state": "debris",
+      "clear_cost": 20.0,
+      "power_cost": 30.0,
+      "opens_entrance": null,
+      "requires_building_power": "building_02"
+    },
+    {
+      "id": "slot_55",
+      "x": 1260.0,
+      "y": 420.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 25.0,
+      "opens_entrance": null,
+      "requires_building_power": "building_02"
+    },
+    {
+      "id": "slot_56",
+      "x": 1340.0,
+      "y": 420.0,
+      "initial_state": "debris",
+      "clear_cost": 20.0,
+      "power_cost": 30.0,
+      "opens_entrance": null,
+      "requires_building_power": "building_02"
+    },
+    {
+      "id": "slot_57",
+      "x": 1500.0,
+      "y": 600.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 25.0,
+      "opens_entrance": null,
+      "requires_building_power": "building_03"
+    },
+    {
+      "id": "slot_58",
+      "x": 1580.0,
+      "y": 600.0,
+      "initial_state": "debris",
+      "clear_cost": 20.0,
+      "power_cost": 30.0,
+      "opens_entrance": null,
+      "requires_building_power": "building_03"
+    },
+    {
+      "id": "slot_59",
+      "x": 1660.0,
+      "y": 600.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 25.0,
+      "opens_entrance": null,
+      "requires_building_power": "building_03"
+    },
+    {
+      "id": "slot_60",
+      "x": 1740.0,
+      "y": 600.0,
+      "initial_state": "debris",
+      "clear_cost": 20.0,
+      "power_cost": 30.0,
+      "opens_entrance": null,
+      "requires_building_power": "building_03"
+    },
+    {
+      "id": "slot_61",
+      "x": 1820.0,
+      "y": 600.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 25.0,
+      "opens_entrance": null,
+      "requires_building_power": "building_03"
+    },
+    {
+      "id": "slot_62",
+      "x": 1900.0,
+      "y": 600.0,
+      "initial_state": "debris",
+      "clear_cost": 20.0,
+      "power_cost": 30.0,
+      "opens_entrance": null,
+      "requires_building_power": "building_03"
+    },
+    {
+      "id": "slot_63",
+      "x": 2100.0,
+      "y": 420.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 30.0,
+      "opens_entrance": null,
+      "requires_building_power": "building_04"
+    },
+    {
+      "id": "slot_64",
+      "x": 2180.0,
+      "y": 420.0,
+      "initial_state": "debris",
+      "clear_cost": 25.0,
+      "power_cost": 35.0,
+      "opens_entrance": null,
+      "requires_building_power": "building_04"
+    },
+    {
+      "id": "slot_65",
+      "x": 2260.0,
+      "y": 420.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 30.0,
+      "opens_entrance": null,
+      "requires_building_power": "building_04"
+    },
+    {
+      "id": "slot_66",
+      "x": 2340.0,
+      "y": 420.0,
+      "initial_state": "debris",
+      "clear_cost": 25.0,
+      "power_cost": 35.0,
+      "opens_entrance": null,
+      "requires_building_power": "building_04"
+    },
+    {
+      "id": "slot_67",
+      "x": 2420.0,
+      "y": 420.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 30.0,
+      "opens_entrance": null,
+      "requires_building_power": "building_04"
+    },
+    {
+      "id": "slot_68",
+      "x": 2600.0,
+      "y": 520.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 35.0,
+      "opens_entrance": null,
+      "requires_building_power": "building_05"
+    },
+    {
+      "id": "slot_69",
+      "x": 2680.0,
+      "y": 520.0,
+      "initial_state": "debris",
+      "clear_cost": 25.0,
+      "power_cost": 40.0,
+      "opens_entrance": null,
+      "requires_building_power": "building_05"
+    },
+    {
+      "id": "slot_70",
+      "x": 2760.0,
+      "y": 520.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 35.0,
+      "opens_entrance": null,
+      "requires_building_power": "building_05"
+    },
+    {
+      "id": "slot_71",
+      "x": 2840.0,
+      "y": 520.0,
+      "initial_state": "debris",
+      "clear_cost": 25.0,
+      "power_cost": 40.0,
+      "opens_entrance": null,
+      "requires_building_power": "building_05"
+    },
+    {
+      "id": "slot_72",
+      "x": 2920.0,
+      "y": 520.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 35.0,
+      "opens_entrance": null,
+      "requires_building_power": "building_05"
+    },
+    {
+      "id": "slot_73",
+      "x": 2680.0,
+      "y": 720.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 35.0,
+      "opens_entrance": null,
+      "requires_building_power": "building_05"
+    },
+    {
+      "id": "slot_74",
+      "x": 2760.0,
+      "y": 720.0,
+      "initial_state": "debris",
+      "clear_cost": 25.0,
+      "power_cost": 40.0,
+      "opens_entrance": null,
+      "requires_building_power": "building_05"
+    },
+    {
+      "id": "slot_75",
+      "x": 2840.0,
+      "y": 720.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 35.0,
+      "opens_entrance": null,
+      "requires_building_power": "building_05"
+    },
+    {
+      "id": "slot_76",
+      "x": 2920.0,
+      "y": 720.0,
+      "initial_state": "debris",
+      "clear_cost": 25.0,
+      "power_cost": 40.0,
+      "opens_entrance": null,
+      "requires_building_power": "building_05"
+    },
+    {
+      "id": "slot_77",
+      "x": 2600.0,
+      "y": 860.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 35.0,
+      "opens_entrance": null,
+      "requires_building_power": "building_08"
+    },
+    {
+      "id": "slot_78",
+      "x": 2680.0,
+      "y": 860.0,
+      "initial_state": "debris",
+      "clear_cost": 25.0,
+      "power_cost": 40.0,
+      "opens_entrance": null,
+      "requires_building_power": "building_08"
+    },
+    {
+      "id": "slot_79",
+      "x": 2760.0,
+      "y": 860.0,
+      "initial_state": "cleared",
+      "clear_cost": 0.0,
+      "power_cost": 35.0,
+      "opens_entrance": null,
+      "requires_building_power": "building_08"
+    },
+    {
+      "id": "slot_80",
+      "x": 2920.0,
+      "y": 860.0,
+      "initial_state": "debris",
+      "clear_cost": 25.0,
+      "power_cost": 40.0,
+      "opens_entrance": null,
+      "requires_building_power": "building_08"
+    }
   ],
   "building_slots": [
     {
@@ -94,8 +819,14 @@
       "building_type": "scrap_converter",
       "repair_cost": 40.0,
       "power_cost": 30.0,
-      "boon": { "scrap_per_sec": 1.2, "food_per_sec": 0.0, "water_per_sec": 0.0, "power_per_sec": 0.0 },
-      "threat_per_sec": 0.15
+      "boon": {
+        "scrap_per_sec": 1.2,
+        "food_per_sec": 0.0,
+        "water_per_sec": 0.0,
+        "power_per_sec": 0.0
+      },
+      "threat_per_sec": 0.15,
+      "requires_power_from": null
     },
     {
       "id": "building_02",
@@ -104,8 +835,15 @@
       "building_type": "water_reclaimer",
       "repair_cost": 35.0,
       "power_cost": 25.0,
-      "boon": { "scrap_per_sec": 0.0, "food_per_sec": 0.0, "water_per_sec": 1.5, "power_per_sec": 0.0 },
-      "threat_per_sec": 0.12
+      "boon": {
+        "scrap_per_sec": 0.0,
+        "food_per_sec": 0.0,
+        "water_per_sec": 1.5,
+        "power_per_sec": 0.0
+      },
+      "threat_per_sec": 0.12,
+      "requires_power_from": null,
+      "opens_entrance": "northwest_breach"
     },
     {
       "id": "building_03",
@@ -114,8 +852,15 @@
       "building_type": "nutrient_vats",
       "repair_cost": 45.0,
       "power_cost": 30.0,
-      "boon": { "scrap_per_sec": 0.0, "food_per_sec": 1.2, "water_per_sec": 0.0, "power_per_sec": 0.0 },
-      "threat_per_sec": 0.2
+      "boon": {
+        "scrap_per_sec": 0.0,
+        "food_per_sec": 1.2,
+        "water_per_sec": 0.0,
+        "power_per_sec": 0.0
+      },
+      "threat_per_sec": 0.2,
+      "requires_power_from": "building_11",
+      "opens_entrance": "south_gate"
     },
     {
       "id": "building_04",
@@ -124,9 +869,15 @@
       "building_type": "power_turbine",
       "repair_cost": 60.0,
       "power_cost": 20.0,
-      "boon": { "scrap_per_sec": 0.0, "food_per_sec": 0.0, "water_per_sec": 0.0, "power_per_sec": 3.0 },
+      "boon": {
+        "scrap_per_sec": 0.0,
+        "food_per_sec": 0.0,
+        "water_per_sec": 0.0,
+        "power_per_sec": 3.0
+      },
       "threat_per_sec": 0.25,
-      "opens_entrance": "south_gate"
+      "opens_entrance": "south_gate",
+      "requires_power_from": "building_03"
     },
     {
       "id": "building_05",
@@ -135,8 +886,14 @@
       "building_type": "scrap_converter",
       "repair_cost": 55.0,
       "power_cost": 35.0,
-      "boon": { "scrap_per_sec": 2.0, "food_per_sec": 0.0, "water_per_sec": 0.0, "power_per_sec": 0.0 },
-      "threat_per_sec": 0.3
+      "boon": {
+        "scrap_per_sec": 2.0,
+        "food_per_sec": 0.0,
+        "water_per_sec": 0.0,
+        "power_per_sec": 0.0
+      },
+      "threat_per_sec": 0.3,
+      "requires_power_from": "building_13"
     },
     {
       "id": "building_06",
@@ -145,9 +902,15 @@
       "building_type": "water_reclaimer",
       "repair_cost": 65.0,
       "power_cost": 40.0,
-      "boon": { "scrap_per_sec": 0.0, "food_per_sec": 0.0, "water_per_sec": 2.5, "power_per_sec": 0.0 },
+      "boon": {
+        "scrap_per_sec": 0.0,
+        "food_per_sec": 0.0,
+        "water_per_sec": 2.5,
+        "power_per_sec": 0.0
+      },
       "threat_per_sec": 0.35,
-      "opens_entrance": "east_breach"
+      "opens_entrance": "east_breach",
+      "requires_power_from": "building_08"
     },
     {
       "id": "building_07",
@@ -156,8 +919,14 @@
       "building_type": "water_reclaimer",
       "repair_cost": 50.0,
       "power_cost": 30.0,
-      "boon": { "scrap_per_sec": 0.0, "food_per_sec": 0.0, "water_per_sec": 1.8, "power_per_sec": 0.0 },
-      "threat_per_sec": 0.22
+      "boon": {
+        "scrap_per_sec": 0.0,
+        "food_per_sec": 0.0,
+        "water_per_sec": 1.8,
+        "power_per_sec": 0.0
+      },
+      "threat_per_sec": 0.22,
+      "requires_power_from": "building_12"
     },
     {
       "id": "building_08",
@@ -166,71 +935,860 @@
       "building_type": "scrap_converter",
       "repair_cost": 70.0,
       "power_cost": 45.0,
-      "boon": { "scrap_per_sec": 2.5, "food_per_sec": 0.0, "water_per_sec": 0.0, "power_per_sec": 0.0 },
-      "threat_per_sec": 0.4
+      "boon": {
+        "scrap_per_sec": 2.5,
+        "food_per_sec": 0.0,
+        "water_per_sec": 0.0,
+        "power_per_sec": 0.0
+      },
+      "threat_per_sec": 0.4,
+      "requires_power_from": "building_13",
+      "opens_entrance": "east_breach"
+    },
+    {
+      "id": "building_09",
+      "x": 820.0,
+      "y": 420.0,
+      "building_type": "power_distribution_spine",
+      "repair_cost": 45.0,
+      "power_cost": 15.0,
+      "boon": {
+        "scrap_per_sec": 0.0,
+        "food_per_sec": 0.0,
+        "water_per_sec": 0.0,
+        "power_per_sec": 1.0
+      },
+      "threat_per_sec": 0.18,
+      "requires_power_from": "building_02"
+    },
+    {
+      "id": "building_10",
+      "x": 520.0,
+      "y": 140.0,
+      "building_type": "assembly_hall_core",
+      "repair_cost": 55.0,
+      "power_cost": 20.0,
+      "boon": {
+        "scrap_per_sec": 0.5,
+        "food_per_sec": 0.0,
+        "water_per_sec": 0.0,
+        "power_per_sec": 0.0
+      },
+      "threat_per_sec": 0.22,
+      "requires_power_from": "building_09",
+      "opens_entrance": "north_gate"
+    },
+    {
+      "id": "building_11",
+      "x": 620.0,
+      "y": 520.0,
+      "building_type": "logistics_hub_core",
+      "repair_cost": 60.0,
+      "power_cost": 25.0,
+      "boon": {
+        "scrap_per_sec": 1.0,
+        "food_per_sec": 0.0,
+        "water_per_sec": 0.0,
+        "power_per_sec": 0.0
+      },
+      "threat_per_sec": 0.25,
+      "requires_power_from": "building_10"
+    },
+    {
+      "id": "building_12",
+      "x": 1200.0,
+      "y": 320.0,
+      "building_type": "robotics_bay_core",
+      "repair_cost": 65.0,
+      "power_cost": 30.0,
+      "boon": {
+        "scrap_per_sec": 0.0,
+        "food_per_sec": 0.0,
+        "water_per_sec": 0.0,
+        "power_per_sec": 0.0
+      },
+      "threat_per_sec": 0.3,
+      "requires_power_from": "building_03"
+    },
+    {
+      "id": "building_13",
+      "x": 1700.0,
+      "y": 600.0,
+      "building_type": "research_core",
+      "repair_cost": 70.0,
+      "power_cost": 35.0,
+      "boon": {
+        "scrap_per_sec": 0.0,
+        "food_per_sec": 0.0,
+        "water_per_sec": 0.0,
+        "power_per_sec": 0.0
+      },
+      "threat_per_sec": 0.35,
+      "requires_power_from": "building_12"
     }
   ],
   "paths": [
     {
       "id": "main_west",
-      "entrance": [120, 360],
-      "waypoints": [[280, 360], [280, 200], [640, 200], [640, 520], [1000, 520], [1000, 260], [1400, 260], [1400, 720], [1800, 720], [2200, 520], [2600, 520], [2600, 720]],
-      "exit": [3000, 720],
+      "entrance": [
+        120,
+        360
+      ],
+      "waypoints": [
+        [
+          200,
+          320
+        ],
+        [
+          360,
+          320
+        ],
+        [
+          520,
+          320
+        ],
+        [
+          520,
+          360
+        ],
+        [
+          700,
+          360
+        ],
+        [
+          880,
+          360
+        ],
+        [
+          1100,
+          420
+        ],
+        [
+          1340,
+          420
+        ],
+        [
+          1500,
+          600
+        ],
+        [
+          1900,
+          600
+        ],
+        [
+          2100,
+          420
+        ],
+        [
+          2420,
+          420
+        ],
+        [
+          2600,
+          520
+        ],
+        [
+          2920,
+          520
+        ],
+        [
+          2920,
+          720
+        ]
+      ],
+      "exit": [
+        3000,
+        720
+      ],
       "initially_active": true,
       "requires_entrance": null
     },
     {
       "id": "north_gate",
-      "entrance": [900, 0],
-      "waypoints": [[900, 140], [1200, 140], [1200, 400], [1600, 400], [1600, 680], [2200, 680], [2600, 680]],
-      "exit": [3000, 720],
+      "entrance": [
+        900,
+        0
+      ],
+      "waypoints": [
+        [
+          900,
+          140
+        ],
+        [
+          1180,
+          140
+        ],
+        [
+          1180,
+          240
+        ],
+        [
+          1340,
+          240
+        ],
+        [
+          1340,
+          420
+        ],
+        [
+          1500,
+          600
+        ],
+        [
+          1900,
+          600
+        ],
+        [
+          2420,
+          520
+        ],
+        [
+          2600,
+          520
+        ],
+        [
+          2920,
+          720
+        ]
+      ],
+      "exit": [
+        3000,
+        720
+      ],
       "initially_active": false,
       "requires_entrance": "north_gate"
     },
     {
       "id": "south_gate",
-      "entrance": [900, 1440],
-      "waypoints": [[900, 1280], [1200, 1280], [1200, 980], [1600, 980], [2000, 980], [2400, 900], [2600, 840]],
-      "exit": [3000, 720],
+      "entrance": [
+        900,
+        1440
+      ],
+      "waypoints": [
+        [
+          900,
+          1280
+        ],
+        [
+          1200,
+          1280
+        ],
+        [
+          1320,
+          880
+        ],
+        [
+          1600,
+          880
+        ],
+        [
+          1740,
+          600
+        ],
+        [
+          1900,
+          600
+        ],
+        [
+          2100,
+          420
+        ],
+        [
+          2600,
+          520
+        ],
+        [
+          2920,
+          720
+        ]
+      ],
+      "exit": [
+        3000,
+        720
+      ],
       "initially_active": false,
       "requires_entrance": "south_gate"
     },
     {
       "id": "east_breach",
-      "entrance": [3440, 600],
-      "waypoints": [[3200, 600], [3200, 880], [3000, 880]],
-      "exit": [3000, 720],
+      "entrance": [
+        3440,
+        600
+      ],
+      "waypoints": [
+        [
+          3200,
+          600
+        ],
+        [
+          3200,
+          880
+        ],
+        [
+          3000,
+          880
+        ],
+        [
+          2920,
+          860
+        ],
+        [
+          2920,
+          720
+        ]
+      ],
+      "exit": [
+        3000,
+        720
+      ],
       "initially_active": false,
       "requires_entrance": "east_breach"
     },
     {
       "id": "northwest_breach",
-      "entrance": [0, 120],
-      "waypoints": [[160, 120], [160, 260], [360, 260]],
-      "exit": [3000, 720],
+      "entrance": [
+        0,
+        120
+      ],
+      "waypoints": [
+        [
+          160,
+          120
+        ],
+        [
+          360,
+          120
+        ],
+        [
+          360,
+          240
+        ],
+        [
+          520,
+          240
+        ],
+        [
+          520,
+          320
+        ]
+      ],
+      "exit": [
+        3000,
+        720
+      ],
       "initially_active": false,
       "requires_entrance": "northwest_breach"
     }
   ],
   "traces": [
-    { "from": "slot_01", "to": "slot_02", "via": [[240, 320], [320, 320]] },
-    { "from": "slot_02", "to": "slot_03", "via": [[320, 320], [360, 320]] },
-    { "from": "slot_03", "to": "slot_06", "via": [[360, 320], [520, 320]] },
-    { "from": "slot_06", "to": "slot_07", "via": [[520, 320], [520, 360]] },
-    { "from": "slot_07", "to": "slot_13", "via": [[520, 360], [700, 360]] },
-    { "from": "slot_13", "to": "slot_15", "via": [[700, 360], [800, 250]] },
-    { "from": "slot_15", "to": "slot_17", "via": [[800, 250], [880, 360]] },
-    { "from": "slot_17", "to": "slot_49", "via": [[880, 360], [1100, 240]] },
-    { "from": "slot_49", "to": "slot_52", "via": [[1100, 240], [1340, 240]] },
-    { "from": "slot_52", "to": "slot_57", "via": [[1340, 240], [1500, 600]] },
-    { "from": "slot_57", "to": "slot_61", "via": [[1500, 600], [1820, 600]] },
-    { "from": "slot_61", "to": "slot_63", "via": [[1820, 600], [2100, 420]] },
-    { "from": "slot_63", "to": "slot_68", "via": [[2100, 420], [2600, 520]] },
-    { "from": "slot_68", "to": "slot_72", "via": [[2600, 520], [2920, 520]] },
-    { "from": "slot_72", "to": "factory_core", "via": [[2920, 520], [3000, 720]] },
-    { "from": "slot_73", "to": "slot_75", "via": [[2680, 720], [2840, 720]] },
-    { "from": "slot_75", "to": "factory_core", "via": [[2840, 720], [3000, 720]] },
-    { "from": "slot_77", "to": "slot_80", "via": [[2600, 860], [2920, 860]] },
-    { "from": "slot_80", "to": "factory_core", "via": [[2920, 860], [3000, 720]] }
+    {
+      "from": "slot_01",
+      "to": "slot_02",
+      "via": [
+        [
+          240,
+          320
+        ],
+        [
+          320,
+          320
+        ]
+      ]
+    },
+    {
+      "from": "slot_02",
+      "to": "slot_03",
+      "via": [
+        [
+          320,
+          320
+        ],
+        [
+          360,
+          320
+        ]
+      ]
+    },
+    {
+      "from": "slot_03",
+      "to": "slot_06",
+      "via": [
+        [
+          360,
+          320
+        ],
+        [
+          520,
+          320
+        ]
+      ]
+    },
+    {
+      "from": "slot_06",
+      "to": "slot_07",
+      "via": [
+        [
+          520,
+          320
+        ],
+        [
+          520,
+          360
+        ]
+      ]
+    },
+    {
+      "from": "slot_07",
+      "to": "slot_13",
+      "via": [
+        [
+          520,
+          360
+        ],
+        [
+          700,
+          360
+        ]
+      ]
+    },
+    {
+      "from": "slot_13",
+      "to": "slot_15",
+      "via": [
+        [
+          700,
+          360
+        ],
+        [
+          800,
+          250
+        ]
+      ]
+    },
+    {
+      "from": "slot_15",
+      "to": "slot_17",
+      "via": [
+        [
+          800,
+          250
+        ],
+        [
+          880,
+          360
+        ]
+      ]
+    },
+    {
+      "from": "slot_17",
+      "to": "slot_49",
+      "via": [
+        [
+          880,
+          360
+        ],
+        [
+          1100,
+          240
+        ]
+      ]
+    },
+    {
+      "from": "slot_49",
+      "to": "slot_52",
+      "via": [
+        [
+          1100,
+          240
+        ],
+        [
+          1340,
+          240
+        ]
+      ]
+    },
+    {
+      "from": "slot_52",
+      "to": "slot_57",
+      "via": [
+        [
+          1340,
+          240
+        ],
+        [
+          1500,
+          600
+        ]
+      ]
+    },
+    {
+      "from": "slot_57",
+      "to": "slot_61",
+      "via": [
+        [
+          1500,
+          600
+        ],
+        [
+          1820,
+          600
+        ]
+      ]
+    },
+    {
+      "from": "slot_61",
+      "to": "slot_63",
+      "via": [
+        [
+          1820,
+          600
+        ],
+        [
+          2100,
+          420
+        ]
+      ]
+    },
+    {
+      "from": "slot_63",
+      "to": "slot_68",
+      "via": [
+        [
+          2100,
+          420
+        ],
+        [
+          2600,
+          520
+        ]
+      ]
+    },
+    {
+      "from": "slot_68",
+      "to": "slot_72",
+      "via": [
+        [
+          2600,
+          520
+        ],
+        [
+          2920,
+          520
+        ]
+      ]
+    },
+    {
+      "from": "slot_72",
+      "to": "factory_core",
+      "via": [
+        [
+          2920,
+          520
+        ],
+        [
+          3000,
+          720
+        ]
+      ]
+    },
+    {
+      "from": "slot_73",
+      "to": "slot_75",
+      "via": [
+        [
+          2680,
+          720
+        ],
+        [
+          2840,
+          720
+        ]
+      ]
+    },
+    {
+      "from": "slot_75",
+      "to": "factory_core",
+      "via": [
+        [
+          2840,
+          720
+        ],
+        [
+          3000,
+          720
+        ]
+      ]
+    },
+    {
+      "from": "slot_77",
+      "to": "slot_80",
+      "via": [
+        [
+          2600,
+          860
+        ],
+        [
+          2920,
+          860
+        ]
+      ]
+    },
+    {
+      "from": "slot_80",
+      "to": "factory_core",
+      "via": [
+        [
+          2920,
+          860
+        ],
+        [
+          3000,
+          720
+        ]
+      ]
+    },
+    {
+      "from": "slot_21",
+      "to": "slot_25",
+      "via": [
+        [
+          360,
+          120
+        ],
+        [
+          360,
+          160
+        ]
+      ]
+    },
+    {
+      "from": "slot_23",
+      "to": "slot_27",
+      "via": [
+        [
+          520,
+          90
+        ],
+        [
+          520,
+          160
+        ]
+      ]
+    },
+    {
+      "from": "slot_41",
+      "to": "slot_39",
+      "via": [
+        [
+          760,
+          560
+        ],
+        [
+          600,
+          560
+        ]
+      ]
+    }
+  ],
+  "sections": [
+    {
+      "id": "section_1_intake",
+      "label": "Intake & Scrap Processing",
+      "core_building": "building_01",
+      "buildings": [
+        "building_01"
+      ],
+      "slots": [
+        "slot_01",
+        "slot_02",
+        "slot_03",
+        "slot_04",
+        "slot_05",
+        "slot_06",
+        "slot_07",
+        "slot_08"
+      ],
+      "unlock_entrance": null,
+      "visible_at_start": true
+    },
+    {
+      "id": "section_2_water",
+      "label": "Water Filtration",
+      "core_building": "building_02",
+      "buildings": [
+        "building_02"
+      ],
+      "slots": [
+        "slot_09",
+        "slot_10",
+        "slot_11",
+        "slot_12",
+        "slot_13",
+        "slot_14"
+      ],
+      "unlock_entrance": "northwest_breach",
+      "visible_at_start": true
+    },
+    {
+      "id": "section_3_power_spine",
+      "label": "Power Distribution Spine",
+      "core_building": "building_09",
+      "buildings": [
+        "building_09"
+      ],
+      "slots": [
+        "slot_15",
+        "slot_16",
+        "slot_17",
+        "slot_18",
+        "slot_19",
+        "slot_20"
+      ],
+      "unlock_entrance": null,
+      "visible_at_start": true
+    },
+    {
+      "id": "section_4_assembly",
+      "label": "Assembly Hall",
+      "core_building": "building_10",
+      "buildings": [
+        "building_10"
+      ],
+      "slots": [
+        "slot_21",
+        "slot_22",
+        "slot_23",
+        "slot_24",
+        "slot_25",
+        "slot_26",
+        "slot_27",
+        "slot_28"
+      ],
+      "unlock_entrance": "north_gate",
+      "visible_at_start": false
+    },
+    {
+      "id": "section_5_logistics",
+      "label": "Logistics Hub",
+      "core_building": "building_11",
+      "buildings": [
+        "building_11"
+      ],
+      "slots": [
+        "slot_32",
+        "slot_33",
+        "slot_34",
+        "slot_35",
+        "slot_36",
+        "slot_37",
+        "slot_38",
+        "slot_39",
+        "slot_40"
+      ],
+      "unlock_entrance": null,
+      "visible_at_start": false
+    },
+    {
+      "id": "section_6_hydroponics",
+      "label": "Hydroponics & Population",
+      "core_building": "building_03",
+      "buildings": [
+        "building_03",
+        "building_07"
+      ],
+      "slots": [
+        "slot_35",
+        "slot_36",
+        "slot_37",
+        "slot_38",
+        "slot_39",
+        "slot_40",
+        "slot_41",
+        "slot_42",
+        "slot_43",
+        "slot_44"
+      ],
+      "unlock_entrance": "south_gate",
+      "visible_at_start": false
+    },
+    {
+      "id": "section_7_robotics",
+      "label": "Robotics Bay",
+      "core_building": "building_12",
+      "buildings": [
+        "building_12"
+      ],
+      "slots": [
+        "slot_49",
+        "slot_50",
+        "slot_51",
+        "slot_52",
+        "slot_53",
+        "slot_54",
+        "slot_55",
+        "slot_56"
+      ],
+      "unlock_entrance": null,
+      "visible_at_start": false
+    },
+    {
+      "id": "section_8_research",
+      "label": "Research Core",
+      "core_building": "building_13",
+      "buildings": [
+        "building_13"
+      ],
+      "slots": [
+        "slot_57",
+        "slot_58",
+        "slot_59",
+        "slot_60",
+        "slot_61",
+        "slot_62"
+      ],
+      "unlock_entrance": null,
+      "visible_at_start": false
+    },
+    {
+      "id": "section_9_ai_vault",
+      "label": "AI Vault",
+      "core_building": "building_08",
+      "buildings": [
+        "building_08",
+        "building_05"
+      ],
+      "slots": [
+        "slot_63",
+        "slot_64",
+        "slot_65",
+        "slot_66",
+        "slot_67",
+        "slot_68",
+        "slot_69",
+        "slot_70",
+        "slot_71",
+        "slot_72"
+      ],
+      "unlock_entrance": "east_breach",
+      "visible_at_start": false
+    },
+    {
+      "id": "section_10_heart",
+      "label": "Factory Heart",
+      "core_building": "factory_core",
+      "buildings": [],
+      "slots": [
+        "slot_73",
+        "slot_74",
+        "slot_75",
+        "slot_76",
+        "slot_77",
+        "slot_78",
+        "slot_79",
+        "slot_80"
+      ],
+      "unlock_entrance": null,
+      "visible_at_start": false
+    }
   ]
 }

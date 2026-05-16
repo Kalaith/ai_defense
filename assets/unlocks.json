@@ -1,10 +1,10 @@
 {
   "towers": {
     "ballistic_turret": { "requires": [] },
-    "laser_emitter": { "requires": ["research_lab"] },
-    "emp_pylon": { "requires": ["robotics_bay"] },
-    "flak_field": { "requires": ["logistics_hub"] },
-    "signal_jammer": { "requires": ["ai_vault"] }
+    "laser_emitter": { "requires": ["building_13"] },
+    "emp_pylon": { "requires": ["building_12"] },
+    "flak_field": { "requires": ["building_11"] },
+    "signal_jammer": { "requires": ["building_08"] }
   },
   "buildings": {
     "scrap_converter": { "requires": ["logistics_hub"] },

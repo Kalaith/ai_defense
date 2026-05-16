@@ -65,10 +65,6 @@ impl ThreatSignature {
         self.noise += amount;
     }
 
-    pub fn add_territory(&mut self, amount: f32) {
-        self.territory += amount;
-    }
-
     pub fn tick_decay(&mut self, dt: f32) {
         let decay_rate = 0.5 * dt;
         self.energy = (self.energy - decay_rate).max(0.0);
@@ -84,8 +80,4 @@ impl ThreatSignature {
         self.heat += 0.5;
     }
 
-    pub fn add_from_sector(&mut self, _sector_id: &str) {
-        self.territory += 3.0;
-        self.energy += 2.0;
-    }
 }

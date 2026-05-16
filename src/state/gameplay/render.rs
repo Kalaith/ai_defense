@@ -50,11 +50,105 @@ impl GameplayState {
         // 1. PCB background
         draw_rectangle(0.0, 0.0, map_w, map_h, Color::new(0.02, 0.08, 0.04, 1.0));
 
+        // 1b. Section backplates + corridor connectors
+        let sections = self.map_state.section_render_info();
+        let mut section_centers: Vec<Vec2> = Vec::new();
+        for section in &sections {
+            let pad_x = 80.0 + (section.index as f32 * 6.0);
+            let pad_y = 70.0 + (section.index as f32 * 4.0);
+            let min = vec2(section.min.x - pad_x, section.min.y - pad_y);
+            let max = vec2(section.max.x + pad_x, section.max.y + pad_y);
+            let w = (max.x - min.x).max(120.0);
+            let h = (max.y - min.y).max(80.0);
+            let base = 0.05 + (section.index as f32 * 0.02).min(0.28);
+            let fill = Color::new(0.02 + base, 0.08 + base * 0.5, 0.04 + base * 0.2, 0.55);
+            let border = Color::new(0.08 + base, 0.22 + base, 0.12 + base * 0.6, 0.65);
+
+            let kind = section.label.to_lowercase();
+            if kind.contains("intake") || kind.contains("scrap") {
+                draw_rectangle(min.x, min.y + h * 0.15, w, h * 0.7, fill);
+                draw_rectangle_lines(min.x, min.y + h * 0.15, w, h * 0.7, 2.0, border);
+            } else if kind.contains("water") || kind.contains("hydro") {
+                let cx = min.x + w * 0.5;
+                let cy = min.y + h * 0.5;
+                draw_circle(cx, cy, h * 0.45, fill);
+                draw_circle_lines(cx, cy, h * 0.45, 2.5, border);
+                draw_rectangle(min.x + w * 0.3, min.y + h * 0.15, w * 0.4, h * 0.7, Color::new(fill.r, fill.g, fill.b, 0.6));
+            } else if kind.contains("power") {
+                draw_rectangle(min.x, min.y + h * 0.35, w, h * 0.3, fill);
+                draw_rectangle_lines(min.x, min.y + h * 0.35, w, h * 0.3, 2.0, border);
+            } else if kind.contains("assembly") {
+                draw_rectangle(min.x, min.y, w, h, fill);
+                draw_rectangle_lines(min.x, min.y, w, h, 2.5, border);
+                for i in 1..4 {
+                    let x = min.x + w * (i as f32 / 4.0);
+                    draw_line(x, min.y + 6.0, x, min.y + h - 6.0, 1.0, Color::new(border.r, border.g, border.b, 0.4));
+                }
+                for i in 1..3 {
+                    let y = min.y + h * (i as f32 / 3.0);
+                    draw_line(min.x + 6.0, y, min.x + w - 6.0, y, 1.0, Color::new(border.r, border.g, border.b, 0.4));
+                }
+            } else if kind.contains("logistics") {
+                draw_rectangle(min.x, min.y, w, h, fill);
+                draw_rectangle_lines(min.x, min.y, w, h, 2.0, border);
+                draw_circle_lines(min.x + w * 0.3, min.y + h * 0.5, h * 0.25, 2.0, Color::new(border.r, border.g, border.b, 0.6));
+                draw_circle_lines(min.x + w * 0.7, min.y + h * 0.5, h * 0.25, 2.0, Color::new(border.r, border.g, border.b, 0.6));
+            } else if kind.contains("robotics") {
+                draw_rectangle(min.x, min.y + h * 0.1, w, h * 0.8, fill);
+                draw_rectangle_lines(min.x, min.y + h * 0.1, w, h * 0.8, 2.5, border);
+                draw_rectangle_lines(min.x + w * 0.2, min.y + h * 0.2, w * 0.6, h * 0.6, 2.0, Color::new(border.r, border.g, border.b, 0.6));
+            } else if kind.contains("research") {
+                draw_rectangle(min.x, min.y, w, h, fill);
+                draw_rectangle_lines(min.x, min.y, w, h, 2.0, border);
+                let a = vec2(min.x + w * 0.15, min.y + h * 0.2);
+                let b = vec2(min.x + w * 0.85, min.y + h * 0.5);
+                let c = vec2(min.x + w * 0.25, min.y + h * 0.8);
+                draw_triangle_lines(a, b, c, 2.0, Color::new(border.r, border.g, border.b, 0.7));
+            } else if kind.contains("vault") || kind.contains("ai") {
+                draw_rectangle(min.x + w * 0.1, min.y + h * 0.1, w * 0.8, h * 0.8, fill);
+                draw_rectangle_lines(min.x + w * 0.1, min.y + h * 0.1, w * 0.8, h * 0.8, 3.0, border);
+                draw_rectangle_lines(min.x + w * 0.2, min.y + h * 0.2, w * 0.6, h * 0.6, 2.0, Color::new(border.r, border.g, border.b, 0.6));
+            } else if kind.contains("heart") {
+                let cx = min.x + w * 0.5;
+                let cy = min.y + h * 0.5;
+                let r = h.min(w) * 0.45;
+                draw_circle(cx, cy, r, fill);
+                draw_circle_lines(cx, cy, r, 3.0, border);
+                draw_circle_lines(cx, cy, r * 0.6, 2.0, Color::new(border.r, border.g, border.b, 0.6));
+            } else {
+                draw_rectangle(min.x, min.y, w, h, fill);
+                draw_rectangle_lines(min.x, min.y, w, h, 2.0, border);
+            }
+
+            let center = vec2((min.x + max.x) * 0.5, (min.y + max.y) * 0.5);
+            section_centers.push(center);
+        }
+
+        for i in 0..section_centers.len().saturating_sub(1) {
+            let a = section_centers[i];
+            let b = section_centers[i + 1];
+            draw_line(a.x, a.y, b.x, b.y, 10.0, Color::new(0.04, 0.14, 0.07, 0.7));
+            draw_line(a.x, a.y, b.x, b.y, 4.0, Color::new(0.12, 0.35, 0.2, 0.7));
+        }
+
         // 2. Traces
         for trace in &self.map_state.traces {
             let powered = self.map_state.trace_powered(trace);
             let from_pos = self.trace_node_pos(&trace.from);
             let to_pos = self.trace_node_pos(&trace.to);
+            let from_visible = match trace.from {
+                TraceNode::Slot(idx) => self.map_state.slots.get(idx).map_or(false, |s| self.map_state.is_slot_visible(s)),
+                TraceNode::Building(idx) => self.map_state.buildings.get(idx).map_or(false, |b| self.map_state.is_building_visible(b)),
+                TraceNode::FactoryCore => true,
+            };
+            let to_visible = match trace.to {
+                TraceNode::Slot(idx) => self.map_state.slots.get(idx).map_or(false, |s| self.map_state.is_slot_visible(s)),
+                TraceNode::Building(idx) => self.map_state.buildings.get(idx).map_or(false, |b| self.map_state.is_building_visible(b)),
+                TraceNode::FactoryCore => true,
+            };
+            if !from_visible || !to_visible {
+                continue;
+            }
 
             let mut points = Vec::new();
             points.push(from_pos);
@@ -63,19 +157,42 @@ impl GameplayState {
             }
             points.push(to_pos);
 
-            for i in 0..points.len().saturating_sub(1) {
-                let a = points[i];
-                let b = points[i + 1];
+            let mut render_points = points.clone();
+            if render_points.len() == 2 {
+                let a = render_points[0];
+                let b = render_points[1];
+                let dir = (b - a).normalize_or_zero();
+                let perp = vec2(-dir.y, dir.x);
+                let bend = ((b - a).length() * 0.15).clamp(12.0, 40.0);
+                render_points.insert(1, (a + b) * 0.5 + perp * bend);
+            }
+
+            for i in 0..render_points.len().saturating_sub(1) {
+                let a = render_points[i];
+                let b = render_points[i + 1];
+                let mid = (a + b) * 0.5;
+                let mut near_core = false;
+                for building in &self.map_state.buildings {
+                    if self.map_state.is_core_building(&building.id)
+                        && (building.position - mid).length() < 90.0
+                    {
+                        near_core = true;
+                        break;
+                    }
+                }
                 if powered {
-                    draw_line(a.x, a.y, b.x, b.y, 6.0, Color::new(0.0, 0.6, 0.2, 0.15));
-                    draw_line(a.x, a.y, b.x, b.y, 2.0, Color::new(0.2, 1.0, 0.4, 0.8));
+                    let wide = if near_core { 11.0 } else { 8.0 };
+                    let thin = if near_core { 4.0 } else { 3.0 };
+                    draw_line(a.x, a.y, b.x, b.y, wide, Color::new(0.0, 0.6, 0.2, 0.18));
+                    draw_line(a.x, a.y, b.x, b.y, thin, Color::new(0.2, 1.0, 0.4, 0.85));
                 } else {
-                    draw_line(a.x, a.y, b.x, b.y, 2.0, Color::new(0.1, 0.25, 0.1, 0.4));
+                    draw_line(a.x, a.y, b.x, b.y, 3.5, Color::new(0.08, 0.2, 0.1, 0.55));
                 }
             }
         }
 
         // 3. Enemy paths
+        let max_x = self.map_state.max_visible_x();
         for path in &self.map_state.paths {
             let alpha = if path.active { 0.8 } else { 0.2 };
             let color = Color::new(0.5, 0.35, 0.15, alpha);
@@ -83,6 +200,9 @@ impl GameplayState {
             for i in 0..path.points.len().saturating_sub(1) {
                 let a = path.points[i];
                 let b = path.points[i + 1];
+                if a.x > max_x || b.x > max_x {
+                    break;
+                }
                 draw_line(a.x, a.y, b.x, b.y, 4.0, color);
             }
         }
@@ -90,15 +210,27 @@ impl GameplayState {
         // 4. Entrance markers
         for path in &self.map_state.paths {
             if path.active {
-                draw_circle(path.entrance.x, path.entrance.y, 10.0, Color::new(0.9, 0.2, 0.1, 0.8));
-                draw_circle_lines(path.entrance.x, path.entrance.y, 12.0, 2.0, Color::new(0.9, 0.2, 0.1, 0.5));
+                if path.entrance.x > max_x {
+                    continue;
+                }
+                let e = path.entrance;
+                draw_circle(e.x, e.y, 14.0, Color::new(0.9, 0.2, 0.1, 0.85));
+                draw_circle_lines(e.x, e.y, 18.0, 3.0, Color::new(0.9, 0.35, 0.15, 0.6));
+                draw_line(e.x - 10.0, e.y - 4.0, e.x + 12.0, e.y + 6.0, 2.5, Color::new(0.6, 0.1, 0.05, 0.6));
+                draw_line(e.x + 8.0, e.y - 8.0, e.x - 6.0, e.y + 10.0, 2.0, Color::new(0.6, 0.1, 0.05, 0.6));
             } else {
-                draw_circle(path.entrance.x, path.entrance.y, 6.0, Color::new(0.5, 0.15, 0.1, 0.3));
+                if path.entrance.x > max_x {
+                    continue;
+                }
+                draw_circle(path.entrance.x, path.entrance.y, 7.0, Color::new(0.5, 0.15, 0.1, 0.35));
             }
         }
 
         // 5. Tower slots
         for (idx, slot) in self.map_state.slots.iter().enumerate() {
+            if !self.map_state.is_slot_visible(slot) {
+                continue;
+            }
             let selected = self.selected_slot == Some(idx);
             match slot.state {
                 SlotState::Debris => {
@@ -128,34 +260,42 @@ impl GameplayState {
             }
 
             if selected {
-                draw_circle_lines(slot.position.x, slot.position.y, 15.0, 2.0, WHITE);
+                draw_circle_lines(slot.position.x, slot.position.y, 16.0, 2.0, WHITE);
             }
         }
 
         // 6. Buildings
         for (idx, building) in self.map_state.buildings.iter().enumerate() {
-            if !self.is_building_unlocked(building) {
+            if !self.map_state.is_building_visible(building) {
                 continue;
             }
+            let unlocked = self.is_building_unlocked(building);
             let selected = self.selected_building == Some(idx);
-            let (bg_color, border_color) = match building.state {
-                BuildingState::Broken => (Color::new(0.3, 0.05, 0.05, 0.8), Color::new(0.5, 0.1, 0.1, 0.8)),
-                BuildingState::Repaired => (Color::new(0.3, 0.3, 0.05, 0.8), Color::new(0.5, 0.5, 0.1, 0.8)),
-                BuildingState::Powered => (Color::new(0.05, 0.2, 0.3, 0.9), Color::new(0.2, 0.7, 0.9, 0.9)),
-                BuildingState::Disabled => (Color::new(0.15, 0.15, 0.15, 0.6), Color::new(0.3, 0.3, 0.3, 0.6)),
+            let (bg_color, border_color) = if !unlocked {
+                (Color::new(0.08, 0.08, 0.08, 0.6), Color::new(0.2, 0.2, 0.2, 0.6))
+            } else {
+                match building.state {
+                    BuildingState::Broken => (Color::new(0.3, 0.05, 0.05, 0.8), Color::new(0.5, 0.1, 0.1, 0.8)),
+                    BuildingState::Repaired => (Color::new(0.3, 0.3, 0.05, 0.8), Color::new(0.5, 0.5, 0.1, 0.8)),
+                    BuildingState::Powered => (Color::new(0.05, 0.2, 0.3, 0.9), Color::new(0.2, 0.7, 0.9, 0.9)),
+                    BuildingState::Disabled => (Color::new(0.15, 0.15, 0.15, 0.6), Color::new(0.3, 0.3, 0.3, 0.6)),
+                }
             };
 
-            let w = 40.0;
-            let h = 30.0;
+            let is_core = self.map_state.is_core_building(&building.id);
+            let w = if is_core { 62.0 } else { 40.0 };
+            let h = if is_core { 44.0 } else { 30.0 };
             draw_rectangle(building.position.x - w / 2.0, building.position.y - h / 2.0, w, h, bg_color);
             draw_rectangle_lines(building.position.x - w / 2.0, building.position.y - h / 2.0, w, h, 2.0, border_color);
 
             // Label
             let label = &building.building_type;
             let short = if label.len() > 8 { &label[..8] } else { label };
-            draw_text(short, building.position.x - w / 2.0, building.position.y + h / 2.0 + 12.0, 10.0, dark::TEXT_DIM);
+            let label_color = if unlocked { dark::TEXT_DIM } else { Color::new(0.35, 0.35, 0.35, 0.8) };
+            let label_y = building.position.y + h / 2.0 + if is_core { 16.0 } else { 12.0 };
+            draw_text(short, building.position.x - w / 2.0, label_y, if is_core { 12.0 } else { 10.0 }, label_color);
 
-            if selected {
+            if selected && unlocked {
                 draw_rectangle_lines(building.position.x - w / 2.0 - 2.0, building.position.y - h / 2.0 - 2.0, w + 4.0, h + 4.0, 2.0, WHITE);
             }
         }
@@ -172,6 +312,7 @@ impl GameplayState {
         match node {
             TraceNode::FactoryCore => self.map_state.factory_core,
             TraceNode::Slot(idx) => self.map_state.slots.get(*idx).map_or(Vec2::ZERO, |s| s.position),
+            TraceNode::Building(idx) => self.map_state.buildings.get(*idx).map_or(Vec2::ZERO, |b| b.position),
         }
     }
 

@@ -1,6 +1,6 @@
 use crate::data::GameData;
 use crate::engine::map::{BuildingState, SlotState};
-use crate::ui::{self, SectorPanelAction};
+use crate::ui;
 use macroquad::prelude::*;
 use macroquad_toolkit::colors::dark;
 use macroquad_toolkit::ui::button;
@@ -8,6 +8,31 @@ use macroquad_toolkit::ui::button;
 use super::GameplayState;
 
 impl GameplayState {
+    fn building_display_name_by_id(&self, id: &str) -> String {
+        let raw = self
+            .map_state
+            .buildings
+            .iter()
+            .find(|b| b.id == id)
+            .map(|b| if b.building_type.is_empty() { b.id.as_str() } else { b.building_type.as_str() })
+            .unwrap_or(id);
+        raw.split('_')
+            .filter(|part| !part.is_empty())
+            .map(|part| {
+                let mut chars = part.chars();
+                match chars.next() {
+                    Some(first) => {
+                        let mut out = String::new();
+                        out.push(first.to_ascii_uppercase());
+                        out.push_str(chars.as_str());
+                        out
+                    }
+                    None => String::new(),
+                }
+            })
+            .collect::<Vec<_>>()
+            .join(" ")
+    }
     pub fn draw_build_panel(&mut self, data: &GameData) {
         let unlocked_towers: Vec<_> = data
             .tower_defs
@@ -30,20 +55,64 @@ impl GameplayState {
 
     pub fn draw_sector_panel(&mut self) {
         let sector_x = screen_width() - self.constants.ui.sector_panel_w;
-        let power_gen = self.factory.power_generation();
-        let panel_action = ui::draw_sector_panel(
-            sector_x,
-            self.constants.ui.hud_height,
-            self.constants.ui.sector_panel_w,
-            &self.factory,
-            self.resources.scrap,
-            power_gen,
-        );
-        if let Some(action) = panel_action {
-            match action {
-                SectorPanelAction::Unlock(sector_id) => self.unlock_sector(&sector_id),
-                SectorPanelAction::Repair(sector_id) => self.repair_sector(&sector_id),
+        let panel_y = self.constants.ui.hud_height;
+        let panel_w = self.constants.ui.sector_panel_w;
+        let panel_h = screen_height() - panel_y;
+
+        draw_rectangle(sector_x, panel_y, panel_w, panel_h, Color::new(0.1, 0.1, 0.12, 0.9));
+        draw_text("BUILDINGS", sector_x + 10.0, panel_y + 20.0, 18.0, dark::WARNING);
+
+        let mut row_y = panel_y + 35.0;
+        let row_h = 46.0;
+        let padding = 4.0;
+
+        for building in self
+            .map_state
+            .buildings
+            .iter()
+            .filter(|b| matches!(b.state, BuildingState::Powered))
+        {
+            if row_y + row_h > panel_y + panel_h - 5.0 {
+                break;
             }
+
+            draw_rectangle(sector_x + 5.0, row_y, panel_w - 10.0, row_h, dark::PANEL);
+            draw_rectangle_lines(sector_x + 5.0, row_y, panel_w - 10.0, row_h, 1.0, dark::TEXT_DIM);
+
+            let name = if building.building_type.is_empty() {
+                &building.id
+            } else {
+                &building.building_type
+            };
+            draw_text(name, sector_x + 10.0, row_y + 16.0, 14.0, dark::TEXT);
+
+            match building.state {
+                BuildingState::Powered => {
+                    let b = &building.boon;
+                    let mut parts = Vec::new();
+                    if b.scrap_per_sec > 0.0 { parts.push(format!("+{:.1} scrap/s", b.scrap_per_sec)); }
+                    if b.food_per_sec > 0.0 { parts.push(format!("+{:.1} food/s", b.food_per_sec)); }
+                    if b.water_per_sec > 0.0 { parts.push(format!("+{:.1} water/s", b.water_per_sec)); }
+                    if b.power_per_sec > 0.0 { parts.push(format!("+{:.1} power/s", b.power_per_sec)); }
+                    if parts.is_empty() {
+                        draw_text("Active", sector_x + 10.0, row_y + 30.0, 11.0, dark::POSITIVE);
+                    } else {
+                        draw_text(&parts.join(", "), sector_x + 10.0, row_y + 30.0, 11.0, dark::POSITIVE);
+                    }
+                    if building.threat_per_sec > 0.0 {
+                        draw_text(
+                            &format!("Threat: +{:.2}/s", building.threat_per_sec),
+                            sector_x + 10.0,
+                            row_y + 42.0,
+                            10.0,
+                            dark::NEGATIVE,
+                        );
+                    }
+                }
+                BuildingState::Repaired | BuildingState::Broken | BuildingState::Disabled => {}
+            }
+
+            row_y += row_h + padding;
         }
     }
 
@@ -228,7 +297,7 @@ impl GameplayState {
 
         // Try to find nearest slot or building for selection
         let slot_result = self.map_state.nearest_slot(world_pos);
-        let building_result = self.nearest_unlocked_building(world_pos);
+        let building_result = self.map_state.nearest_building(world_pos);
 
         // Pick the closer of slot vs building
         match (slot_result, building_result) {
@@ -272,7 +341,18 @@ impl GameplayState {
     }
 
     pub(crate) fn clear_slot(&mut self, idx: usize) {
+        if self.beacon_active {
+            self.push_notification("Repairs locked during beacon operation".to_string());
+            return;
+        }
         let cost = self.map_state.slots[idx].clear_cost;
+        if let Some(req) = self.map_state.slots[idx].requires_building_power.as_deref() {
+            if !self.map_state.is_building_powered(req) {
+                let name = self.building_display_name_by_id(req);
+                self.push_notification(format!("Requires power from {}", name));
+                return;
+            }
+        }
         if self.resources.scrap < cost {
             return;
         }
@@ -284,7 +364,18 @@ impl GameplayState {
     }
 
     pub(crate) fn power_slot(&mut self, idx: usize) {
+        if self.beacon_active {
+            self.push_notification("Repairs locked during beacon operation".to_string());
+            return;
+        }
         let cost = self.map_state.slots[idx].power_cost;
+        if let Some(req) = self.map_state.slots[idx].requires_building_power.as_deref() {
+            if !self.map_state.is_building_powered(req) {
+                let name = self.building_display_name_by_id(req);
+                self.push_notification(format!("Requires power from {}", name));
+                return;
+            }
+        }
         if self.resources.scrap < cost {
             return;
         }
@@ -342,14 +433,16 @@ impl GameplayState {
     }
 
     pub(crate) fn repair_building(&mut self, idx: usize) {
-        if self
-            .map_state
-            .buildings
-            .get(idx)
-            .map(|b| !self.is_building_unlocked(b))
-            .unwrap_or(true)
-        {
+        if self.beacon_active {
+            self.push_notification("Repairs locked during beacon operation".to_string());
             return;
+        }
+        if let Some(req) = self.map_state.buildings[idx].requires_power_from.as_deref() {
+            if !self.map_state.is_building_powered(req) {
+                let name = self.building_display_name_by_id(req);
+                self.push_notification(format!("Requires power from {}", name));
+                return;
+            }
         }
         let cost = self.map_state.buildings[idx].repair_cost;
         if self.resources.scrap < cost {
@@ -361,14 +454,16 @@ impl GameplayState {
     }
 
     pub(crate) fn power_building(&mut self, idx: usize) {
-        if self
-            .map_state
-            .buildings
-            .get(idx)
-            .map(|b| !self.is_building_unlocked(b))
-            .unwrap_or(true)
-        {
+        if self.beacon_active {
+            self.push_notification("Repairs locked during beacon operation".to_string());
             return;
+        }
+        if let Some(req) = self.map_state.buildings[idx].requires_power_from.as_deref() {
+            if !self.map_state.is_building_powered(req) {
+                let name = self.building_display_name_by_id(req);
+                self.push_notification(format!("Requires power from {}", name));
+                return;
+            }
         }
         let cost = self.map_state.buildings[idx].power_cost;
         if self.resources.scrap < cost {
@@ -389,35 +484,6 @@ impl GameplayState {
                 self.resources.scrap -= def.cost_scrap;
                 self.factory.purchase_upgrade(&def);
             }
-        }
-    }
-
-    fn unlock_sector(&mut self, sector_id: &str) {
-        if let Some(sector) = self.factory.sectors.iter_mut().find(|s| s.id == sector_id) {
-            if !sector.unlocked && self.resources.scrap >= sector.unlock_cost {
-                self.resources.scrap -= sector.unlock_cost;
-                sector.unlocked = true;
-                self.threat.add_from_sector(sector_id);
-                if sector_id == "ai_vault" {
-                    self.threat.add_territory(5.0);
-                }
-                self.factory.check_awakening();
-            }
-        }
-    }
-
-    fn repair_sector(&mut self, sector_id: &str) {
-        let repair_cost = self.constants.sector.repair_cost;
-        let repair_amount = self.constants.sector.repair_amount;
-        if self.resources.scrap < repair_cost {
-            return;
-        }
-        if let Some(sector) = self.factory.sectors.iter_mut().find(|s| s.id == sector_id && s.unlocked) {
-            if sector.integrity >= sector.max_integrity {
-                return;
-            }
-            self.resources.scrap -= repair_cost;
-            sector.integrity = (sector.integrity + repair_amount).min(sector.max_integrity);
         }
     }
 

@@ -240,6 +240,23 @@ pub struct MapDef {
     pub building_slots: Vec<BuildingSlotDef>,
     pub paths: Vec<PathDef>,
     pub traces: Vec<TraceDef>,
+    #[serde(default)]
+    pub sections: Vec<SectionDef>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct SectionDef {
+    pub id: String,
+    pub label: String,
+    pub core_building: String,
+    #[serde(default)]
+    pub buildings: Vec<String>,
+    #[serde(default)]
+    pub slots: Vec<String>,
+    #[serde(default)]
+    pub unlock_entrance: Option<String>,
+    #[serde(default)]
+    pub visible_at_start: bool,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -251,6 +268,8 @@ pub struct SlotDef {
     pub clear_cost: f32,
     pub power_cost: f32,
     pub opens_entrance: Option<String>,
+    #[serde(default)]
+    pub requires_building_power: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -282,6 +301,8 @@ pub struct BuildingSlotDef {
     pub threat_per_sec: f32,
     #[serde(default)]
     pub opens_entrance: Option<String>,
+    #[serde(default)]
+    pub requires_power_from: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default)]

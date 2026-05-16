@@ -25,12 +25,10 @@ impl FactoryPhase {
 
 pub struct Sector {
     pub id: String,
-    pub name: String,
     pub unlocked: bool,
     pub integrity: f32,
     pub max_integrity: f32,
     pub power_cost: f32,
-    pub unlock_cost: f32,
 }
 
 pub struct Factory {
@@ -55,12 +53,10 @@ impl Factory {
             .iter()
             .map(|sd| Sector {
                 id: sd.id.clone(),
-                name: sd.name.clone(),
                 unlocked: sd.starts_unlocked,
                 integrity: sd.max_integrity,
                 max_integrity: sd.max_integrity,
                 power_cost: sd.base_power_cost,
-                unlock_cost: sd.base_power_cost * 5.0,
             })
             .collect();
     }

@@ -80,18 +80,20 @@ impl GameplayState {
     }
 
     pub fn is_building_unlocked(&self, building: &MapBuilding) -> bool {
-        self.is_building_type_unlocked(&building.building_type)
+        let _ = building;
+        true
     }
 
     pub fn is_building_type_unlocked(&self, building_type: &str) -> bool {
-        match self.unlocks.buildings.get(building_type) {
-            Some(rule) => self.unlock_requires_met(&rule.requires),
-            None => false,
-        }
+        let _ = building_type;
+        true
     }
 
     fn unlock_requires_met(&self, requires: &[String]) -> bool {
         requires.iter().all(|req| {
+            if self.map_state.is_building_powered(req) {
+                return true;
+            }
             self.factory.is_sector_unlocked(req) || self.factory.has_upgrade(req)
         })
     }
@@ -99,7 +101,7 @@ impl GameplayState {
     pub fn unlocked_building_boon(&self) -> BuildingBoon {
         let mut boon = BuildingBoon::default();
         for building in &self.map_state.buildings {
-            if !self.is_building_unlocked(building) || !building.is_active() {
+            if !building.is_active() {
                 continue;
             }
             boon.scrap_per_sec += building.boon.scrap_per_sec;
@@ -114,7 +116,7 @@ impl GameplayState {
         self.map_state
             .buildings
             .iter()
-            .filter(|b| self.is_building_unlocked(b) && b.is_active())
+            .filter(|b| b.is_active())
             .map(|b| b.threat_per_sec)
             .sum()
     }
@@ -123,9 +125,6 @@ impl GameplayState {
         let mut best = None;
         let mut best_dist = self.map_state.building_interact_radius;
         for (idx, building) in self.map_state.buildings.iter().enumerate() {
-            if !self.is_building_unlocked(building) {
-                continue;
-            }
             let dist = (building.position - pos).length();
             if dist <= best_dist {
                 best_dist = dist;

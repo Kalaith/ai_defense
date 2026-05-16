@@ -179,9 +179,11 @@ impl GameplayState {
     }
 
     fn tick_wave(&mut self, dt: f32) {
-        let paths: HashMap<String, Vec<Vec2>> = self.map_state.paths.iter()
-            .filter(|p| p.active)
-            .map(|p| (p.id.clone(), p.points.clone()))
+        let paths: HashMap<String, Vec<Vec2>> = self
+            .map_state
+            .active_paths_limited()
+            .into_iter()
+            .map(|p| (p.id.clone(), p.points))
             .collect();
 
         let event = self.wave_manager.tick(dt, &paths);
@@ -300,6 +302,7 @@ impl GameplayState {
     fn update_factory(&mut self) {
         self.factory.check_awakening();
         self.recalc_factory_integrity();
+        self.map_state.update_section_visibility();
     }
 
     fn update_notifications(&mut self, dt: f32) {
