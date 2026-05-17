@@ -14,7 +14,13 @@ impl GameplayState {
             .buildings
             .iter()
             .find(|b| b.id == id)
-            .map(|b| if b.building_type.is_empty() { b.id.as_str() } else { b.building_type.as_str() })
+            .map(|b| {
+                if b.building_type.is_empty() {
+                    b.id.as_str()
+                } else {
+                    b.building_type.as_str()
+                }
+            })
             .unwrap_or(id);
         raw.split('_')
             .filter(|part| !part.is_empty())
@@ -59,8 +65,19 @@ impl GameplayState {
         let panel_w = self.constants.ui.sector_panel_w;
         let panel_h = screen_height() - panel_y;
 
-        draw_rectangle(sector_x, panel_y, panel_w, panel_h, Color::new(0.1, 0.1, 0.12, 0.9));
-        draw_text("BUILDINGS", sector_x + 10.0, panel_y + 20.0, 18.0, dark::WARNING);
+        let panel_surface =
+            macroquad_toolkit::ui::SurfaceStyle::new(Color::new(0.1, 0.1, 0.12, 0.9));
+        macroquad_toolkit::ui::draw_surface(
+            Rect::new(sector_x, panel_y, panel_w, panel_h),
+            &panel_surface,
+        );
+        draw_text(
+            "BUILDINGS",
+            sector_x + 10.0,
+            panel_y + 20.0,
+            18.0,
+            dark::WARNING,
+        );
 
         let mut row_y = panel_y + 35.0;
         let row_h = 46.0;
@@ -76,8 +93,10 @@ impl GameplayState {
                 break;
             }
 
-            draw_rectangle(sector_x + 5.0, row_y, panel_w - 10.0, row_h, dark::PANEL);
-            draw_rectangle_lines(sector_x + 5.0, row_y, panel_w - 10.0, row_h, 1.0, dark::TEXT_DIM);
+            let row_rect = Rect::new(sector_x + 5.0, row_y, panel_w - 10.0, row_h);
+            let row_surface = macroquad_toolkit::ui::SurfaceStyle::new(dark::PANEL)
+                .with_border(1.0, dark::TEXT_DIM);
+            macroquad_toolkit::ui::draw_surface(row_rect, &row_surface);
 
             let name = if building.building_type.is_empty() {
                 &building.id
@@ -90,14 +109,34 @@ impl GameplayState {
                 BuildingState::Powered => {
                     let b = &building.boon;
                     let mut parts = Vec::new();
-                    if b.scrap_per_sec > 0.0 { parts.push(format!("+{:.1} scrap/s", b.scrap_per_sec)); }
-                    if b.food_per_sec > 0.0 { parts.push(format!("+{:.1} food/s", b.food_per_sec)); }
-                    if b.water_per_sec > 0.0 { parts.push(format!("+{:.1} water/s", b.water_per_sec)); }
-                    if b.power_per_sec > 0.0 { parts.push(format!("+{:.1} power/s", b.power_per_sec)); }
+                    if b.scrap_per_sec > 0.0 {
+                        parts.push(format!("+{:.1} scrap/s", b.scrap_per_sec));
+                    }
+                    if b.food_per_sec > 0.0 {
+                        parts.push(format!("+{:.1} food/s", b.food_per_sec));
+                    }
+                    if b.water_per_sec > 0.0 {
+                        parts.push(format!("+{:.1} water/s", b.water_per_sec));
+                    }
+                    if b.power_per_sec > 0.0 {
+                        parts.push(format!("+{:.1} power/s", b.power_per_sec));
+                    }
                     if parts.is_empty() {
-                        draw_text("Active", sector_x + 10.0, row_y + 30.0, 11.0, dark::POSITIVE);
+                        draw_text(
+                            "Active",
+                            sector_x + 10.0,
+                            row_y + 30.0,
+                            11.0,
+                            dark::POSITIVE,
+                        );
                     } else {
-                        draw_text(&parts.join(", "), sector_x + 10.0, row_y + 30.0, 11.0, dark::POSITIVE);
+                        draw_text(
+                            &parts.join(", "),
+                            sector_x + 10.0,
+                            row_y + 30.0,
+                            11.0,
+                            dark::POSITIVE,
+                        );
                     }
                     if building.threat_per_sec > 0.0 {
                         draw_text(
@@ -119,7 +158,8 @@ impl GameplayState {
     pub fn draw_placement_ghost(&self, data: &GameData) {
         if let Some(ref tower_id) = self.placing_tower {
             if let Some(def) = data.tower_def_by_id(tower_id) {
-                let world_mouse = self.screen_to_world(vec2(mouse_position().0, mouse_position().1));
+                let world_mouse =
+                    self.screen_to_world(vec2(mouse_position().0, mouse_position().1));
 
                 // Find nearest powered empty slot
                 let mut best_slot = None;
@@ -141,7 +181,11 @@ impl GameplayState {
                     let ghost_color = Color::new(c.r, c.g, c.b, 0.5);
                     let range_color = Color::new(c.r, c.g, c.b, 0.3);
 
-                    let range_mult = if self.factory.is_sector_active("ai_vault") { 1.2 } else { 1.0 };
+                    let range_mult = if self.factory.is_sector_active("ai_vault") {
+                        1.2
+                    } else {
+                        1.0
+                    };
                     let radius = self.constants.ui.tower_base_radius;
                     draw_circle(pos.x, pos.y, radius, ghost_color);
                     draw_circle_lines(pos.x, pos.y, def.base_range * range_mult, 1.0, range_color);
@@ -182,8 +226,12 @@ impl GameplayState {
     }
 
     pub fn draw_selected_tower_panel(&mut self, data: &GameData) {
-        let Some(idx) = self.selected_tower else { return; };
-        let Some(tower) = self.towers.get(idx) else { return; };
+        let Some(idx) = self.selected_tower else {
+            return;
+        };
+        let Some(tower) = self.towers.get(idx) else {
+            return;
+        };
 
         let panel_x = 0.0;
         let panel_y = self.constants.ui.hud_height;
@@ -200,13 +248,37 @@ impl GameplayState {
 
         draw_text("SELECTED", info_x, info_y, 14.0, dark::TEXT_DIM);
         info_y += 16.0;
-        draw_text(&format!("{} (Lv {})", name, tower.level), info_x, info_y, 14.0, dark::TEXT_BRIGHT);
+        draw_text(
+            &format!("{} (Lv {})", name, tower.level),
+            info_x,
+            info_y,
+            14.0,
+            dark::TEXT_BRIGHT,
+        );
         info_y += 16.0;
-        draw_text(&format!("Dmg: {:.1}", tower.damage), info_x, info_y, 12.0, dark::TEXT);
+        draw_text(
+            &format!("Dmg: {:.1}", tower.damage),
+            info_x,
+            info_y,
+            12.0,
+            dark::TEXT,
+        );
         info_y += 14.0;
-        draw_text(&format!("Rng: {:.0}", tower.range), info_x, info_y, 12.0, dark::TEXT);
+        draw_text(
+            &format!("Rng: {:.0}", tower.range),
+            info_x,
+            info_y,
+            12.0,
+            dark::TEXT,
+        );
         info_y += 14.0;
-        draw_text(&format!("Rate: {:.2}/s", tower.fire_rate), info_x, info_y, 12.0, dark::TEXT);
+        draw_text(
+            &format!("Rate: {:.2}/s", tower.fire_rate),
+            info_x,
+            info_y,
+            12.0,
+            dark::TEXT,
+        );
 
         let btn_w = panel_w - 20.0;
         let btn_h = 24.0;
@@ -219,7 +291,13 @@ impl GameplayState {
         }
 
         if !self.factory.is_sector_active("research_lab") {
-            draw_text("Requires Research Lab", btn_x, btn_y + 16.0, 12.0, dark::TEXT_DIM);
+            draw_text(
+                "Requires Research Lab",
+                btn_x,
+                btn_y + 16.0,
+                12.0,
+                dark::TEXT_DIM,
+            );
             return;
         }
 
@@ -230,9 +308,20 @@ impl GameplayState {
                 self.upgrade_tower(idx);
             }
         } else {
-            draw_rectangle(btn_x, btn_y, btn_w, btn_h, Color::new(0.2, 0.2, 0.2, 0.5));
+            let disabled_surface =
+                macroquad_toolkit::ui::SurfaceStyle::new(Color::new(0.2, 0.2, 0.2, 0.5));
+            macroquad_toolkit::ui::draw_surface(
+                Rect::new(btn_x, btn_y, btn_w, btn_h),
+                &disabled_surface,
+            );
             let dims = measure_text(&label, None, 12, 1.0);
-            draw_text(&label, btn_x + (btn_w - dims.width) / 2.0, btn_y + 16.0, 12.0, dark::TEXT_DIM);
+            draw_text(
+                &label,
+                btn_x + (btn_w - dims.width) / 2.0,
+                btn_y + 16.0,
+                12.0,
+                dark::TEXT_DIM,
+            );
         }
     }
 
@@ -263,7 +352,11 @@ impl GameplayState {
             let core_panel_x = panel_x - 10.0;
             let core_panel_w = panel_w + 20.0;
             let core_panel_top = panel_y - 160.0;
-            if mx >= core_panel_x && mx <= core_panel_x + core_panel_w && my >= core_panel_top && my <= panel_y + panel_h {
+            if mx >= core_panel_x
+                && mx <= core_panel_x + core_panel_w
+                && my >= core_panel_top
+                && my <= panel_y + panel_h
+            {
                 return;
             }
         }
@@ -277,7 +370,11 @@ impl GameplayState {
             self.selected_building = None;
             self.selected_tower = None;
             if self.selected_upgrade.is_none() {
-                if let Some(upg) = self.available_upgrades().into_iter().find(|u| !self.factory.has_upgrade(&u.id)) {
+                if let Some(upg) = self
+                    .available_upgrades()
+                    .into_iter()
+                    .find(|u| !self.factory.has_upgrade(&u.id))
+                {
                     self.selected_upgrade = Some(upg.id.clone());
                 }
             }
@@ -395,16 +492,25 @@ impl GameplayState {
             return;
         }
 
-        let Some(def) = data.tower_def_by_id(tower_id) else { return; };
+        let Some(def) = data.tower_def_by_id(tower_id) else {
+            return;
+        };
         if self.resources.scrap < def.cost_scrap {
             return;
         }
 
         let gen = self.factory.power_generation();
         let current_drain: f32 = self.factory.power_consumption()
-            + self.towers.iter().filter(|t| t.is_active).map(|t| t.power_drain).sum::<f32>();
+            + self
+                .towers
+                .iter()
+                .filter(|t| t.is_active)
+                .map(|t| t.power_drain)
+                .sum::<f32>();
         let net_after = gen - current_drain - def.cost_power;
-        if net_after < 0.0 && self.resources.power < self.constants.economy.power_buffer_min_for_build {
+        if net_after < 0.0
+            && self.resources.power < self.constants.economy.power_buffer_min_for_build
+        {
             return;
         }
 
@@ -449,7 +555,8 @@ impl GameplayState {
             return;
         }
         self.resources.scrap -= cost;
-        self.map_state.set_building_state(idx, BuildingState::Repaired);
+        self.map_state
+            .set_building_state(idx, BuildingState::Repaired);
         self.push_notification(format!("{} repaired", self.map_state.buildings[idx].id));
     }
 
@@ -470,7 +577,9 @@ impl GameplayState {
             return;
         }
         self.resources.scrap -= cost;
-        let newly_active = self.map_state.set_building_state(idx, BuildingState::Powered);
+        let newly_active = self
+            .map_state
+            .set_building_state(idx, BuildingState::Powered);
         self.push_notification(format!("{} powered on", self.map_state.buildings[idx].id));
         for path_id in &newly_active {
             self.push_notification(format!("New entrance opened: {}", path_id));
@@ -478,9 +587,16 @@ impl GameplayState {
     }
 
     pub(crate) fn purchase_upgrade(&mut self, upgrade_id: &str) {
-        let def = self.upgrade_defs.iter().find(|u| u.id == upgrade_id).cloned();
+        let def = self
+            .upgrade_defs
+            .iter()
+            .find(|u| u.id == upgrade_id)
+            .cloned();
         if let Some(def) = def {
-            if self.factory.can_purchase(&def, self.resources.scrap, self.resources.power) {
+            if self
+                .factory
+                .can_purchase(&def, self.resources.scrap, self.resources.power)
+            {
                 self.resources.scrap -= def.cost_scrap;
                 self.factory.purchase_upgrade(&def);
             }

@@ -43,7 +43,8 @@ impl Population {
 
             if self.health < constants.population.death_health_threshold && self.count > 0 {
                 self.death_timer += dt;
-                while self.death_timer >= constants.population.death_interval_sec && self.count > 0 {
+                while self.death_timer >= constants.population.death_interval_sec && self.count > 0
+                {
                     self.count -= 1;
                     self.death_timer -= constants.population.death_interval_sec;
                 }

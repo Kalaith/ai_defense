@@ -201,8 +201,7 @@ impl MapState {
         let mut traces = Self::build_traces(&slots, &buildings, def.traces);
         traces.extend(Self::auto_building_traces(&slots, &buildings, &traces));
 
-        let (sections, slot_sections, building_sections) =
-            Self::build_sections(&def.sections);
+        let (sections, slot_sections, building_sections) = Self::build_sections(&def.sections);
         let mut state = Self {
             map_size: Vec2::new(def.map_size[0], def.map_size[1]),
             factory_core: Vec2::new(def.factory_core[0], def.factory_core[1]),
@@ -223,7 +222,11 @@ impl MapState {
 
     fn build_sections(
         sections: &[SectionDef],
-    ) -> (Vec<MapSection>, HashMap<String, usize>, HashMap<String, usize>) {
+    ) -> (
+        Vec<MapSection>,
+        HashMap<String, usize>,
+        HashMap<String, usize>,
+    ) {
         let mut slot_sections: HashMap<String, usize> = HashMap::new();
         let mut building_sections: HashMap<String, usize> = HashMap::new();
         let mut result = Vec::new();
@@ -390,7 +393,11 @@ impl MapState {
         }
     }
 
-    fn build_traces(slots: &[MapSlot], buildings: &[MapBuilding], traces: Vec<TraceDef>) -> Vec<MapTrace> {
+    fn build_traces(
+        slots: &[MapSlot],
+        buildings: &[MapBuilding],
+        traces: Vec<TraceDef>,
+    ) -> Vec<MapTrace> {
         let mut slot_map: HashMap<&str, usize> = HashMap::new();
         for (idx, slot) in slots.iter().enumerate() {
             slot_map.insert(slot.id.as_str(), idx);
@@ -404,8 +411,12 @@ impl MapState {
         for trace in traces {
             let from = Self::resolve_trace_node(&trace.from, &slot_map, &building_map);
             let to = Self::resolve_trace_node(&trace.to, &slot_map, &building_map);
-            let Some(from) = from else { continue; };
-            let Some(to) = to else { continue; };
+            let Some(from) = from else {
+                continue;
+            };
+            let Some(to) = to else {
+                continue;
+            };
             let via = trace
                 .via
                 .iter()
@@ -470,7 +481,10 @@ impl MapState {
         if id == "factory_core" {
             return Some(TraceNode::FactoryCore);
         }
-        slot_map.get(id).copied().map(TraceNode::Slot)
+        slot_map
+            .get(id)
+            .copied()
+            .map(TraceNode::Slot)
             .or_else(|| building_map.get(id).copied().map(TraceNode::Building))
     }
 
@@ -528,17 +542,28 @@ impl MapState {
             .unwrap_or(false)
     }
 
-
     pub fn trace_powered(&self, trace: &MapTrace) -> bool {
         let from_powered = match trace.from {
             TraceNode::FactoryCore => true,
-            TraceNode::Slot(idx) => self.slots.get(idx).map_or(false, |s| s.state == SlotState::Powered),
-            TraceNode::Building(idx) => self.buildings.get(idx).map_or(false, |b| b.state == BuildingState::Powered),
+            TraceNode::Slot(idx) => self
+                .slots
+                .get(idx)
+                .map_or(false, |s| s.state == SlotState::Powered),
+            TraceNode::Building(idx) => self
+                .buildings
+                .get(idx)
+                .map_or(false, |b| b.state == BuildingState::Powered),
         };
         let to_powered = match trace.to {
             TraceNode::FactoryCore => true,
-            TraceNode::Slot(idx) => self.slots.get(idx).map_or(false, |s| s.state == SlotState::Powered),
-            TraceNode::Building(idx) => self.buildings.get(idx).map_or(false, |b| b.state == BuildingState::Powered),
+            TraceNode::Slot(idx) => self
+                .slots
+                .get(idx)
+                .map_or(false, |s| s.state == SlotState::Powered),
+            TraceNode::Building(idx) => self
+                .buildings
+                .get(idx)
+                .map_or(false, |b| b.state == BuildingState::Powered),
         };
         from_powered && to_powered
     }
@@ -546,7 +571,9 @@ impl MapState {
     pub fn set_slot_state(&mut self, idx: usize, state: SlotState) -> Vec<String> {
         let mut entrance_to_unlock = None;
         {
-            let Some(slot) = self.slots.get_mut(idx) else { return Vec::new(); };
+            let Some(slot) = self.slots.get_mut(idx) else {
+                return Vec::new();
+            };
             if slot.state == state {
                 return Vec::new();
             }
@@ -565,7 +592,9 @@ impl MapState {
     pub fn set_building_state(&mut self, idx: usize, state: BuildingState) -> Vec<String> {
         let mut entrance_to_unlock = None;
         {
-            let Some(building) = self.buildings.get_mut(idx) else { return Vec::new(); };
+            let Some(building) = self.buildings.get_mut(idx) else {
+                return Vec::new();
+            };
             if building.state == state {
                 return Vec::new();
             }

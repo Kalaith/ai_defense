@@ -59,10 +59,18 @@ impl GameplayState {
         let pan_speed = 400.0 / self.camera_zoom;
 
         // WASD panning
-        if is_key_down(KeyCode::W) { self.camera_offset.y -= pan_speed * dt; }
-        if is_key_down(KeyCode::S) { self.camera_offset.y += pan_speed * dt; }
-        if is_key_down(KeyCode::A) { self.camera_offset.x -= pan_speed * dt; }
-        if is_key_down(KeyCode::D) { self.camera_offset.x += pan_speed * dt; }
+        if is_key_down(KeyCode::W) {
+            self.camera_offset.y -= pan_speed * dt;
+        }
+        if is_key_down(KeyCode::S) {
+            self.camera_offset.y += pan_speed * dt;
+        }
+        if is_key_down(KeyCode::A) {
+            self.camera_offset.x -= pan_speed * dt;
+        }
+        if is_key_down(KeyCode::D) {
+            self.camera_offset.x += pan_speed * dt;
+        }
 
         // Middle-mouse drag
         let (mx, my) = mouse_position();
@@ -105,7 +113,11 @@ impl GameplayState {
         }
 
         if is_key_pressed(KeyCode::Space) {
-            self.time_scale = if self.time_scale > 1.0 { 1.0 } else { self.constants.gameplay.speed_multiplier };
+            self.time_scale = if self.time_scale > 1.0 {
+                1.0
+            } else {
+                self.constants.gameplay.speed_multiplier
+            };
         }
 
         if is_mouse_button_pressed(MouseButton::Right) {
@@ -148,11 +160,17 @@ impl GameplayState {
     }
 
     fn start_wave_if_ready(&mut self) {
-        if !self.beacon_active || self.shutdown_triggered || self.between_waves || self.wave_manager.wave_active {
+        if !self.beacon_active
+            || self.shutdown_triggered
+            || self.between_waves
+            || self.wave_manager.wave_active
+        {
             return;
         }
 
-        let spawn_points: Vec<(String, Vec2)> = self.map_state.active_paths()
+        let spawn_points: Vec<(String, Vec2)> = self
+            .map_state
+            .active_paths()
             .iter()
             .map(|p| (p.id.clone(), p.entrance))
             .collect();
@@ -162,7 +180,8 @@ impl GameplayState {
         }
 
         let force_commander = self.beacon_phase == BeaconPhase::TerminalHowl;
-        let budget_multiplier = self.constants.waves.budget_multiplier + self.beacon_start_difficulty_bonus;
+        let budget_multiplier =
+            self.constants.waves.budget_multiplier + self.beacon_start_difficulty_bonus;
         self.wave_manager.generate_wave(
             self.current_wave,
             &self.enemy_defs,
@@ -195,10 +214,26 @@ impl GameplayState {
     }
 
     fn update_combat(&mut self, dt: f32) {
-        let damage_mult = if self.factory.is_sector_active("assembly_hall") { self.constants.sector.bonus_damage_mult } else { 1.0 };
-        let fire_rate_mult = if self.factory.is_sector_active("robotics_bay") { self.constants.sector.bonus_fire_rate_mult } else { 1.0 };
-        let range_mult = if self.factory.is_sector_active("ai_vault") { self.constants.sector.bonus_range_mult } else { 1.0 };
-        let scrap_mult = if self.factory.is_sector_active("logistics_hub") { self.constants.sector.bonus_scrap_mult } else { 1.0 };
+        let damage_mult = if self.factory.is_sector_active("assembly_hall") {
+            self.constants.sector.bonus_damage_mult
+        } else {
+            1.0
+        };
+        let fire_rate_mult = if self.factory.is_sector_active("robotics_bay") {
+            self.constants.sector.bonus_fire_rate_mult
+        } else {
+            1.0
+        };
+        let range_mult = if self.factory.is_sector_active("ai_vault") {
+            self.constants.sector.bonus_range_mult
+        } else {
+            1.0
+        };
+        let scrap_mult = if self.factory.is_sector_active("logistics_hub") {
+            self.constants.sector.bonus_scrap_mult
+        } else {
+            1.0
+        };
 
         let tuning = TowerTuning {
             shot_ttl: self.constants.tower.shot_ttl,
@@ -242,9 +277,15 @@ impl GameplayState {
     fn update_power(&mut self, dt: f32) {
         let building_power = self.unlocked_building_boon().power_per_sec;
         let gen = self.factory.power_generation() + building_power;
-        let tower_drain: f32 = self.towers.iter().filter(|t| t.is_active).map(|t| t.power_drain).sum();
+        let tower_drain: f32 = self
+            .towers
+            .iter()
+            .filter(|t| t.is_active)
+            .map(|t| t.power_drain)
+            .sum();
         let consume = self.factory.power_consumption() + tower_drain;
-        self.resources.power = (self.resources.power + (gen - consume) * dt).clamp(0.0, self.constants.economy.power_cap);
+        self.resources.power = (self.resources.power + (gen - consume) * dt)
+            .clamp(0.0, self.constants.economy.power_cap);
 
         if self.resources.power <= 0.0 && gen < consume {
             let mut current_drain = consume;
@@ -270,7 +311,9 @@ impl GameplayState {
 
     fn update_population(&mut self, dt: f32) {
         self.population.tick(dt, &self.constants);
-        self.resources.scrap += self.population.productivity(&self.constants) * self.constants.economy.productivity_scrap_rate * dt;
+        self.resources.scrap += self.population.productivity(&self.constants)
+            * self.constants.economy.productivity_scrap_rate
+            * dt;
     }
 
     fn update_building_boons(&mut self, dt: f32) {
@@ -321,7 +364,8 @@ impl GameplayState {
     fn handle_breach(&mut self, enemy_type: EnemyType) {
         match enemy_type {
             EnemyType::Scout => {
-                self.threat.add_noise(self.constants.threat.noise_scout_breach);
+                self.threat
+                    .add_noise(self.constants.threat.noise_scout_breach);
                 self.push_notification("Scout slipped through — threat increased".to_string());
             }
             EnemyType::Saboteur => {
@@ -359,7 +403,11 @@ impl GameplayState {
     pub(crate) fn update_beacon(&mut self) {
         let unlocked = self.factory.unlocked_count() as f32;
         let power_throughput = self.factory.power_generation();
-        let ai_vault_tier = if self.factory.is_sector_active("ai_vault") { 1.0 } else { 0.0 };
+        let ai_vault_tier = if self.factory.is_sector_active("ai_vault") {
+            1.0
+        } else {
+            0.0
+        };
         let population = self.population.count as f32;
 
         self.beacon_strength = (unlocked * 2.0)
@@ -389,24 +437,28 @@ impl GameplayState {
         self.scavenger_recall_timer = 0.0;
 
         let (scrap, food, pop_gain) = match self.beacon_phase {
-            BeaconPhase::WarmSignal => {
-                (self.constants.scavenger.warm_scrap, self.constants.scavenger.warm_food, 0)
-            }
+            BeaconPhase::WarmSignal => (
+                self.constants.scavenger.warm_scrap,
+                self.constants.scavenger.warm_food,
+                0,
+            ),
             BeaconPhase::SustainedCall => {
                 let pop = if gen_range(0.0, 1.0) < self.constants.scavenger.sustained_pop_chance {
                     1
                 } else {
                     0
                 };
-                (self.constants.scavenger.sustained_scrap, self.constants.scavenger.sustained_food, pop)
-            }
-            BeaconPhase::ScreamingBeacon => {
                 (
-                    self.constants.scavenger.screaming_scrap,
-                    self.constants.scavenger.screaming_food,
-                    self.constants.scavenger.screaming_pop_gain,
+                    self.constants.scavenger.sustained_scrap,
+                    self.constants.scavenger.sustained_food,
+                    pop,
                 )
             }
+            BeaconPhase::ScreamingBeacon => (
+                self.constants.scavenger.screaming_scrap,
+                self.constants.scavenger.screaming_food,
+                self.constants.scavenger.screaming_pop_gain,
+            ),
             BeaconPhase::TerminalHowl => {
                 if gen_range(0.0, 1.0) < self.constants.scavenger.terminal_loss_chance {
                     self.scavengers_out = self.scavengers_out.saturating_sub(1);
@@ -432,7 +484,10 @@ impl GameplayState {
         self.scavenger_food_gained += food;
         self.scavenger_population_gained += pop_gain;
 
-        let note = format!("Scavengers returned: +{:.0} scrap, +{:.0} food, +{} pop", scrap, food, pop_gain);
+        let note = format!(
+            "Scavengers returned: +{:.0} scrap, +{:.0} food, +{} pop",
+            scrap, food, pop_gain
+        );
         self.push_notification(note);
     }
 

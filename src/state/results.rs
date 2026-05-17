@@ -41,7 +41,11 @@ impl ResultsState {
             center_x - dims.width / 2.0,
             center_y - 60.0,
             40.0,
-            if self.summary.shutdown_triggered { dark::POSITIVE } else { dark::NEGATIVE },
+            if self.summary.shutdown_triggered {
+                dark::POSITIVE
+            } else {
+                dark::NEGATIVE
+            },
         );
 
         let lines = build_report_lines(&self.summary);
@@ -76,7 +80,10 @@ fn build_report_lines(summary: &RunSummary) -> Vec<String> {
         "Factory Systems Online: {}",
         summary.factory_online
     ));
-    lines.push(format!("Population Surviving: {}", summary.population_surviving));
+    lines.push(format!(
+        "Population Surviving: {}",
+        summary.population_surviving
+    ));
 
     let outcome = if summary.shutdown_triggered {
         "Beacon shut down — survivors evacuated"

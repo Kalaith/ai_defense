@@ -80,7 +80,8 @@ impl Factory {
         if !has_power_core {
             return 0.0;
         }
-        let other_unlocked = self.sectors
+        let other_unlocked = self
+            .sectors
             .iter()
             .filter(|s| s.unlocked && s.integrity > 0.0 && s.id != "power_core")
             .count();
@@ -88,7 +89,11 @@ impl Factory {
     }
 
     pub fn power_consumption(&self) -> f32 {
-        self.sectors.iter().filter(|s| s.unlocked).map(|s| s.power_cost).sum()
+        self.sectors
+            .iter()
+            .filter(|s| s.unlocked)
+            .map(|s| s.power_cost)
+            .sum()
     }
 
     pub fn check_awakening(&mut self) {

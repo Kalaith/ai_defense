@@ -1,7 +1,7 @@
 //! Wave spawning and progression (refactored).
 
 use crate::data::EnemyDef;
-use crate::engine::enemy::{Enemy, EnemyType, EnemyTuning};
+use crate::engine::enemy::{Enemy, EnemyTuning, EnemyType};
 use macroquad::prelude::Vec2;
 use std::collections::HashMap;
 
@@ -214,7 +214,13 @@ pub fn preview_wave(
     queue.into_iter().map(|e| e.enemy_type).collect()
 }
 
-fn push_spawn(queue: &mut Vec<SpawnEntry>, def: &EnemyDef, health_scale: f32, spawn_point: Vec2, path_id: String) {
+fn push_spawn(
+    queue: &mut Vec<SpawnEntry>,
+    def: &EnemyDef,
+    health_scale: f32,
+    spawn_point: Vec2,
+    path_id: String,
+) {
     queue.push(SpawnEntry {
         enemy_type: def.enemy_type.clone(),
         health: def.base_health * health_scale,
@@ -248,7 +254,9 @@ fn build_spawn_queue(
     let scale = base_health_scale.powi(wave_number as i32) * threat_health_bonus;
 
     let threat_budget_bonus = (threat_awareness / threat_budget_divisor).floor() as i32;
-    let base_budget = wave_budget_base as i32 + wave_number as i32 * wave_budget_per_wave as i32 + threat_budget_bonus;
+    let base_budget = wave_budget_base as i32
+        + wave_number as i32 * wave_budget_per_wave as i32
+        + threat_budget_bonus;
     let mut budget = (base_budget as f32 * budget_multiplier).round().max(1.0) as i32;
 
     let mut max_tier = match wave_number {
@@ -272,7 +280,10 @@ fn build_spawn_queue(
     let mut path_robin = 0usize;
 
     if (wave_number > 0 && wave_number % wave_commander_every == 0) || force_commander {
-        if let Some(boss) = eligible.iter().find(|d| d.enemy_type == EnemyType::Commander) {
+        if let Some(boss) = eligible
+            .iter()
+            .find(|d| d.enemy_type == EnemyType::Commander)
+        {
             let (ref pid, sp) = spawn_points[path_robin % spawn_points.len()];
             push_spawn(&mut queue, boss, scale, sp, pid.clone());
             budget -= boss.threat_value as i32;
@@ -284,7 +295,10 @@ fn build_spawn_queue(
     while budget > 0 && safety > 0 {
         safety -= 1;
         let pick = if queue.len() % 3 == 0 {
-            eligible.iter().rev().find(|d| (d.threat_value as i32) <= budget)
+            eligible
+                .iter()
+                .rev()
+                .find(|d| (d.threat_value as i32) <= budget)
         } else {
             eligible.iter().find(|d| (d.threat_value as i32) <= budget)
         };

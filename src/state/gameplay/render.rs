@@ -3,6 +3,9 @@ use crate::engine::enemy::EnemyType;
 use crate::engine::map::{BuildingState, SlotState, TraceNode};
 use macroquad::prelude::*;
 use macroquad_toolkit::colors::dark;
+use macroquad_toolkit::notifications::{
+    draw_notification, Notification, NotificationRenderConfig, NotificationType,
+};
 use macroquad_toolkit::ui::button;
 
 use super::helpers::{beacon_color, enemy_label, entrance_label};
@@ -73,7 +76,13 @@ impl GameplayState {
                 let cy = min.y + h * 0.5;
                 draw_circle(cx, cy, h * 0.45, fill);
                 draw_circle_lines(cx, cy, h * 0.45, 2.5, border);
-                draw_rectangle(min.x + w * 0.3, min.y + h * 0.15, w * 0.4, h * 0.7, Color::new(fill.r, fill.g, fill.b, 0.6));
+                draw_rectangle(
+                    min.x + w * 0.3,
+                    min.y + h * 0.15,
+                    w * 0.4,
+                    h * 0.7,
+                    Color::new(fill.r, fill.g, fill.b, 0.6),
+                );
             } else if kind.contains("power") {
                 draw_rectangle(min.x, min.y + h * 0.35, w, h * 0.3, fill);
                 draw_rectangle_lines(min.x, min.y + h * 0.35, w, h * 0.3, 2.0, border);
@@ -82,21 +91,54 @@ impl GameplayState {
                 draw_rectangle_lines(min.x, min.y, w, h, 2.5, border);
                 for i in 1..4 {
                     let x = min.x + w * (i as f32 / 4.0);
-                    draw_line(x, min.y + 6.0, x, min.y + h - 6.0, 1.0, Color::new(border.r, border.g, border.b, 0.4));
+                    draw_line(
+                        x,
+                        min.y + 6.0,
+                        x,
+                        min.y + h - 6.0,
+                        1.0,
+                        Color::new(border.r, border.g, border.b, 0.4),
+                    );
                 }
                 for i in 1..3 {
                     let y = min.y + h * (i as f32 / 3.0);
-                    draw_line(min.x + 6.0, y, min.x + w - 6.0, y, 1.0, Color::new(border.r, border.g, border.b, 0.4));
+                    draw_line(
+                        min.x + 6.0,
+                        y,
+                        min.x + w - 6.0,
+                        y,
+                        1.0,
+                        Color::new(border.r, border.g, border.b, 0.4),
+                    );
                 }
             } else if kind.contains("logistics") {
                 draw_rectangle(min.x, min.y, w, h, fill);
                 draw_rectangle_lines(min.x, min.y, w, h, 2.0, border);
-                draw_circle_lines(min.x + w * 0.3, min.y + h * 0.5, h * 0.25, 2.0, Color::new(border.r, border.g, border.b, 0.6));
-                draw_circle_lines(min.x + w * 0.7, min.y + h * 0.5, h * 0.25, 2.0, Color::new(border.r, border.g, border.b, 0.6));
+                draw_circle_lines(
+                    min.x + w * 0.3,
+                    min.y + h * 0.5,
+                    h * 0.25,
+                    2.0,
+                    Color::new(border.r, border.g, border.b, 0.6),
+                );
+                draw_circle_lines(
+                    min.x + w * 0.7,
+                    min.y + h * 0.5,
+                    h * 0.25,
+                    2.0,
+                    Color::new(border.r, border.g, border.b, 0.6),
+                );
             } else if kind.contains("robotics") {
                 draw_rectangle(min.x, min.y + h * 0.1, w, h * 0.8, fill);
                 draw_rectangle_lines(min.x, min.y + h * 0.1, w, h * 0.8, 2.5, border);
-                draw_rectangle_lines(min.x + w * 0.2, min.y + h * 0.2, w * 0.6, h * 0.6, 2.0, Color::new(border.r, border.g, border.b, 0.6));
+                draw_rectangle_lines(
+                    min.x + w * 0.2,
+                    min.y + h * 0.2,
+                    w * 0.6,
+                    h * 0.6,
+                    2.0,
+                    Color::new(border.r, border.g, border.b, 0.6),
+                );
             } else if kind.contains("research") {
                 draw_rectangle(min.x, min.y, w, h, fill);
                 draw_rectangle_lines(min.x, min.y, w, h, 2.0, border);
@@ -106,15 +148,35 @@ impl GameplayState {
                 draw_triangle_lines(a, b, c, 2.0, Color::new(border.r, border.g, border.b, 0.7));
             } else if kind.contains("vault") || kind.contains("ai") {
                 draw_rectangle(min.x + w * 0.1, min.y + h * 0.1, w * 0.8, h * 0.8, fill);
-                draw_rectangle_lines(min.x + w * 0.1, min.y + h * 0.1, w * 0.8, h * 0.8, 3.0, border);
-                draw_rectangle_lines(min.x + w * 0.2, min.y + h * 0.2, w * 0.6, h * 0.6, 2.0, Color::new(border.r, border.g, border.b, 0.6));
+                draw_rectangle_lines(
+                    min.x + w * 0.1,
+                    min.y + h * 0.1,
+                    w * 0.8,
+                    h * 0.8,
+                    3.0,
+                    border,
+                );
+                draw_rectangle_lines(
+                    min.x + w * 0.2,
+                    min.y + h * 0.2,
+                    w * 0.6,
+                    h * 0.6,
+                    2.0,
+                    Color::new(border.r, border.g, border.b, 0.6),
+                );
             } else if kind.contains("heart") {
                 let cx = min.x + w * 0.5;
                 let cy = min.y + h * 0.5;
                 let r = h.min(w) * 0.45;
                 draw_circle(cx, cy, r, fill);
                 draw_circle_lines(cx, cy, r, 3.0, border);
-                draw_circle_lines(cx, cy, r * 0.6, 2.0, Color::new(border.r, border.g, border.b, 0.6));
+                draw_circle_lines(
+                    cx,
+                    cy,
+                    r * 0.6,
+                    2.0,
+                    Color::new(border.r, border.g, border.b, 0.6),
+                );
             } else {
                 draw_rectangle(min.x, min.y, w, h, fill);
                 draw_rectangle_lines(min.x, min.y, w, h, 2.0, border);
@@ -137,13 +199,29 @@ impl GameplayState {
             let from_pos = self.trace_node_pos(&trace.from);
             let to_pos = self.trace_node_pos(&trace.to);
             let from_visible = match trace.from {
-                TraceNode::Slot(idx) => self.map_state.slots.get(idx).map_or(false, |s| self.map_state.is_slot_visible(s)),
-                TraceNode::Building(idx) => self.map_state.buildings.get(idx).map_or(false, |b| self.map_state.is_building_visible(b)),
+                TraceNode::Slot(idx) => self
+                    .map_state
+                    .slots
+                    .get(idx)
+                    .map_or(false, |s| self.map_state.is_slot_visible(s)),
+                TraceNode::Building(idx) => self
+                    .map_state
+                    .buildings
+                    .get(idx)
+                    .map_or(false, |b| self.map_state.is_building_visible(b)),
                 TraceNode::FactoryCore => true,
             };
             let to_visible = match trace.to {
-                TraceNode::Slot(idx) => self.map_state.slots.get(idx).map_or(false, |s| self.map_state.is_slot_visible(s)),
-                TraceNode::Building(idx) => self.map_state.buildings.get(idx).map_or(false, |b| self.map_state.is_building_visible(b)),
+                TraceNode::Slot(idx) => self
+                    .map_state
+                    .slots
+                    .get(idx)
+                    .map_or(false, |s| self.map_state.is_slot_visible(s)),
+                TraceNode::Building(idx) => self
+                    .map_state
+                    .buildings
+                    .get(idx)
+                    .map_or(false, |b| self.map_state.is_building_visible(b)),
                 TraceNode::FactoryCore => true,
             };
             if !from_visible || !to_visible {
@@ -216,13 +294,32 @@ impl GameplayState {
                 let e = path.entrance;
                 draw_circle(e.x, e.y, 14.0, Color::new(0.9, 0.2, 0.1, 0.85));
                 draw_circle_lines(e.x, e.y, 18.0, 3.0, Color::new(0.9, 0.35, 0.15, 0.6));
-                draw_line(e.x - 10.0, e.y - 4.0, e.x + 12.0, e.y + 6.0, 2.5, Color::new(0.6, 0.1, 0.05, 0.6));
-                draw_line(e.x + 8.0, e.y - 8.0, e.x - 6.0, e.y + 10.0, 2.0, Color::new(0.6, 0.1, 0.05, 0.6));
+                draw_line(
+                    e.x - 10.0,
+                    e.y - 4.0,
+                    e.x + 12.0,
+                    e.y + 6.0,
+                    2.5,
+                    Color::new(0.6, 0.1, 0.05, 0.6),
+                );
+                draw_line(
+                    e.x + 8.0,
+                    e.y - 8.0,
+                    e.x - 6.0,
+                    e.y + 10.0,
+                    2.0,
+                    Color::new(0.6, 0.1, 0.05, 0.6),
+                );
             } else {
                 if path.entrance.x > max_x {
                     continue;
                 }
-                draw_circle(path.entrance.x, path.entrance.y, 7.0, Color::new(0.5, 0.15, 0.1, 0.35));
+                draw_circle(
+                    path.entrance.x,
+                    path.entrance.y,
+                    7.0,
+                    Color::new(0.5, 0.15, 0.1, 0.35),
+                );
             }
         }
 
@@ -234,27 +331,74 @@ impl GameplayState {
             let selected = self.selected_slot == Some(idx);
             match slot.state {
                 SlotState::Debris => {
-                    draw_circle(slot.position.x, slot.position.y, 8.0, Color::new(0.35, 0.25, 0.15, 0.8));
+                    draw_circle(
+                        slot.position.x,
+                        slot.position.y,
+                        8.0,
+                        Color::new(0.35, 0.25, 0.15, 0.8),
+                    );
                     // X cross lines
                     let s = 5.0;
-                    draw_line(slot.position.x - s, slot.position.y - s, slot.position.x + s, slot.position.y + s, 1.5, Color::new(0.5, 0.3, 0.1, 0.6));
-                    draw_line(slot.position.x + s, slot.position.y - s, slot.position.x - s, slot.position.y + s, 1.5, Color::new(0.5, 0.3, 0.1, 0.6));
+                    draw_line(
+                        slot.position.x - s,
+                        slot.position.y - s,
+                        slot.position.x + s,
+                        slot.position.y + s,
+                        1.5,
+                        Color::new(0.5, 0.3, 0.1, 0.6),
+                    );
+                    draw_line(
+                        slot.position.x + s,
+                        slot.position.y - s,
+                        slot.position.x - s,
+                        slot.position.y + s,
+                        1.5,
+                        Color::new(0.5, 0.3, 0.1, 0.6),
+                    );
                     // Gold ring hint for slots that open entrances
                     if slot.opens_entrance.is_some() {
-                        draw_circle_lines(slot.position.x, slot.position.y, 11.0, 1.5, Color::new(0.9, 0.75, 0.2, 0.6));
+                        draw_circle_lines(
+                            slot.position.x,
+                            slot.position.y,
+                            11.0,
+                            1.5,
+                            Color::new(0.9, 0.75, 0.2, 0.6),
+                        );
                     }
                 }
                 SlotState::Cleared => {
-                    draw_circle_lines(slot.position.x, slot.position.y, 10.0, 1.5, Color::new(0.3, 0.4, 0.7, 0.6));
+                    draw_circle_lines(
+                        slot.position.x,
+                        slot.position.y,
+                        10.0,
+                        1.5,
+                        Color::new(0.3, 0.4, 0.7, 0.6),
+                    );
                 }
                 SlotState::Powered => {
                     if slot.tower_index.is_some() {
                         // Tower is placed here; tower rendering handles the visual
-                        draw_circle(slot.position.x, slot.position.y, 12.0, Color::new(0.05, 0.15, 0.05, 0.5));
+                        draw_circle(
+                            slot.position.x,
+                            slot.position.y,
+                            12.0,
+                            Color::new(0.05, 0.15, 0.05, 0.5),
+                        );
                     } else {
-                        draw_circle(slot.position.x, slot.position.y, 10.0, Color::new(0.05, 0.15, 0.05, 0.8));
+                        draw_circle(
+                            slot.position.x,
+                            slot.position.y,
+                            10.0,
+                            Color::new(0.05, 0.15, 0.05, 0.8),
+                        );
                         let pulse = 0.5 + 0.3 * (get_time() as f32 * 2.0).sin().abs();
-                        draw_circle_lines(slot.position.x, slot.position.y, 11.0, 2.0, Color::new(0.2, 0.8, 0.3, pulse));
+                        draw_circle_lines(
+                            slot.position.x,
+                            slot.position.y,
+                            11.0,
+                            2.0,
+                            Color::new(0.2, 0.8, 0.3, pulse),
+                        );
                     }
                 }
             }
@@ -272,31 +416,76 @@ impl GameplayState {
             let unlocked = self.is_building_unlocked(building);
             let selected = self.selected_building == Some(idx);
             let (bg_color, border_color) = if !unlocked {
-                (Color::new(0.08, 0.08, 0.08, 0.6), Color::new(0.2, 0.2, 0.2, 0.6))
+                (
+                    Color::new(0.08, 0.08, 0.08, 0.6),
+                    Color::new(0.2, 0.2, 0.2, 0.6),
+                )
             } else {
                 match building.state {
-                    BuildingState::Broken => (Color::new(0.3, 0.05, 0.05, 0.8), Color::new(0.5, 0.1, 0.1, 0.8)),
-                    BuildingState::Repaired => (Color::new(0.3, 0.3, 0.05, 0.8), Color::new(0.5, 0.5, 0.1, 0.8)),
-                    BuildingState::Powered => (Color::new(0.05, 0.2, 0.3, 0.9), Color::new(0.2, 0.7, 0.9, 0.9)),
-                    BuildingState::Disabled => (Color::new(0.15, 0.15, 0.15, 0.6), Color::new(0.3, 0.3, 0.3, 0.6)),
+                    BuildingState::Broken => (
+                        Color::new(0.3, 0.05, 0.05, 0.8),
+                        Color::new(0.5, 0.1, 0.1, 0.8),
+                    ),
+                    BuildingState::Repaired => (
+                        Color::new(0.3, 0.3, 0.05, 0.8),
+                        Color::new(0.5, 0.5, 0.1, 0.8),
+                    ),
+                    BuildingState::Powered => (
+                        Color::new(0.05, 0.2, 0.3, 0.9),
+                        Color::new(0.2, 0.7, 0.9, 0.9),
+                    ),
+                    BuildingState::Disabled => (
+                        Color::new(0.15, 0.15, 0.15, 0.6),
+                        Color::new(0.3, 0.3, 0.3, 0.6),
+                    ),
                 }
             };
 
             let is_core = self.map_state.is_core_building(&building.id);
             let w = if is_core { 62.0 } else { 40.0 };
             let h = if is_core { 44.0 } else { 30.0 };
-            draw_rectangle(building.position.x - w / 2.0, building.position.y - h / 2.0, w, h, bg_color);
-            draw_rectangle_lines(building.position.x - w / 2.0, building.position.y - h / 2.0, w, h, 2.0, border_color);
+            draw_rectangle(
+                building.position.x - w / 2.0,
+                building.position.y - h / 2.0,
+                w,
+                h,
+                bg_color,
+            );
+            draw_rectangle_lines(
+                building.position.x - w / 2.0,
+                building.position.y - h / 2.0,
+                w,
+                h,
+                2.0,
+                border_color,
+            );
 
             // Label
             let label = &building.building_type;
             let short = if label.len() > 8 { &label[..8] } else { label };
-            let label_color = if unlocked { dark::TEXT_DIM } else { Color::new(0.35, 0.35, 0.35, 0.8) };
+            let label_color = if unlocked {
+                dark::TEXT_DIM
+            } else {
+                Color::new(0.35, 0.35, 0.35, 0.8)
+            };
             let label_y = building.position.y + h / 2.0 + if is_core { 16.0 } else { 12.0 };
-            draw_text(short, building.position.x - w / 2.0, label_y, if is_core { 12.0 } else { 10.0 }, label_color);
+            draw_text(
+                short,
+                building.position.x - w / 2.0,
+                label_y,
+                if is_core { 12.0 } else { 10.0 },
+                label_color,
+            );
 
             if selected && unlocked {
-                draw_rectangle_lines(building.position.x - w / 2.0 - 2.0, building.position.y - h / 2.0 - 2.0, w + 4.0, h + 4.0, 2.0, WHITE);
+                draw_rectangle_lines(
+                    building.position.x - w / 2.0 - 2.0,
+                    building.position.y - h / 2.0 - 2.0,
+                    w + 4.0,
+                    h + 4.0,
+                    2.0,
+                    WHITE,
+                );
             }
         }
 
@@ -305,20 +494,38 @@ impl GameplayState {
         let pulse = 0.6 + 0.4 * (get_time() as f32 * 3.0).sin().abs();
         draw_circle(core.x, core.y, 20.0, Color::new(0.1, 0.5, 0.2, pulse));
         draw_circle_lines(core.x, core.y, 22.0, 2.0, Color::new(0.3, 0.9, 0.4, 0.8));
-        draw_text("FACTORY", core.x - 25.0, core.y + 30.0, 12.0, Color::new(0.3, 0.9, 0.4, 0.8));
+        draw_text(
+            "FACTORY",
+            core.x - 25.0,
+            core.y + 30.0,
+            12.0,
+            Color::new(0.3, 0.9, 0.4, 0.8),
+        );
     }
 
     fn trace_node_pos(&self, node: &TraceNode) -> Vec2 {
         match node {
             TraceNode::FactoryCore => self.map_state.factory_core,
-            TraceNode::Slot(idx) => self.map_state.slots.get(*idx).map_or(Vec2::ZERO, |s| s.position),
-            TraceNode::Building(idx) => self.map_state.buildings.get(*idx).map_or(Vec2::ZERO, |b| b.position),
+            TraceNode::Slot(idx) => self
+                .map_state
+                .slots
+                .get(*idx)
+                .map_or(Vec2::ZERO, |s| s.position),
+            TraceNode::Building(idx) => self
+                .map_state
+                .buildings
+                .get(*idx)
+                .map_or(Vec2::ZERO, |b| b.position),
         }
     }
 
     fn draw_towers(&self) {
         let world_mouse = self.screen_to_world(vec2(mouse_position().0, mouse_position().1));
-        let range_mult = if self.factory.is_sector_active("ai_vault") { 1.2 } else { 1.0 };
+        let range_mult = if self.factory.is_sector_active("ai_vault") {
+            1.2
+        } else {
+            1.0
+        };
         for tower in &self.towers {
             let mut col = tower.color();
             if !tower.is_active {
@@ -354,11 +561,18 @@ impl GameplayState {
         for effect in &self.shot_effects {
             let alpha = effect.alpha();
             match effect {
-                crate::engine::tower::ShotEffect::Line { from, to, color, .. } => {
+                crate::engine::tower::ShotEffect::Line {
+                    from, to, color, ..
+                } => {
                     let col = Color::new(color.r, color.g, color.b, alpha);
                     draw_line(from.x, from.y, to.x, to.y, 2.0, col);
                 }
-                crate::engine::tower::ShotEffect::Pulse { center, radius, color, .. } => {
+                crate::engine::tower::ShotEffect::Pulse {
+                    center,
+                    radius,
+                    color,
+                    ..
+                } => {
                     let col = Color::new(color.r, color.g, color.b, alpha);
                     draw_circle_lines(center.x, center.y, *radius, 2.0, col);
                 }
@@ -413,7 +627,13 @@ impl GameplayState {
     }
 
     fn draw_hud(&self) {
-        draw_rectangle(0.0, 0.0, screen_width(), self.constants.ui.hud_height, Color::new(0.08, 0.08, 0.1, 0.95));
+        draw_rectangle(
+            0.0,
+            0.0,
+            screen_width(),
+            self.constants.ui.hud_height,
+            Color::new(0.08, 0.08, 0.1, 0.95),
+        );
 
         let y = 8.0;
         let font_size = 16.0;
@@ -421,14 +641,23 @@ impl GameplayState {
         let spacing = 140.0;
 
         let gen = self.factory.power_generation() + self.unlocked_building_boon().power_per_sec;
-        let tower_drain: f32 = self.towers.iter().filter(|t| t.is_active).map(|t| t.power_drain).sum();
+        let tower_drain: f32 = self
+            .towers
+            .iter()
+            .filter(|t| t.is_active)
+            .map(|t| t.power_drain)
+            .sum();
         let net_rate = gen - self.factory.power_consumption() - tower_drain;
         let power_text = if net_rate >= 0.0 {
             format!("Power: {:.0} (+{:.0}/s)", self.resources.power, net_rate)
         } else {
             format!("Power: {:.0} ({:.0}/s)", self.resources.power, net_rate)
         };
-        let power_color = if net_rate >= 0.0 { dark::POSITIVE } else { dark::NEGATIVE };
+        let power_color = if net_rate >= 0.0 {
+            dark::POSITIVE
+        } else {
+            dark::NEGATIVE
+        };
 
         let threat_text = format!(
             "Threat: {} ({:.0})",
@@ -440,10 +669,19 @@ impl GameplayState {
             threat_col = Color::new(1.0, 0.85, 0.25, 1.0);
         }
 
-        let beacon_text = format!("Beacon: {} ({:.0})", self.beacon_phase.label(), self.beacon_strength);
+        let beacon_text = format!(
+            "Beacon: {} ({:.0})",
+            self.beacon_phase.label(),
+            self.beacon_strength
+        );
         let pulse = 0.6 + 0.4 * (f32::sin(get_time() as f32 * 3.0).abs());
         let base_beacon_col = beacon_color(&self.beacon_phase);
-        let beacon_col = Color::new(base_beacon_col.r, base_beacon_col.g, base_beacon_col.b, pulse);
+        let beacon_col = Color::new(
+            base_beacon_col.r,
+            base_beacon_col.g,
+            base_beacon_col.b,
+            pulse,
+        );
 
         let scavenger_text = format!("Scavengers: {} out", self.scavengers_out);
 
@@ -454,15 +692,22 @@ impl GameplayState {
         } else {
             dark::POSITIVE
         };
-        let income_rate = self.population.productivity(&self.constants) * self.constants.economy.productivity_scrap_rate;
+        let income_rate = self.population.productivity(&self.constants)
+            * self.constants.economy.productivity_scrap_rate;
 
         let items = [
             (format!("Wave: {}", self.current_wave), dark::TEXT),
             (power_text, power_color),
             (format!("Scrap: {:.0}", self.resources.scrap), dark::WARNING),
             (format!("Pop: {}", self.population.count), dark::POSITIVE),
-            (format!("Food: {:.0}", self.population.food_supply), dark::TEXT_DIM),
-            (format!("Morale: {:.0}", self.population.morale), morale_color),
+            (
+                format!("Food: {:.0}", self.population.food_supply),
+                dark::TEXT_DIM,
+            ),
+            (
+                format!("Morale: {:.0}", self.population.morale),
+                morale_color,
+            ),
             (format!("Income: {:.1}/s", income_rate), dark::TEXT_DIM),
             (format!("{}", self.factory.phase.label()), dark::TEXT_BRIGHT),
             (beacon_text, beacon_col),
@@ -481,7 +726,15 @@ impl GameplayState {
         let bar_h = self.constants.ui.food_bar_h;
         let bar_x = screen_width() - bar_w - 10.0;
         let bar_y = 22.0;
-        crate::ui::draw_resource_bar(bar_x, bar_y, bar_w, bar_h, self.population.food_supply, max_food, dark::POSITIVE);
+        crate::ui::draw_resource_bar(
+            bar_x,
+            bar_y,
+            bar_w,
+            bar_h,
+            self.population.food_supply,
+            max_food,
+            dark::POSITIVE,
+        );
     }
 
     fn draw_wave_status(&self) {
@@ -490,7 +743,10 @@ impl GameplayState {
         } else {
             let alive = self.wave_manager.alive_count();
             let queued = self.wave_manager.spawn_queue.len();
-            format!("Wave {} - {} enemies ({} spawning)", self.current_wave, alive, queued)
+            format!(
+                "Wave {} - {} enemies ({} spawning)",
+                self.current_wave, alive, queued
+            )
         };
 
         let x = self.constants.ui.build_panel_w + 10.0;
@@ -500,7 +756,13 @@ impl GameplayState {
         if self.time_scale > 1.0 {
             let speed_text = "Speed: 2x";
             let dims = measure_text(speed_text, None, 12, 1.0);
-            draw_text(speed_text, screen_width() - dims.width - self.constants.ui.sector_panel_w - 10.0, y + 14.0, 12.0, dark::WARNING);
+            draw_text(
+                speed_text,
+                screen_width() - dims.width - self.constants.ui.sector_panel_w - 10.0,
+                y + 14.0,
+                12.0,
+                dark::WARNING,
+            );
         }
 
         if self.between_waves {
@@ -511,7 +773,13 @@ impl GameplayState {
                     .map(|(t, c)| format!("{}x{}", enemy_label(t), c))
                     .collect::<Vec<_>>()
                     .join("  ");
-                draw_text(&format!("Incoming: {}", list), x, y + 28.0, 12.0, dark::TEXT_DIM);
+                draw_text(
+                    &format!("Incoming: {}", list),
+                    x,
+                    y + 28.0,
+                    12.0,
+                    dark::TEXT_DIM,
+                );
             }
         }
     }
@@ -533,7 +801,12 @@ impl GameplayState {
         } else {
             format!("WAVE {}", self.last_wave_started)
         };
-        let dims = measure_text(&text, None, self.constants.ui.wave_flash_text_size as u16, 1.0);
+        let dims = measure_text(
+            &text,
+            None,
+            self.constants.ui.wave_flash_text_size as u16,
+            1.0,
+        );
         draw_text(
             &text,
             screen_width() / 2.0 - dims.width / 2.0,
@@ -544,12 +817,31 @@ impl GameplayState {
     }
 
     fn draw_notifications(&self) {
+        let config = NotificationRenderConfig {
+            width: 340.0,
+            row_height: 30.0,
+            spacing: 4.0,
+            padding: 8.0,
+            font_size: 16.0,
+            background: Color::new(0.08, 0.08, 0.1, 0.9),
+            text_color: dark::TEXT_BRIGHT,
+            ..Default::default()
+        };
         let mut y = self.constants.ui.hud_height + 28.0;
         for note in &self.notifications {
-            let alpha = (note.ttl / self.constants.ui.notification_ttl).clamp(0.0, 1.0);
-            let col = Color::new(dark::TEXT_BRIGHT.r, dark::TEXT_BRIGHT.g, dark::TEXT_BRIGHT.b, alpha);
-            draw_text(&note.text, self.constants.ui.build_panel_w + 10.0, y, 16.0, col);
-            y += 18.0;
+            let notification = Notification {
+                message: note.text.clone(),
+                notification_type: NotificationType::Info,
+                time_remaining: note.ttl,
+                total_duration: self.constants.ui.notification_ttl,
+            };
+            draw_notification(
+                &notification,
+                self.constants.ui.build_panel_w + 10.0,
+                y,
+                &config,
+            );
+            y += config.row_height + config.spacing;
         }
     }
 
@@ -561,7 +853,13 @@ impl GameplayState {
         let panel_y = screen_height() - panel_h - 10.0;
 
         if self.selected_core {
-            draw_rectangle(panel_x, panel_y, panel_w, panel_h, Color::new(0.08, 0.08, 0.1, 0.9));
+            draw_rectangle(
+                panel_x,
+                panel_y,
+                panel_w,
+                panel_h,
+                Color::new(0.08, 0.08, 0.1, 0.9),
+            );
             draw_rectangle_lines(panel_x, panel_y, panel_w, panel_h, 1.0, dark::TEXT_DIM);
 
             let text_x = panel_x + 10.0;
@@ -595,9 +893,19 @@ impl GameplayState {
                 draw_rectangle(row_x, row_y, row_w, row_h, bg);
                 draw_rectangle_lines(row_x, row_y, row_w, row_h, 1.0, dark::TEXT_DIM);
 
-                let name = if purchased { format!("[x] {}", upg.name) } else { upg.name.clone() };
+                let name = if purchased {
+                    format!("[x] {}", upg.name)
+                } else {
+                    upg.name.clone()
+                };
                 draw_text(&name, row_x + 8.0, row_y + 14.0, 12.0, dark::TEXT);
-                draw_text(&upg.description, row_x + 8.0, row_y + 26.0, 10.0, dark::TEXT_DIM);
+                draw_text(
+                    &upg.description,
+                    row_x + 8.0,
+                    row_y + 26.0,
+                    10.0,
+                    dark::TEXT_DIM,
+                );
 
                 let (mx, my) = mouse_position();
                 if mx >= row_x && mx <= row_x + row_w && my >= row_y && my <= row_y + row_h {
@@ -610,43 +918,62 @@ impl GameplayState {
             if let Some(selected_id) = self.selected_upgrade.clone() {
                 let selected = self.upgrade_defs.iter().find(|u| u.id == selected_id);
                 if let Some(selected) = selected {
-                    let can_afford = self.factory.can_purchase(selected, self.resources.scrap, self.resources.power);
+                    let can_afford = self.factory.can_purchase(
+                        selected,
+                        self.resources.scrap,
+                        self.resources.power,
+                    );
                     let purchased = self.factory.has_upgrade(&selected.id);
-                let detail_x = panel_x + 10.0;
-                let mut detail_y = panel_y + 40.0;
-                draw_text(&selected.name, detail_x, detail_y, 14.0, dark::TEXT_BRIGHT);
-                detail_y += 16.0;
-                draw_text(&selected.description, detail_x, detail_y, 12.0, dark::TEXT_DIM);
-                detail_y += 14.0;
-                draw_text(
-                    &format!("Cost: {}s / {}p", selected.cost_scrap as i32, selected.cost_power as i32),
-                    detail_x,
-                    detail_y,
-                    12.0,
-                    dark::WARNING,
-                );
-                detail_y += 14.0;
-                draw_text(
-                    &format!("Difficulty: +{:.0}", selected.difficulty_cost),
-                    detail_x,
-                    detail_y,
-                    12.0,
-                    dark::NEGATIVE,
-                );
+                    let detail_x = panel_x + 10.0;
+                    let mut detail_y = panel_y + 40.0;
+                    draw_text(&selected.name, detail_x, detail_y, 14.0, dark::TEXT_BRIGHT);
+                    detail_y += 16.0;
+                    draw_text(
+                        &selected.description,
+                        detail_x,
+                        detail_y,
+                        12.0,
+                        dark::TEXT_DIM,
+                    );
+                    detail_y += 14.0;
+                    draw_text(
+                        &format!(
+                            "Cost: {}s / {}p",
+                            selected.cost_scrap as i32, selected.cost_power as i32
+                        ),
+                        detail_x,
+                        detail_y,
+                        12.0,
+                        dark::WARNING,
+                    );
+                    detail_y += 14.0;
+                    draw_text(
+                        &format!("Difficulty: +{:.0}", selected.difficulty_cost),
+                        detail_x,
+                        detail_y,
+                        12.0,
+                        dark::NEGATIVE,
+                    );
 
-                if !purchased {
-                    let btn_w = 70.0;
-                    let btn_h = 22.0;
-                    let btn_x = panel_x + panel_w - btn_w - 10.0;
-                    let btn_y = panel_y + panel_h - btn_h - 8.0;
-                    if can_afford {
-                        if button(btn_x, btn_y, btn_w, btn_h, "Unlock") {
-                            upgrade_purchase = Some(selected.id.clone());
+                    if !purchased {
+                        let btn_w = 70.0;
+                        let btn_h = 22.0;
+                        let btn_x = panel_x + panel_w - btn_w - 10.0;
+                        let btn_y = panel_y + panel_h - btn_h - 8.0;
+                        if can_afford {
+                            if button(btn_x, btn_y, btn_w, btn_h, "Unlock") {
+                                upgrade_purchase = Some(selected.id.clone());
+                            }
+                        } else {
+                            draw_text(
+                                "Need resources",
+                                btn_x - 10.0,
+                                btn_y - 6.0,
+                                10.0,
+                                dark::TEXT_DIM,
+                            );
                         }
-                    } else {
-                        draw_text("Need resources", btn_x - 10.0, btn_y - 6.0, 10.0, dark::TEXT_DIM);
                     }
-                }
                 }
             }
 
@@ -658,19 +985,41 @@ impl GameplayState {
             }
         } else if let Some(idx) = self.selected_slot {
             if let Some(slot) = self.map_state.slots.get(idx) {
-                draw_rectangle(panel_x, panel_y, panel_w, panel_h, Color::new(0.08, 0.08, 0.1, 0.9));
+                draw_rectangle(
+                    panel_x,
+                    panel_y,
+                    panel_w,
+                    panel_h,
+                    Color::new(0.08, 0.08, 0.1, 0.9),
+                );
                 draw_rectangle_lines(panel_x, panel_y, panel_w, panel_h, 1.0, dark::TEXT_DIM);
 
                 let text_x = panel_x + 10.0;
                 let mut text_y = panel_y + 18.0;
 
-                draw_text(&format!("Slot: {}", slot.id), text_x, text_y, 14.0, dark::TEXT_BRIGHT);
+                draw_text(
+                    &format!("Slot: {}", slot.id),
+                    text_x,
+                    text_y,
+                    14.0,
+                    dark::TEXT_BRIGHT,
+                );
                 text_y += 16.0;
 
                 match slot.state {
                     SlotState::Debris => {
-                        let hint = if slot.opens_entrance.is_some() { " [Opens path!]" } else { "" };
-                        draw_text(&format!("Debris - Clear: {:.0} scrap{}", slot.clear_cost, hint), text_x, text_y, 12.0, dark::WARNING);
+                        let hint = if slot.opens_entrance.is_some() {
+                            " [Opens path!]"
+                        } else {
+                            ""
+                        };
+                        draw_text(
+                            &format!("Debris - Clear: {:.0} scrap{}", slot.clear_cost, hint),
+                            text_x,
+                            text_y,
+                            12.0,
+                            dark::WARNING,
+                        );
                         text_y += 14.0;
                         let btn_label = format!("Clear ({:.0})", slot.clear_cost);
                         let btn_w = 110.0;
@@ -686,7 +1035,13 @@ impl GameplayState {
                         }
                     }
                     SlotState::Cleared => {
-                        draw_text(&format!("Cleared - Power: {:.0} scrap", slot.power_cost), text_x, text_y, 12.0, dark::ACCENT);
+                        draw_text(
+                            &format!("Cleared - Power: {:.0} scrap", slot.power_cost),
+                            text_x,
+                            text_y,
+                            12.0,
+                            dark::ACCENT,
+                        );
                         text_y += 14.0;
                         let btn_label = format!("Power ({:.0})", slot.power_cost);
                         let btn_w = 110.0;
@@ -705,27 +1060,57 @@ impl GameplayState {
                         if slot.tower_index.is_some() {
                             draw_text("Tower placed", text_x, text_y, 12.0, dark::POSITIVE);
                         } else if self.placing_tower.is_some() {
-                            draw_text("Powered - Click to place tower here", text_x, text_y, 12.0, dark::POSITIVE);
+                            draw_text(
+                                "Powered - Click to place tower here",
+                                text_x,
+                                text_y,
+                                12.0,
+                                dark::POSITIVE,
+                            );
                         } else {
-                            draw_text("Powered - Select tower from Build panel", text_x, text_y, 12.0, dark::POSITIVE);
+                            draw_text(
+                                "Powered - Select tower from Build panel",
+                                text_x,
+                                text_y,
+                                12.0,
+                                dark::POSITIVE,
+                            );
                         }
                     }
                 }
             }
         } else if let Some(idx) = self.selected_building {
             if let Some(building) = self.map_state.buildings.get(idx) {
-                draw_rectangle(panel_x, panel_y, panel_w, panel_h, Color::new(0.08, 0.08, 0.1, 0.9));
+                draw_rectangle(
+                    panel_x,
+                    panel_y,
+                    panel_w,
+                    panel_h,
+                    Color::new(0.08, 0.08, 0.1, 0.9),
+                );
                 draw_rectangle_lines(panel_x, panel_y, panel_w, panel_h, 1.0, dark::TEXT_DIM);
 
                 let text_x = panel_x + 10.0;
                 let mut text_y = panel_y + 18.0;
 
-                draw_text(&format!("{} ({})", building.id, building.building_type), text_x, text_y, 14.0, dark::TEXT_BRIGHT);
+                draw_text(
+                    &format!("{} ({})", building.id, building.building_type),
+                    text_x,
+                    text_y,
+                    14.0,
+                    dark::TEXT_BRIGHT,
+                );
                 text_y += 16.0;
 
                 match building.state {
                     BuildingState::Broken => {
-                        draw_text(&format!("Broken - Repair: {:.0} scrap", building.repair_cost), text_x, text_y, 12.0, dark::NEGATIVE);
+                        draw_text(
+                            &format!("Broken - Repair: {:.0} scrap", building.repair_cost),
+                            text_x,
+                            text_y,
+                            12.0,
+                            dark::NEGATIVE,
+                        );
                         let btn_label = format!("Repair ({:.0})", building.repair_cost);
                         let btn_w = 110.0;
                         let btn_h = 22.0;
@@ -738,7 +1123,13 @@ impl GameplayState {
                         }
                     }
                     BuildingState::Repaired => {
-                        draw_text(&format!("Repaired - Power: {:.0} scrap", building.power_cost), text_x, text_y, 12.0, dark::WARNING);
+                        draw_text(
+                            &format!("Repaired - Power: {:.0} scrap", building.power_cost),
+                            text_x,
+                            text_y,
+                            12.0,
+                            dark::WARNING,
+                        );
                         let btn_label = format!("Power ({:.0})", building.power_cost);
                         let btn_w = 110.0;
                         let btn_h = 22.0;
@@ -753,13 +1144,33 @@ impl GameplayState {
                     BuildingState::Powered => {
                         let b = &building.boon;
                         let mut parts = Vec::new();
-                        if b.scrap_per_sec > 0.0 { parts.push(format!("+{:.1} scrap/s", b.scrap_per_sec)); }
-                        if b.food_per_sec > 0.0 { parts.push(format!("+{:.1} food/s", b.food_per_sec)); }
-                        if b.water_per_sec > 0.0 { parts.push(format!("+{:.1} water/s", b.water_per_sec)); }
-                        if b.power_per_sec > 0.0 { parts.push(format!("+{:.1} power/s", b.power_per_sec)); }
-                        draw_text(&format!("Active: {}", parts.join(", ")), text_x, text_y, 12.0, dark::POSITIVE);
+                        if b.scrap_per_sec > 0.0 {
+                            parts.push(format!("+{:.1} scrap/s", b.scrap_per_sec));
+                        }
+                        if b.food_per_sec > 0.0 {
+                            parts.push(format!("+{:.1} food/s", b.food_per_sec));
+                        }
+                        if b.water_per_sec > 0.0 {
+                            parts.push(format!("+{:.1} water/s", b.water_per_sec));
+                        }
+                        if b.power_per_sec > 0.0 {
+                            parts.push(format!("+{:.1} power/s", b.power_per_sec));
+                        }
+                        draw_text(
+                            &format!("Active: {}", parts.join(", ")),
+                            text_x,
+                            text_y,
+                            12.0,
+                            dark::POSITIVE,
+                        );
                         text_y += 14.0;
-                        draw_text(&format!("Threat: +{:.2}/s", building.threat_per_sec), text_x, text_y, 11.0, dark::NEGATIVE);
+                        draw_text(
+                            &format!("Threat: +{:.2}/s", building.threat_per_sec),
+                            text_x,
+                            text_y,
+                            11.0,
+                            dark::NEGATIVE,
+                        );
                     }
                     BuildingState::Disabled => {
                         draw_text("Disabled", text_x, text_y, 12.0, dark::TEXT_DIM);
@@ -798,7 +1209,9 @@ impl GameplayState {
             }
         }
 
-        let Some(text) = tooltip else { return; };
+        let Some(text) = tooltip else {
+            return;
+        };
         let w = self.constants.ui.tooltip_w;
         let h = self.constants.ui.tooltip_h;
         let x = (mx + 12.0).clamp(10.0, screen_width() - w - 10.0);

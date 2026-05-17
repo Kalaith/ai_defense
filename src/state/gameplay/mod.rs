@@ -1,22 +1,25 @@
 //! Core gameplay state: wave defense, factory management, resource loop.
 
-mod update;
+mod helpers;
 mod render;
 #[path = "../../ui/gameplay.rs"]
 mod ui;
-mod helpers;
+mod update;
 
 use crate::data::{EnemyDef, GameConstants, GameData, UpgradeDef};
 use crate::engine::beacon::BeaconPhase;
+use crate::engine::enemy::EnemyTuning;
 use crate::engine::factory::Factory;
 use crate::engine::map::MapState;
 use crate::engine::population::Population;
-use crate::engine::enemy::EnemyTuning;
 use crate::engine::threat::{ReactionTier, ThreatSignature};
 use crate::engine::tower::{ShotEffect, Tower};
 use crate::engine::wave::{WaveManager, WaveTuning};
-use crate::save::{SaveData, SavedBuilding, SavedPopulation, SavedResources, SavedSector, SavedSlot, SavedThreat, SavedTower};
-use macroquad::prelude::{Vec2, vec2};
+use crate::save::{
+    SaveData, SavedBuilding, SavedPopulation, SavedResources, SavedSector, SavedSlot, SavedThreat,
+    SavedTower,
+};
+use macroquad::prelude::{vec2, Vec2};
 
 pub struct GameplayState {
     pub constants: GameConstants,
@@ -238,18 +241,29 @@ impl GameplayState {
                 sector.integrity = saved.integrity;
             }
         }
-        self.factory.set_purchased_upgrades(save.purchased_upgrades, &self.upgrade_defs);
+        self.factory
+            .set_purchased_upgrades(save.purchased_upgrades, &self.upgrade_defs);
         self.factory.check_awakening();
 
         // Restore slot states
         for saved_slot in &save.slots {
-            if let Some(slot) = self.map_state.slots.iter_mut().find(|s| s.id == saved_slot.id) {
+            if let Some(slot) = self
+                .map_state
+                .slots
+                .iter_mut()
+                .find(|s| s.id == saved_slot.id)
+            {
                 slot.state = crate::engine::map::SlotState::from_str(&saved_slot.state);
             }
         }
         // Restore building states
         for saved_building in &save.buildings {
-            if let Some(building) = self.map_state.buildings.iter_mut().find(|b| b.id == saved_building.id) {
+            if let Some(building) = self
+                .map_state
+                .buildings
+                .iter_mut()
+                .find(|b| b.id == saved_building.id)
+            {
                 building.state = crate::engine::map::BuildingState::from_str(&saved_building.state);
             }
         }

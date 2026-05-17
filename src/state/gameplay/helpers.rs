@@ -217,7 +217,10 @@ impl GameplayState {
             );
             for _ in 0..count {
                 let angle = gen_range(0.0, std::f32::consts::TAU);
-                let speed = gen_range(self.constants.particles.speed_min, self.constants.particles.speed_max);
+                let speed = gen_range(
+                    self.constants.particles.speed_min,
+                    self.constants.particles.speed_max,
+                );
                 let velocity = vec2(angle.cos(), angle.sin()) * speed;
                 self.particles.push(Particle {
                     position: *pos,
@@ -293,7 +296,11 @@ impl GameplayState {
                 count += 1.0;
             }
         }
-        self.factory_integrity = if count > 0.0 { (total_ratio / count) * 100.0 } else { 0.0 };
+        self.factory_integrity = if count > 0.0 {
+            (total_ratio / count) * 100.0
+        } else {
+            0.0
+        };
     }
 
     pub fn factory_online_count(&self) -> usize {
@@ -308,13 +315,19 @@ impl GameplayState {
         if !self.factory.is_sector_active("research_lab") {
             return;
         }
-        let max_level_bonus = self.factory.upgrade_effect("max_tower_level_bonus", &self.upgrade_defs) as u32;
+        let max_level_bonus =
+            self.factory
+                .upgrade_effect("max_tower_level_bonus", &self.upgrade_defs) as u32;
         let max_level = self.constants.tower.upgrade_max_level + max_level_bonus;
-        let Some(tower) = self.towers.get_mut(idx) else { return; };
+        let Some(tower) = self.towers.get_mut(idx) else {
+            return;
+        };
         if tower.level >= max_level {
             return;
         }
-        let cost_reduction = self.factory.upgrade_effect("upgrade_cost_reduction", &self.upgrade_defs);
+        let cost_reduction = self
+            .factory
+            .upgrade_effect("upgrade_cost_reduction", &self.upgrade_defs);
         let cost = tower.base_scrap_cost * tower.level as f32 * (1.0 - cost_reduction);
         if self.resources.scrap < cost {
             return;

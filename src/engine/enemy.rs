@@ -108,7 +108,9 @@ impl Enemy {
 
         if distance < 2.0 {
             self.path_index += 1;
-            if self.enemy_type == EnemyType::Saboteur && self.path_index < path.len().saturating_sub(1) {
+            if self.enemy_type == EnemyType::Saboteur
+                && self.path_index < path.len().saturating_sub(1)
+            {
                 if gen_range(0.0, 1.0) < self.tuning.saboteur_skip_chance {
                     self.path_index += 1;
                 }

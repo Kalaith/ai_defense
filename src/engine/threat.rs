@@ -79,5 +79,4 @@ impl ThreatSignature {
         self.noise += 1.0 + wave_number as f32 * 0.5;
         self.heat += 0.5;
     }
-
 }

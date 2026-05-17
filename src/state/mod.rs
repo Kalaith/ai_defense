@@ -5,11 +5,11 @@ pub mod gameplay;
 pub mod menu;
 pub mod results;
 
+use crate::engine::beacon::BeaconPhase;
+use crate::save::SaveData;
 use gameplay::GameplayState;
 use menu::MenuState;
 use results::ResultsState;
-use crate::engine::beacon::BeaconPhase;
-use crate::save::SaveData;
 
 pub enum GameState {
     Menu(MenuState),

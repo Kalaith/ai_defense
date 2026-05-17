@@ -205,7 +205,12 @@ pub fn tick_towers(
             if hit_any {
                 tower.fire(fire_rate_mult);
                 fired_count += 1.0;
-                effects.push(ShotEffect::pulse(tower.position, range, tower.color(), tuning.shot_ttl));
+                effects.push(ShotEffect::pulse(
+                    tower.position,
+                    range,
+                    tower.color(),
+                    tuning.shot_ttl,
+                ));
             }
             continue;
         }
@@ -274,7 +279,9 @@ pub fn tick_towers(
                 }
 
                 if matches!(tower.tower_type, TowerType::Subversion) {
-                    let chain_damage = enemies[idx].max_health * tuning.subversion_chain_damage_fraction * damage_mult;
+                    let chain_damage = enemies[idx].max_health
+                        * tuning.subversion_chain_damage_fraction
+                        * damage_mult;
                     let chain_center = enemies[idx].position;
                     for enemy in enemies.iter_mut() {
                         if !enemy.is_alive {
@@ -293,7 +300,12 @@ pub fn tick_towers(
                 }
             }
 
-            effects.push(ShotEffect::line(tower.position, target_pos, tower.color(), tuning.shot_ttl));
+            effects.push(ShotEffect::line(
+                tower.position,
+                target_pos,
+                tower.color(),
+                tuning.shot_ttl,
+            ));
         }
     }
 
