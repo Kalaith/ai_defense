@@ -20,6 +20,7 @@ use crate::save::{
     SavedTower,
 };
 use macroquad::prelude::{vec2, Vec2};
+use macroquad_toolkit::camera::{Camera2D as ToolkitCamera2D, Camera2DConfig, CameraBounds};
 
 pub struct GameplayState {
     pub constants: GameConstants,
@@ -87,9 +88,7 @@ pub struct GameplayState {
     pub enemy_defs: Vec<EnemyDef>,
 
     // Camera
-    pub camera_offset: Vec2,
-    pub camera_zoom: f32,
-    pub prev_mouse_pos: Vec2,
+    pub camera: ToolkitCamera2D,
 }
 
 pub struct Resources {
@@ -113,6 +112,7 @@ impl GameplayState {
     pub fn new(data: &GameData) -> Self {
         let constants = data.constants.clone();
         let map_state = MapState::from_def(data.map_def.clone());
+        let camera_bounds = map_state.map_size;
 
         let mut factory = Factory::new();
         factory.init_sectors(&data.sector_defs);
@@ -202,9 +202,22 @@ impl GameplayState {
             unlocks: data.unlocks.clone(),
             enemy_defs: data.enemy_defs.clone(),
 
-            camera_offset: vec2(600.0, 400.0),
-            camera_zoom: 0.5,
-            prev_mouse_pos: vec2(0.0, 0.0),
+            camera: ToolkitCamera2D::with_config(
+                vec2(600.0, 400.0),
+                0.5,
+                Camera2DConfig {
+                    drag_button: Some(macroquad::prelude::MouseButton::Middle),
+                    min_zoom: 0.25,
+                    max_zoom: 2.0,
+                    pan_speed: 400.0,
+                    zoom_in_factor: 1.1,
+                    zoom_out_factor: 1.0 / 1.1,
+                    mouse_wheel_zoom_to_cursor: false,
+                    keyboard_zoom_enabled: false,
+                    bounds: Some(CameraBounds::new(vec2(0.0, 0.0), camera_bounds)),
+                    ..Default::default()
+                },
+            ),
         }
     }
 

@@ -1,0 +1,16 @@
+{
+  "packs": [
+    {
+      "source": "assets/tiles",
+      "output": "assets/tiles.zip",
+      "entry_root": "assets/tiles",
+      "delete_source": true
+    },
+    {
+      "source": "assets/tiles_128",
+      "output": "assets/tiles_128.zip",
+      "entry_root": "assets/tiles_128",
+      "delete_source": true
+    }
+  ]
+}

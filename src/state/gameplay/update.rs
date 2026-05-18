@@ -56,51 +56,11 @@ impl GameplayState {
 
     fn handle_camera_input(&mut self) {
         let dt = get_frame_time();
-        let pan_speed = 400.0 / self.camera_zoom;
-
-        // WASD panning
-        if is_key_down(KeyCode::W) {
-            self.camera_offset.y -= pan_speed * dt;
-        }
-        if is_key_down(KeyCode::S) {
-            self.camera_offset.y += pan_speed * dt;
-        }
-        if is_key_down(KeyCode::A) {
-            self.camera_offset.x -= pan_speed * dt;
-        }
-        if is_key_down(KeyCode::D) {
-            self.camera_offset.x += pan_speed * dt;
-        }
-
-        // Middle-mouse drag
-        let (mx, my) = mouse_position();
-        let mouse_pos = vec2(mx, my);
-        if is_mouse_button_down(MouseButton::Middle) {
-            let delta = self.prev_mouse_pos - mouse_pos;
-            self.camera_offset += delta / self.camera_zoom;
-        }
-        self.prev_mouse_pos = mouse_pos;
-
-        // Scroll wheel zoom
-        let (_, scroll_y) = mouse_wheel();
-        if scroll_y != 0.0 {
-            let factor = if scroll_y > 0.0 { 1.1 } else { 1.0 / 1.1 };
-            self.camera_zoom = (self.camera_zoom * factor).clamp(0.25, 2.0);
-        }
-
-        // Clamp camera to map bounds
-        let map_w = self.map_state.map_size.x;
-        let map_h = self.map_state.map_size.y;
-        self.camera_offset.x = self.camera_offset.x.clamp(0.0, map_w);
-        self.camera_offset.y = self.camera_offset.y.clamp(0.0, map_h);
+        self.camera.update(dt, false);
     }
 
     pub fn screen_to_world(&self, screen_pos: Vec2) -> Vec2 {
-        let sw = screen_width();
-        let sh = screen_height();
-        let world_x = self.camera_offset.x + (screen_pos.x - sw / 2.0) / self.camera_zoom;
-        let world_y = self.camera_offset.y + (screen_pos.y - sh / 2.0) / self.camera_zoom;
-        vec2(world_x, world_y)
+        self.camera.screen_to_world(screen_pos)
     }
 
     fn handle_input(&mut self) {

@@ -14,14 +14,7 @@ use super::GameplayState;
 impl GameplayState {
     pub fn draw(&mut self, data: &GameData) {
         // --- World-space rendering (with camera) ---
-        let sw = screen_width();
-        let sh = screen_height();
-        let cam = Camera2D {
-            target: self.camera_offset,
-            zoom: vec2(self.camera_zoom * 2.0 / sw, self.camera_zoom * 2.0 / sh),
-            ..Default::default()
-        };
-        set_camera(&cam);
+        self.camera.begin();
 
         self.draw_circuit_board();
         self.draw_towers();
