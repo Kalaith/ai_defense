@@ -110,9 +110,18 @@ pub struct TowerCombatResult {
     pub effects: Vec<ShotEffect>,
     pub heat_generated: f32,
     pub death_positions: Vec<Vec2>,
+    pub tower_stats: Vec<TowerTickStats>,
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct TowerTickStats {
+    pub shots: u32,
+    pub hits: u32,
+    pub kills: u32,
 }
 
 impl Tower {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         tower_type: TowerType,
         tower_id: String,
@@ -162,6 +171,7 @@ impl Tower {
 
 /// Run tower combat: each tower finds a target, fires if ready, applies damage.
 /// Returns total scrap earned from kills.
+#[allow(clippy::too_many_arguments)]
 pub fn tick_towers(
     towers: &mut [Tower],
     enemies: &mut [Enemy],
@@ -176,8 +186,9 @@ pub fn tick_towers(
     let mut effects = Vec::new();
     let mut fired_count = 0.0;
     let mut death_positions = Vec::new();
+    let mut tower_stats = vec![TowerTickStats::default(); towers.len()];
 
-    for tower in towers.iter_mut() {
+    for (tower_idx, tower) in towers.iter_mut().enumerate() {
         tower.tick(dt);
         if !tower.can_fire() {
             continue;
@@ -185,6 +196,8 @@ pub fn tick_towers(
 
         if matches!(tower.tower_type, TowerType::AreaDenial) {
             let mut hit_any = false;
+            let mut hits = 0;
+            let mut kills = 0;
             let range = tower.range * range_mult;
             for enemy in enemies.iter_mut() {
                 if !enemy.is_alive {
@@ -193,9 +206,11 @@ pub fn tick_towers(
                 let dist = (enemy.position - tower.position).length();
                 if dist <= range {
                     hit_any = true;
+                    hits += 1;
                     let was_alive = enemy.is_alive;
                     enemy.take_damage(tower.damage * damage_mult * tuning.area_denial_damage_scale);
                     if was_alive && !enemy.is_alive {
+                        kills += 1;
                         scrap_earned += enemy.scrap_reward * scrap_mult;
                         death_positions.push(enemy.position);
                     }
@@ -205,6 +220,9 @@ pub fn tick_towers(
             if hit_any {
                 tower.fire(fire_rate_mult);
                 fired_count += 1.0;
+                tower_stats[tower_idx].shots += 1;
+                tower_stats[tower_idx].hits += hits;
+                tower_stats[tower_idx].kills += kills;
                 effects.push(ShotEffect::pulse(
                     tower.position,
                     range,
@@ -233,6 +251,8 @@ pub fn tick_towers(
         if let Some(idx) = best_idx {
             tower.fire(fire_rate_mult);
             fired_count += 1.0;
+            tower_stats[tower_idx].shots += 1;
+            tower_stats[tower_idx].hits += 1;
             let target_pos = enemies[idx].position;
             let target_type = enemies[idx].enemy_type.clone();
             let mut damage = tower.damage * damage_mult;
@@ -242,10 +262,10 @@ pub fn tick_towers(
                     EnemyType::Scout => damage *= tuning.laser_vs_scout_mult,
                     _ => {}
                 }
-            } else if matches!(tower.tower_type, TowerType::Ballistic) {
-                if matches!(target_type, EnemyType::HeavyUnit) {
-                    damage *= tuning.ballistic_vs_heavy_mult;
-                }
+            } else if matches!(tower.tower_type, TowerType::Ballistic)
+                && matches!(target_type, EnemyType::HeavyUnit)
+            {
+                damage *= tuning.ballistic_vs_heavy_mult;
             }
 
             let was_alive = enemies[idx].is_alive;
@@ -256,6 +276,7 @@ pub fn tick_towers(
             }
 
             if was_alive && !enemies[idx].is_alive {
+                tower_stats[tower_idx].kills += 1;
                 scrap_earned += enemies[idx].scrap_reward * scrap_mult;
                 death_positions.push(enemies[idx].position);
 
@@ -271,6 +292,7 @@ pub fn tick_towers(
                             let was_burst_alive = enemy.is_alive;
                             enemy.take_damage(burst_damage);
                             if was_burst_alive && !enemy.is_alive {
+                                tower_stats[tower_idx].kills += 1;
                                 scrap_earned += enemy.scrap_reward * scrap_mult;
                                 death_positions.push(enemy.position);
                             }
@@ -292,6 +314,7 @@ pub fn tick_towers(
                             let was_chain_alive = enemy.is_alive;
                             enemy.take_damage(chain_damage);
                             if was_chain_alive && !enemy.is_alive {
+                                tower_stats[tower_idx].kills += 1;
                                 scrap_earned += enemy.scrap_reward * scrap_mult;
                                 death_positions.push(enemy.position);
                             }
@@ -315,5 +338,6 @@ pub fn tick_towers(
         effects,
         heat_generated,
         death_positions,
+        tower_stats,
     }
 }

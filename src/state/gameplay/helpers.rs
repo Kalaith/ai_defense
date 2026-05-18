@@ -124,7 +124,14 @@ impl GameplayState {
     pub fn nearest_unlocked_building(&self, pos: Vec2) -> Option<(usize, f32)> {
         let mut best = None;
         let mut best_dist = self.map_state.building_interact_radius;
+        let max_x = self.map_state.max_visible_x() + 120.0;
         for (idx, building) in self.map_state.buildings.iter().enumerate() {
+            if !self.map_state.is_building_visible(building) {
+                continue;
+            }
+            if building.position.x > max_x {
+                continue;
+            }
             let dist = (building.position - pos).length();
             if dist <= best_dist {
                 best_dist = dist;
@@ -175,6 +182,7 @@ impl GameplayState {
             + (purchased_upgrades * weights.per_upgrade)
     }
 
+    #[allow(dead_code)]
     pub fn build_wave_preview(&self) -> Vec<(EnemyType, usize)> {
         let next_wave = self.current_wave + 1;
         let force_commander = self.beacon_phase == BeaconPhase::TerminalHowl;

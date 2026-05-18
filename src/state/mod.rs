@@ -11,6 +11,7 @@ use gameplay::GameplayState;
 use menu::MenuState;
 use results::ResultsState;
 
+#[allow(clippy::large_enum_variant)]
 pub enum GameState {
     Menu(MenuState),
     Gameplay(GameplayState),
@@ -31,6 +32,7 @@ pub struct RunSummary {
     pub shutdown_triggered: bool,
 }
 
+#[allow(clippy::enum_variant_names)]
 pub enum StateTransition {
     ToMenu,
     ToGameplay,

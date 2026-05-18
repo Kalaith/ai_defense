@@ -145,9 +145,11 @@ pub struct SectionRenderInfo {
     pub id: String,
     pub label: String,
     pub core_building: String,
+    pub unlock_entrance: Option<String>,
     pub min: Vec2,
     pub max: Vec2,
     pub index: usize,
+    pub visible: bool,
 }
 
 #[allow(dead_code)]
@@ -286,14 +288,14 @@ impl MapState {
         let Some(idx) = self.slot_sections.get(&slot.id).copied() else {
             return true;
         };
-        self.sections.get(idx).map_or(true, |s| s.visible)
+        self.sections.get(idx).is_none_or(|s| s.visible)
     }
 
     pub fn is_building_visible(&self, building: &MapBuilding) -> bool {
         let Some(idx) = self.building_sections.get(&building.id).copied() else {
             return true;
         };
-        self.sections.get(idx).map_or(true, |s| s.visible)
+        self.sections.get(idx).is_none_or(|s| s.visible)
     }
 
     pub fn is_core_building(&self, building_id: &str) -> bool {
@@ -309,9 +311,6 @@ impl MapState {
     pub fn section_render_info(&self) -> Vec<SectionRenderInfo> {
         let mut result = Vec::new();
         for (idx, section) in self.sections.iter().enumerate() {
-            if !section.visible {
-                continue;
-            }
             let mut min = Vec2::new(f32::MAX, f32::MAX);
             let mut max = Vec2::new(f32::MIN, f32::MIN);
 
@@ -341,9 +340,11 @@ impl MapState {
                 id: section.id.clone(),
                 label: section.label.clone(),
                 core_building: section.core_building.clone(),
+                unlock_entrance: section.unlock_entrance.clone(),
                 min,
                 max,
                 index: idx,
+                visible: section.visible,
             });
         }
         result
@@ -357,7 +358,9 @@ impl MapState {
             }
         }
         for building in &self.buildings {
-            if self.is_building_visible(building) {
+            if self.building_sections.contains_key(&building.id)
+                && self.is_building_visible(building)
+            {
                 max_x = max_x.max(building.position.x);
             }
         }
@@ -521,8 +524,12 @@ impl MapState {
     pub fn nearest_building(&self, pos: Vec2) -> Option<(usize, f32)> {
         let mut best = None;
         let mut best_dist = self.building_interact_radius;
+        let max_x = self.max_visible_x() + 120.0;
         for (idx, building) in self.buildings.iter().enumerate() {
             if !self.is_building_visible(building) {
+                continue;
+            }
+            if building.position.x > max_x {
                 continue;
             }
             let dist = (building.position - pos).length();
@@ -548,22 +555,22 @@ impl MapState {
             TraceNode::Slot(idx) => self
                 .slots
                 .get(idx)
-                .map_or(false, |s| s.state == SlotState::Powered),
+                .is_some_and(|s| s.state == SlotState::Powered),
             TraceNode::Building(idx) => self
                 .buildings
                 .get(idx)
-                .map_or(false, |b| b.state == BuildingState::Powered),
+                .is_some_and(|b| b.state == BuildingState::Powered),
         };
         let to_powered = match trace.to {
             TraceNode::FactoryCore => true,
             TraceNode::Slot(idx) => self
                 .slots
                 .get(idx)
-                .map_or(false, |s| s.state == SlotState::Powered),
+                .is_some_and(|s| s.state == SlotState::Powered),
             TraceNode::Building(idx) => self
                 .buildings
                 .get(idx)
-                .map_or(false, |b| b.state == BuildingState::Powered),
+                .is_some_and(|b| b.state == BuildingState::Powered),
         };
         from_powered && to_powered
     }

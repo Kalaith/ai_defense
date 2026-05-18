@@ -2,8 +2,12 @@
 
 mod helpers;
 mod render;
+mod render_hud;
+mod render_map;
+mod render_panels;
 #[path = "../../ui/gameplay.rs"]
 mod ui;
+mod ui_advice;
 mod update;
 
 use crate::data::{EnemyDef, GameConstants, GameData, UpgradeDef};
@@ -33,6 +37,7 @@ pub struct GameplayState {
     pub paused: bool,
 
     pub towers: Vec<Tower>,
+    pub tower_stats: Vec<TowerUiStats>,
     pub map_state: MapState,
 
     pub shot_effects: Vec<ShotEffect>,
@@ -108,6 +113,13 @@ pub struct Particle {
     pub ttl: f32,
 }
 
+#[derive(Clone, Debug, Default)]
+pub struct TowerUiStats {
+    pub shots_this_wave: u32,
+    pub hits_this_wave: u32,
+    pub kills_this_wave: u32,
+}
+
 impl GameplayState {
     pub fn new(data: &GameData) -> Self {
         let constants = data.constants.clone();
@@ -151,6 +163,7 @@ impl GameplayState {
             paused: false,
 
             towers: Vec::new(),
+            tower_stats: Vec::new(),
             map_state,
 
             shot_effects: Vec::new(),
@@ -203,8 +216,8 @@ impl GameplayState {
             enemy_defs: data.enemy_defs.clone(),
 
             camera: ToolkitCamera2D::with_config(
-                vec2(600.0, 400.0),
-                0.5,
+                vec2(620.0, 390.0),
+                0.82,
                 Camera2DConfig {
                     drag_button: Some(macroquad::prelude::MouseButton::Middle),
                     min_zoom: 0.25,
@@ -283,6 +296,7 @@ impl GameplayState {
         self.map_state.rebuild_unlocks();
 
         self.towers.clear();
+        self.tower_stats.clear();
         for saved in save.towers {
             if let Some(def) = data.tower_def_by_id(&saved.tower_id) {
                 let tt = def.tower_type.clone();
@@ -307,6 +321,7 @@ impl GameplayState {
                     }
                 }
                 self.towers.push(tower);
+                self.tower_stats.push(TowerUiStats::default());
             }
         }
 

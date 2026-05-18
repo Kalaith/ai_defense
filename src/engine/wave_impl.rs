@@ -50,6 +50,12 @@ pub struct SpawnEntry {
     pub path_id: String,
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub struct PreviewSpawnEntry {
+    pub enemy_type: EnemyType,
+    pub path_id: String,
+}
+
 impl WaveManager {
     pub fn new(tuning: WaveTuning) -> Self {
         Self {
@@ -70,6 +76,7 @@ impl WaveManager {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn generate_wave(
         &mut self,
         wave_number: u32,
@@ -181,6 +188,8 @@ impl WaveManager {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn preview_wave(
     wave_number: u32,
     enemy_defs: &[EnemyDef],
@@ -196,6 +205,40 @@ pub fn preview_wave(
     threat_health_mult_per_awareness: f32,
 ) -> Vec<EnemyType> {
     let dummy_spawn = vec![("preview".to_string(), Vec2::new(0.0, 0.0))];
+    let entries = preview_wave_entries(
+        wave_number,
+        enemy_defs,
+        base_health_scale,
+        threat_awareness,
+        tier_floor,
+        budget_multiplier,
+        force_commander,
+        wave_budget_base,
+        wave_budget_per_wave,
+        wave_commander_every,
+        threat_budget_divisor,
+        threat_health_mult_per_awareness,
+        &dummy_spawn,
+    );
+    entries.into_iter().map(|e| e.enemy_type).collect()
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn preview_wave_entries(
+    wave_number: u32,
+    enemy_defs: &[EnemyDef],
+    base_health_scale: f32,
+    threat_awareness: f32,
+    tier_floor: u32,
+    budget_multiplier: f32,
+    force_commander: bool,
+    wave_budget_base: u32,
+    wave_budget_per_wave: u32,
+    wave_commander_every: u32,
+    threat_budget_divisor: f32,
+    threat_health_mult_per_awareness: f32,
+    spawn_points: &[(String, Vec2)],
+) -> Vec<PreviewSpawnEntry> {
     let queue = build_spawn_queue(
         wave_number,
         enemy_defs,
@@ -204,14 +247,20 @@ pub fn preview_wave(
         tier_floor,
         budget_multiplier,
         force_commander,
-        &dummy_spawn,
+        spawn_points,
         wave_budget_base,
         wave_budget_per_wave,
         wave_commander_every,
         threat_budget_divisor,
         threat_health_mult_per_awareness,
     );
-    queue.into_iter().map(|e| e.enemy_type).collect()
+    queue
+        .into_iter()
+        .map(|e| PreviewSpawnEntry {
+            enemy_type: e.enemy_type,
+            path_id: e.path_id,
+        })
+        .collect()
 }
 
 fn push_spawn(
@@ -231,6 +280,7 @@ fn push_spawn(
     });
 }
 
+#[allow(clippy::too_many_arguments)]
 fn build_spawn_queue(
     wave_number: u32,
     enemy_defs: &[EnemyDef],
@@ -279,7 +329,11 @@ fn build_spawn_queue(
     let mut queue = Vec::new();
     let mut path_robin = 0usize;
 
-    if (wave_number > 0 && wave_number % wave_commander_every == 0) || force_commander {
+    if (wave_number > 0
+        && wave_commander_every != 0
+        && wave_number.is_multiple_of(wave_commander_every))
+        || force_commander
+    {
         if let Some(boss) = eligible
             .iter()
             .find(|d| d.enemy_type == EnemyType::Commander)
@@ -315,4 +369,144 @@ fn build_spawn_queue(
     }
 
     queue
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::data::GameData;
+    use macroquad::prelude::vec2;
+
+    fn test_tuning(data: &GameData) -> WaveTuning {
+        WaveTuning {
+            spawn_interval: data.constants.waves.spawn_interval,
+            commander_aura_radius: data.constants.enemy.commander_aura_radius,
+            commander_aura_speed_mult: data.constants.enemy.commander_aura_speed_mult,
+            enemy_tuning: EnemyTuning {
+                scout_dodge_chance: data.constants.enemy.scout_dodge_chance,
+                scout_dodge_duration: data.constants.enemy.scout_dodge_duration,
+                hit_flash_duration: data.constants.enemy.hit_flash_duration,
+                saboteur_skip_chance: data.constants.enemy.saboteur_skip_chance,
+                slow_multiplier: data.constants.enemy.slow_multiplier,
+            },
+            wave_budget_base: data.constants.waves.budget_base,
+            wave_budget_per_wave: data.constants.waves.budget_per_wave,
+            wave_commander_every: data.constants.waves.commander_every,
+            threat_budget_divisor: data.constants.threat.budget_divisor,
+            threat_health_mult_per_awareness: data.constants.threat.health_mult_per_awareness,
+        }
+    }
+
+    #[test]
+    fn preview_wave_uses_loaded_enemy_data() {
+        let data = GameData::load();
+
+        let preview = preview_wave(
+            1,
+            &data.enemy_defs,
+            data.constants.waves.health_scale_per_wave,
+            0.0,
+            1,
+            data.constants.waves.budget_multiplier,
+            false,
+            data.constants.waves.budget_base,
+            data.constants.waves.budget_per_wave,
+            data.constants.waves.commander_every,
+            data.constants.threat.budget_divisor,
+            data.constants.threat.health_mult_per_awareness,
+        );
+
+        assert!(!preview.is_empty(), "wave preview should spawn enemies");
+        assert!(
+            preview.iter().all(|kind| matches!(
+                kind,
+                EnemyType::Scout
+                    | EnemyType::Drone
+                    | EnemyType::HeavyUnit
+                    | EnemyType::Saboteur
+                    | EnemyType::Commander
+            )),
+            "preview contained an unknown enemy type"
+        );
+    }
+
+    #[test]
+    fn generated_wave_queues_enemies_across_active_spawn_points() {
+        let data = GameData::load();
+        let mut manager = WaveManager::new(test_tuning(&data));
+        let spawn_points = vec![
+            ("west".to_string(), vec2(10.0, 20.0)),
+            ("north".to_string(), vec2(100.0, 120.0)),
+        ];
+
+        manager.generate_wave(
+            3,
+            &data.enemy_defs,
+            data.constants.waves.health_scale_per_wave,
+            15.0,
+            1,
+            data.constants.waves.budget_multiplier,
+            false,
+            &spawn_points,
+        );
+
+        assert!(manager.wave_active);
+        assert!(!manager.spawn_queue.is_empty(), "expected queued enemies");
+        assert!(manager
+            .spawn_queue
+            .iter()
+            .all(|entry| entry.health > 0.0 && entry.speed > 0.0));
+        assert!(manager
+            .spawn_queue
+            .iter()
+            .any(|entry| entry.path_id == "west"));
+        assert!(manager
+            .spawn_queue
+            .iter()
+            .any(|entry| entry.path_id == "north"));
+    }
+
+    #[test]
+    fn preview_wave_entries_include_enemy_type_and_path_id() {
+        let data = GameData::load();
+        let spawn_points = vec![
+            ("west".to_string(), vec2(10.0, 20.0)),
+            ("north".to_string(), vec2(100.0, 120.0)),
+        ];
+
+        let preview = preview_wave_entries(
+            3,
+            &data.enemy_defs,
+            data.constants.waves.health_scale_per_wave,
+            15.0,
+            1,
+            data.constants.waves.budget_multiplier,
+            false,
+            data.constants.waves.budget_base,
+            data.constants.waves.budget_per_wave,
+            data.constants.waves.commander_every,
+            data.constants.threat.budget_divisor,
+            data.constants.threat.health_mult_per_awareness,
+            &spawn_points,
+        );
+
+        assert!(!preview.is_empty(), "expected preview entries");
+        assert!(
+            preview
+                .iter()
+                .all(|entry| entry.path_id == "west" || entry.path_id == "north"),
+            "preview should preserve path ids"
+        );
+        assert!(
+            preview.iter().any(|entry| matches!(
+                entry.enemy_type,
+                EnemyType::Scout
+                    | EnemyType::Drone
+                    | EnemyType::HeavyUnit
+                    | EnemyType::Saboteur
+                    | EnemyType::Commander
+            )),
+            "preview should expose enemy types"
+        );
+    }
 }

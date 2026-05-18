@@ -1,6 +1,10 @@
 //! Save/load persistence for campaign progress.
 
+use macroquad_toolkit::persistence::SaveRoot;
 use serde::{Deserialize, Serialize};
+
+const GAME_NAME: &str = "ai_defense";
+const SAVE_FILE: &str = "save.json";
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SaveData {
@@ -74,19 +78,44 @@ pub struct SavedBuilding {
 }
 
 impl SaveData {
-    pub fn save(&self) -> Result<(), Box<dyn std::error::Error>> {
-        let json = serde_json::to_string_pretty(self)?;
-        std::fs::write("save.json", json)?;
-        Ok(())
+    pub fn save(&self) -> Result<(), String> {
+        save_root()?.save_json(SAVE_FILE, self)
     }
 
-    pub fn load() -> Result<Self, Box<dyn std::error::Error>> {
-        let json = std::fs::read_to_string("save.json")?;
-        let data: SaveData = serde_json::from_str(&json)?;
-        Ok(data)
+    pub fn load() -> Result<Self, String> {
+        match save_root()?.load_json(SAVE_FILE) {
+            Ok(data) => Ok(data),
+            Err(toolkit_err) => {
+                #[cfg(not(target_arch = "wasm32"))]
+                {
+                    if let Ok(json) = std::fs::read_to_string(SAVE_FILE) {
+                        return serde_json::from_str(&json)
+                            .map_err(|e| format!("Legacy save parse error: {e}"));
+                    }
+                }
+
+                Err(toolkit_err)
+            }
+        }
     }
 
     pub fn exists() -> bool {
-        std::fs::metadata("save.json").is_ok()
+        let toolkit_save_exists = save_root()
+            .map(|root| root.exists(SAVE_FILE))
+            .unwrap_or(false);
+
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            toolkit_save_exists || std::fs::metadata(SAVE_FILE).is_ok()
+        }
+
+        #[cfg(target_arch = "wasm32")]
+        {
+            toolkit_save_exists
+        }
     }
+}
+
+fn save_root() -> Result<SaveRoot, String> {
+    SaveRoot::app_data(GAME_NAME)
 }

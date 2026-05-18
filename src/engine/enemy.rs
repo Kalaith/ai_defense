@@ -67,11 +67,11 @@ impl Enemy {
     }
 
     pub fn take_damage(&mut self, amount: f32) {
-        if self.enemy_type == EnemyType::Scout {
-            if gen_range(0.0, 1.0) < self.tuning.scout_dodge_chance {
-                self.dodge_timer = self.tuning.scout_dodge_duration;
-                return;
-            }
+        if self.enemy_type == EnemyType::Scout
+            && gen_range(0.0, 1.0) < self.tuning.scout_dodge_chance
+        {
+            self.dodge_timer = self.tuning.scout_dodge_duration;
+            return;
         }
 
         self.health -= amount;
@@ -110,10 +110,9 @@ impl Enemy {
             self.path_index += 1;
             if self.enemy_type == EnemyType::Saboteur
                 && self.path_index < path.len().saturating_sub(1)
+                && gen_range(0.0, 1.0) < self.tuning.saboteur_skip_chance
             {
-                if gen_range(0.0, 1.0) < self.tuning.saboteur_skip_chance {
-                    self.path_index += 1;
-                }
+                self.path_index += 1;
             }
         } else {
             self.position += direction.normalize() * speed * dt;

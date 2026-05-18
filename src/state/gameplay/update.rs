@@ -152,6 +152,11 @@ impl GameplayState {
             force_commander,
             &spawn_points,
         );
+        self.tower_stats
+            .resize_with(self.towers.len(), Default::default);
+        for stats in &mut self.tower_stats {
+            *stats = Default::default();
+        }
         self.threat.add_from_wave(self.current_wave);
         self.wave_flash_timer = self.constants.ui.wave_flash_duration;
         self.last_wave_started = self.current_wave;
@@ -220,6 +225,15 @@ impl GameplayState {
         );
         self.resources.scrap += combat.scrap_earned;
         self.shot_effects.extend(combat.effects);
+        self.tower_stats
+            .resize_with(self.towers.len(), Default::default);
+        for (idx, stats) in combat.tower_stats.iter().enumerate() {
+            if let Some(total) = self.tower_stats.get_mut(idx) {
+                total.shots_this_wave += stats.shots;
+                total.hits_this_wave += stats.hits;
+                total.kills_this_wave += stats.kills;
+            }
+        }
         if combat.heat_generated > 0.0 {
             self.threat.add_heat(combat.heat_generated);
         }

@@ -5,7 +5,8 @@ use macroquad::prelude::*;
 use macroquad_toolkit::colors::dark;
 use macroquad_toolkit::ui::button;
 
-use super::GameplayState;
+use super::helpers::{beacon_color, threat_color};
+use super::{GameplayState, TowerUiStats};
 
 impl GameplayState {
     fn building_display_name_by_id(&self, id: &str) -> String {
@@ -65,166 +66,427 @@ impl GameplayState {
         let panel_w = self.constants.ui.sector_panel_w;
         let panel_h = screen_height() - panel_y;
 
-        let panel_surface =
-            macroquad_toolkit::ui::SurfaceStyle::new(Color::new(0.1, 0.1, 0.12, 0.9));
-        macroquad_toolkit::ui::draw_surface(
+        ui::draw_console_panel(
             Rect::new(sector_x, panel_y, panel_w, panel_h),
-            &panel_surface,
+            Color::new(0.26, 0.42, 0.48, 0.82),
         );
-        draw_text(
-            "BUILDINGS",
-            sector_x + 10.0,
-            panel_y + 20.0,
-            18.0,
-            dark::WARNING,
+        ui::draw_console_header(
+            sector_x + 12.0,
+            panel_y + 26.0,
+            "SYSTEMS",
+            "repair / power / upgrade",
+            dark::ACCENT,
         );
 
-        let mut row_y = panel_y + 35.0;
-        let row_h = 46.0;
-        let padding = 4.0;
+        let mut row_y = panel_y + 56.0;
+        let row_h = 94.0;
+        let padding = 9.0;
+        let mut clicked_building = None;
+        let mut clicked_action: Option<(usize, &'static str)> = None;
+        let reveal_x = self.map_state.max_visible_x() + 120.0;
 
-        for building in self
-            .map_state
-            .buildings
-            .iter()
-            .filter(|b| matches!(b.state, BuildingState::Powered))
-        {
+        for (idx, building) in self.map_state.buildings.iter().enumerate() {
+            if !self.map_state.is_building_visible(building) || building.position.x > reveal_x {
+                continue;
+            }
             if row_y + row_h > panel_y + panel_h - 5.0 {
                 break;
             }
 
-            let row_rect = Rect::new(sector_x + 5.0, row_y, panel_w - 10.0, row_h);
-            let row_surface = macroquad_toolkit::ui::SurfaceStyle::new(dark::PANEL)
-                .with_border(1.0, dark::TEXT_DIM);
-            macroquad_toolkit::ui::draw_surface(row_rect, &row_surface);
-
-            let name = if building.building_type.is_empty() {
-                &building.id
+            let unlocked = self.is_building_unlocked(building);
+            let selected = self.selected_building == Some(idx);
+            let (status, status_color) = if !unlocked {
+                ("LOCKED", dark::TEXT_DIM)
             } else {
-                &building.building_type
-            };
-            draw_text(name, sector_x + 10.0, row_y + 16.0, 14.0, dark::TEXT);
-
-            match building.state {
-                BuildingState::Powered => {
-                    let b = &building.boon;
-                    let mut parts = Vec::new();
-                    if b.scrap_per_sec > 0.0 {
-                        parts.push(format!("+{:.1} scrap/s", b.scrap_per_sec));
-                    }
-                    if b.food_per_sec > 0.0 {
-                        parts.push(format!("+{:.1} food/s", b.food_per_sec));
-                    }
-                    if b.water_per_sec > 0.0 {
-                        parts.push(format!("+{:.1} water/s", b.water_per_sec));
-                    }
-                    if b.power_per_sec > 0.0 {
-                        parts.push(format!("+{:.1} power/s", b.power_per_sec));
-                    }
-                    if parts.is_empty() {
-                        draw_text(
-                            "Active",
-                            sector_x + 10.0,
-                            row_y + 30.0,
-                            11.0,
-                            dark::POSITIVE,
-                        );
-                    } else {
-                        draw_text(
-                            &parts.join(", "),
-                            sector_x + 10.0,
-                            row_y + 30.0,
-                            11.0,
-                            dark::POSITIVE,
-                        );
-                    }
-                    if building.threat_per_sec > 0.0 {
-                        draw_text(
-                            &format!("Threat: +{:.2}/s", building.threat_per_sec),
-                            sector_x + 10.0,
-                            row_y + 42.0,
-                            10.0,
-                            dark::NEGATIVE,
-                        );
-                    }
+                match building.state {
+                    BuildingState::Broken => ("DAMAGED", dark::NEGATIVE),
+                    BuildingState::Repaired => ("REPAIRED", dark::WARNING),
+                    BuildingState::Powered => ("ONLINE", dark::POSITIVE),
+                    BuildingState::Disabled => ("OFFLINE", dark::TEXT_DIM),
                 }
-                BuildingState::Repaired | BuildingState::Broken | BuildingState::Disabled => {}
+            };
+            let row_rect = Rect::new(sector_x + 7.0, row_y, panel_w - 14.0, row_h);
+            let border = if selected {
+                dark::TEXT_BRIGHT
+            } else if unlocked {
+                status_color
+            } else {
+                dark::TEXT_DIM
+            };
+            ui::draw_console_panel(row_rect, Color::new(border.r, border.g, border.b, 0.72));
+
+            let icon = icon_for_boon(&building.boon, building.threat_per_sec);
+            ui::draw_icon(icon, row_rect.x + 12.0, row_rect.y + 18.0, 30.0, border);
+
+            let name = self.building_display_name(building);
+            draw_panel_text(
+                &name,
+                row_rect.x + 50.0,
+                row_y + 20.0,
+                row_rect.w - 62.0,
+                14.0,
+                dark::TEXT,
+            );
+            ui::draw_status_pill(row_rect.x + 50.0, row_y + 27.0, status, status_color);
+
+            let b = &building.boon;
+            let detail = self.boon_text(b);
+            let cost_line = match building.state {
+                BuildingState::Broken => format!("Repair Cost: {:.0} scrap", building.repair_cost),
+                BuildingState::Repaired => format!("Power Cost: {:.0} scrap", building.power_cost),
+                BuildingState::Powered => "Online".to_string(),
+                BuildingState::Disabled => "Locked".to_string(),
+            };
+            draw_panel_text(
+                &cost_line,
+                row_rect.x + 12.0,
+                row_y + 58.0,
+                row_rect.w - 126.0,
+                11.0,
+                dark::TEXT_DIM,
+            );
+            draw_panel_text(
+                &format!("Benefit: {}", detail),
+                row_rect.x + 12.0,
+                row_y + 74.0,
+                row_rect.w - 126.0,
+                11.0,
+                if matches!(building.state, BuildingState::Powered) {
+                    dark::POSITIVE
+                } else {
+                    dark::TEXT_DIM
+                },
+            );
+            draw_panel_text(
+                &format!("Risk: +{:.2} noise/s", building.threat_per_sec),
+                row_rect.x + 12.0,
+                row_y + 89.0,
+                row_rect.w - 126.0,
+                10.0,
+                dark::WARNING,
+            );
+
+            let missing_repair = (building.repair_cost - self.resources.scrap).max(0.0);
+            let missing_power = (building.power_cost - self.resources.scrap).max(0.0);
+            let (action_label, action_kind, action_state) = if !unlocked {
+                (
+                    "LOCKED".to_string(),
+                    "locked",
+                    ui::ConsoleButtonState::Disabled,
+                )
+            } else {
+                match building.state {
+                    BuildingState::Broken => {
+                        if self.resources.scrap >= building.repair_cost {
+                            (
+                                "REPAIR".to_string(),
+                                "repair",
+                                ui::ConsoleButtonState::Affordable,
+                            )
+                        } else {
+                            (
+                                format!("NEED {:.0} SCRAP", missing_repair),
+                                "repair",
+                                ui::ConsoleButtonState::Disabled,
+                            )
+                        }
+                    }
+                    BuildingState::Repaired => {
+                        if self.resources.scrap >= building.power_cost {
+                            (
+                                "POWER".to_string(),
+                                "power",
+                                ui::ConsoleButtonState::Recommended,
+                            )
+                        } else {
+                            (
+                                format!("NEED {:.0} SCRAP", missing_power),
+                                "power",
+                                ui::ConsoleButtonState::Disabled,
+                            )
+                        }
+                    }
+                    BuildingState::Powered => (
+                        "ONLINE".to_string(),
+                        "online",
+                        ui::ConsoleButtonState::Disabled,
+                    ),
+                    BuildingState::Disabled => (
+                        "LOCKED".to_string(),
+                        "locked",
+                        ui::ConsoleButtonState::Disabled,
+                    ),
+                }
+            };
+            if ui::draw_console_button(
+                row_rect.x + row_rect.w - 108.0,
+                row_y + 56.0,
+                96.0,
+                32.0,
+                &action_label,
+                action_state,
+            ) {
+                clicked_action = Some((idx, action_kind));
+            }
+
+            let (mx, my) = mouse_position();
+            if mx >= row_rect.x
+                && mx <= row_rect.x + row_rect.w
+                && my >= row_rect.y
+                && my <= row_rect.y + row_rect.h
+            {
+                draw_rectangle(
+                    row_rect.x,
+                    row_rect.y,
+                    row_rect.w,
+                    row_rect.h,
+                    Color::new(0.35, 0.48, 0.54, 0.1),
+                );
+                if is_mouse_button_pressed(MouseButton::Left) {
+                    clicked_building = Some(idx);
+                }
             }
 
             row_y += row_h + padding;
         }
+
+        if let Some((idx, action)) = clicked_action {
+            self.selected_building = Some(idx);
+            self.selected_slot = None;
+            self.selected_tower = None;
+            self.selected_core = false;
+            self.selected_upgrade = None;
+            match action {
+                "repair" => self.repair_building(idx),
+                "power" => self.power_building(idx),
+                _ => {}
+            }
+        } else if let Some(idx) = clicked_building {
+            self.selected_building = Some(idx);
+            self.selected_slot = None;
+            self.selected_tower = None;
+            self.selected_core = false;
+            self.selected_upgrade = None;
+        }
     }
 
     pub fn draw_placement_ghost(&self, data: &GameData) {
-        if let Some(ref tower_id) = self.placing_tower {
-            if let Some(def) = data.tower_def_by_id(tower_id) {
-                let world_mouse =
-                    self.screen_to_world(vec2(mouse_position().0, mouse_position().1));
+        let world_mouse = self.screen_to_world(vec2(mouse_position().0, mouse_position().1));
+        let Some(preview) = self.placement_preview(data, world_mouse) else {
+            return;
+        };
+        let Some(def) = data.tower_def_by_id(&preview.tower_id) else {
+            return;
+        };
 
-                // Find nearest powered empty slot
-                let mut best_slot = None;
-                let mut best_dist = self.map_state.slot_interact_radius;
-                for (idx, slot) in self.map_state.slots.iter().enumerate() {
-                    if slot.state != SlotState::Powered || slot.tower_index.is_some() {
-                        continue;
-                    }
-                    let dist = (slot.position - world_mouse).length();
-                    if dist < best_dist {
-                        best_dist = dist;
-                        best_slot = Some(idx);
+        let range = self.effective_tower_range(def.base_range);
+        let c = def.color();
+
+        for path in self.map_state.active_paths_limited() {
+            for pair in path.points.windows(2) {
+                draw_line(
+                    pair[0].x,
+                    pair[0].y,
+                    pair[1].x,
+                    pair[1].y,
+                    9.0,
+                    Color::new(1.0, 0.48, 0.08, 0.24),
+                );
+                draw_line(
+                    pair[0].x,
+                    pair[0].y,
+                    pair[1].x,
+                    pair[1].y,
+                    4.0,
+                    Color::new(1.0, 0.7, 0.22, 0.8),
+                );
+            }
+        }
+
+        for idx in preview.valid_slots {
+            if let Some(slot) = self.map_state.slots.get(idx) {
+                let pulse = 0.55 + 0.28 * (get_time() as f32 * 5.0).sin().abs();
+                draw_circle(
+                    slot.position.x,
+                    slot.position.y,
+                    19.0,
+                    Color::new(0.06, 0.25, 0.22, 0.34),
+                );
+                draw_circle_lines(
+                    slot.position.x,
+                    slot.position.y,
+                    23.0,
+                    3.0,
+                    Color::new(0.26, 0.95, 0.82, pulse),
+                );
+            }
+        }
+
+        for (idx, reason) in preview.invalid_slots {
+            if let Some(slot) = self.map_state.slots.get(idx) {
+                draw_circle(
+                    slot.position.x,
+                    slot.position.y,
+                    17.0,
+                    Color::new(0.02, 0.025, 0.03, 0.58),
+                );
+                draw_circle_lines(
+                    slot.position.x,
+                    slot.position.y,
+                    18.0,
+                    1.5,
+                    Color::new(0.45, 0.48, 0.5, 0.32),
+                );
+                if preview.hovered_slot == Some(idx) {
+                    draw_text(
+                        reason.label(),
+                        slot.position.x + 18.0,
+                        slot.position.y + 4.0,
+                        12.0,
+                        dark::TEXT_DIM,
+                    );
+                }
+            }
+        }
+
+        if let Some(idx) = preview.hovered_slot {
+            if let Some(slot) = self.map_state.slots.get(idx) {
+                let ghost_color = Color::new(c.r, c.g, c.b, 0.5);
+                let range_color = Color::new(c.r, c.g, c.b, 0.32);
+                draw_circle(
+                    slot.position.x,
+                    slot.position.y,
+                    self.constants.ui.tower_base_radius,
+                    ghost_color,
+                );
+                draw_circle_lines(slot.position.x, slot.position.y, range, 2.0, range_color);
+                for path_id in &preview.covered_paths {
+                    if let Some(path) = self.map_state.paths.iter().find(|p| p.id == *path_id) {
+                        for pair in path.points.windows(2) {
+                            draw_line(
+                                pair[0].x,
+                                pair[0].y,
+                                pair[1].x,
+                                pair[1].y,
+                                6.0,
+                                Color::new(c.r, c.g, c.b, 0.42),
+                            );
+                        }
                     }
                 }
-
-                if let Some(idx) = best_slot {
-                    let pos = self.map_state.slots[idx].position;
-                    let c = def.color();
-                    let ghost_color = Color::new(c.r, c.g, c.b, 0.5);
-                    let range_color = Color::new(c.r, c.g, c.b, 0.3);
-
-                    let range_mult = if self.factory.is_sector_active("ai_vault") {
-                        1.2
-                    } else {
-                        1.0
-                    };
-                    let radius = self.constants.ui.tower_base_radius;
-                    draw_circle(pos.x, pos.y, radius, ghost_color);
-                    draw_circle_lines(pos.x, pos.y, def.base_range * range_mult, 1.0, range_color);
-                }
-
-                // Hint text is drawn in screen space - need to return to default camera for this
-                // (handled by caller since this is called in world-space section)
             }
         }
     }
 
+    #[allow(dead_code)]
     pub fn draw_shutdown_ui(&mut self) {
-        let btn_w = 160.0;
-        let btn_h = 24.0;
-        let btn_x = screen_width() - self.constants.ui.sector_panel_w - btn_w - 10.0;
-        let btn_y = 6.0;
+        let panel_w = 226.0;
+        let panel_h = self.constants.ui.hud_height - 10.0;
+        let panel_x = screen_width() - self.constants.ui.sector_panel_w - panel_w - 8.0;
+        let panel_y = 5.0;
+        let panel_surface =
+            macroquad_toolkit::ui::SurfaceStyle::new(Color::new(0.075, 0.065, 0.07, 0.96))
+                .with_border(1.0, Color::new(0.42, 0.22, 0.18, 0.85));
+        macroquad_toolkit::ui::draw_surface(
+            Rect::new(panel_x, panel_y, panel_w, panel_h),
+            &panel_surface,
+        );
 
+        draw_text(
+            "BEACON DRAW",
+            panel_x + 10.0,
+            panel_y + 14.0,
+            10.0,
+            dark::NEGATIVE,
+        );
+        let phase_color = beacon_color(&self.beacon_phase);
+        draw_panel_text(
+            self.beacon_phase.label(),
+            panel_x + 10.0,
+            panel_y + 31.0,
+            98.0,
+            12.0,
+            phase_color,
+        );
+        draw_signal_bar(
+            panel_x + 10.0,
+            panel_y + panel_h - 10.0,
+            92.0,
+            5.0,
+            self.beacon_strength,
+            phase_color,
+        );
+
+        draw_text(
+            &format!("Teams {}", self.scavengers_out),
+            panel_x + 108.0,
+            panel_y + 31.0,
+            11.0,
+            dark::TEXT_DIM,
+        );
+        draw_text(
+            &format!(
+                "{} {:.0}",
+                self.threat.reaction_tier().label(),
+                self.threat.awareness_level()
+            ),
+            panel_x + 108.0,
+            panel_y + 46.0,
+            10.0,
+            threat_color(&self.threat),
+        );
+
+        let btn_h = 20.0;
         if !self.beacon_active {
-            if button(btn_x, btn_y, btn_w, btn_h, "Start Beacon") {
+            let btn_w = 96.0;
+            let btn_x = panel_x + panel_w - btn_w - 8.0;
+            let btn_y = panel_y + 8.0;
+            if button(btn_x, btn_y, btn_w, btn_h, "Start") {
                 self.start_beacon();
             }
             return;
         }
 
-        if self.beacon_active && !self.shutdown_triggered && self.current_wave >= 1 {
-            if button(btn_x, btn_y, btn_w, btn_h, "Shutdown Beacon") {
+        let shutdown_enabled = !self.shutdown_triggered && self.current_wave >= 1;
+        let shutdown_x = panel_x + panel_w - 104.0;
+        let shutdown_y = panel_y + 8.0;
+        if shutdown_enabled {
+            if button(shutdown_x, shutdown_y, 96.0, btn_h, "Shutdown") {
                 self.trigger_shutdown();
             }
+        } else {
+            draw_rectangle(
+                shutdown_x,
+                shutdown_y,
+                96.0,
+                btn_h,
+                Color::new(0.18, 0.16, 0.16, 0.78),
+            );
+            draw_centered_ui_text(
+                "Locked",
+                shutdown_x + 48.0,
+                shutdown_y + 14.0,
+                11.0,
+                dark::TEXT_DIM,
+            );
         }
 
-        if self.beacon_active && !self.scavenger_recall_active && self.scavengers_out > 0 {
-            let recall_y = btn_y + 28.0;
-            if button(btn_x, recall_y, btn_w, btn_h, "Recall Scavengers") {
-                self.scavenger_recall_active = true;
-                self.scavenger_recall_timer = 0.0;
-            }
+        if !self.scavenger_recall_active
+            && self.scavengers_out > 0
+            && button(
+                panel_x + panel_w - 104.0,
+                panel_y + 31.0,
+                96.0,
+                btn_h,
+                "Recall",
+            )
+        {
+            self.scavenger_recall_active = true;
+            self.scavenger_recall_timer = 0.0;
         }
     }
 
+    #[allow(dead_code)]
     pub fn draw_selected_tower_panel(&mut self, data: &GameData) {
         let Some(idx) = self.selected_tower else {
             return;
@@ -341,11 +603,16 @@ impl GameplayState {
         }
 
         // Skip if in bottom slot panel area
-        let panel_w = 300.0;
-        let panel_h = 80.0;
-        let panel_x = (screen_width() - panel_w) / 2.0;
-        let panel_y = screen_height() - panel_h - 10.0;
-        if mx >= panel_x && mx <= panel_x + panel_w && my >= panel_y && my <= panel_y + panel_h {
+        let play_x = self.constants.ui.build_panel_w + 8.0;
+        let play_w =
+            (screen_width() - self.constants.ui.build_panel_w - self.constants.ui.sector_panel_w)
+                .max(360.0)
+                - 16.0;
+        let panel_w = play_w;
+        let panel_h = self.constants.ui.bottom_context_h;
+        let panel_x = play_x;
+        let panel_y = screen_height() - panel_h - 8.0;
+        if my >= panel_y && my <= panel_y + panel_h && mx >= panel_x && mx <= panel_x + panel_w {
             return;
         }
         if self.selected_core {
@@ -483,7 +750,12 @@ impl GameplayState {
         }
     }
 
-    fn try_place_tower_on_slot(&mut self, slot_idx: usize, tower_id: &str, data: &GameData) {
+    pub(crate) fn try_place_tower_on_slot(
+        &mut self,
+        slot_idx: usize,
+        tower_id: &str,
+        data: &GameData,
+    ) {
         if !self.is_tower_unlocked(tower_id) {
             return;
         }
@@ -531,6 +803,7 @@ impl GameplayState {
             def.cost_scrap,
             def.color(),
         ));
+        self.tower_stats.push(TowerUiStats::default());
 
         self.map_state.slots[slot_idx].tower_index = Some(tower_idx);
         self.threat.add_noise(0.5);
@@ -603,7 +876,7 @@ impl GameplayState {
         }
     }
 
-    fn start_beacon(&mut self) {
+    pub(crate) fn start_beacon(&mut self) {
         self.beacon_active = true;
         self.between_waves = true;
         self.wave_timer = self.constants.gameplay.beacon_start_delay;
@@ -615,7 +888,7 @@ impl GameplayState {
         self.push_notification("Beacon activated. Machines inbound.".to_string());
     }
 
-    fn trigger_shutdown(&mut self) {
+    pub(crate) fn trigger_shutdown(&mut self) {
         self.shutdown_triggered = true;
         self.beacon_active = false;
         self.beacon_start_difficulty_bonus = 0.0;
@@ -624,5 +897,61 @@ impl GameplayState {
         self.wave_manager.spawn_queue.clear();
         self.between_waves = false;
         self.push_notification("Beacon shut down. No new waves incoming.".to_string());
+    }
+}
+
+fn draw_panel_text(text: &str, x: f32, y: f32, max_w: f32, font_size: f32, color: Color) {
+    let bounded = truncate_text(text, max_w, font_size as u16);
+    draw_text(&bounded, x, y, font_size, color);
+}
+
+fn truncate_text(text: &str, max_w: f32, font_size: u16) -> String {
+    if measure_text(text, None, font_size, 1.0).width <= max_w {
+        return text.to_string();
+    }
+
+    let mut out = String::new();
+    for ch in text.chars() {
+        let candidate = format!("{}{}...", out, ch);
+        if measure_text(&candidate, None, font_size, 1.0).width > max_w {
+            break;
+        }
+        out.push(ch);
+    }
+    format!("{}...", out)
+}
+
+#[allow(dead_code)]
+fn draw_signal_bar(x: f32, y: f32, w: f32, h: f32, strength: f32, color: Color) {
+    draw_rectangle(x, y, w, h, Color::new(0.18, 0.09, 0.08, 0.8));
+    let fill_w = w * (strength / 70.0).clamp(0.0, 1.0);
+    draw_rectangle(x, y, fill_w, h, color);
+}
+
+#[allow(dead_code)]
+fn draw_centered_ui_text(text: &str, center_x: f32, baseline_y: f32, font_size: f32, color: Color) {
+    let dims = measure_text(text, None, font_size as u16, 1.0);
+    draw_text(
+        text,
+        center_x - dims.width * 0.5,
+        baseline_y,
+        font_size,
+        color,
+    );
+}
+
+fn icon_for_boon(boon: &crate::data::BuildingBoon, risk: f32) -> ui::ConsoleIcon {
+    if boon.scrap_per_sec > 0.0 {
+        ui::ConsoleIcon::Scrap
+    } else if boon.food_per_sec > 0.0 {
+        ui::ConsoleIcon::Food
+    } else if boon.water_per_sec > 0.0 {
+        ui::ConsoleIcon::Water
+    } else if boon.power_per_sec > 0.0 {
+        ui::ConsoleIcon::Power
+    } else if risk > 0.0 {
+        ui::ConsoleIcon::Risk
+    } else {
+        ui::ConsoleIcon::Locked
     }
 }

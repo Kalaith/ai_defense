@@ -96,9 +96,13 @@
     "shutdown_loss_chance": 0.2
   },
   "ui": {
-    "build_panel_w": 200.0,
-    "sector_panel_w": 180.0,
-    "hud_height": 35.0,
+    "build_panel_w": 240.0,
+    "sector_panel_w": 270.0,
+    "top_bar_h": 84.0,
+    "command_strip_h": 58.0,
+    "bottom_context_h": 126.0,
+    "alert_max_visible": 2,
+    "hud_height": 150.0,
     "wave_start_delay": 5.0,
     "wave_flash_duration": 0.8,
     "wave_flash_alpha": 0.15,
