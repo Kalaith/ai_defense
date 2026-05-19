@@ -80,6 +80,8 @@ pub struct GameplayState {
 
     // Loss tracking
     pub factory_integrity: f32,
+    pub autosave_enabled: bool,
+    pub survival_proof_active: bool,
 
     pub base_health_scale_per_wave: f32,
     pub base_food_per_wave: f32,
@@ -203,6 +205,8 @@ impl GameplayState {
             selected_upgrade: None,
 
             factory_integrity: 100.0,
+            autosave_enabled: true,
+            survival_proof_active: false,
 
             base_health_scale_per_wave: data.constants.waves.health_scale_per_wave,
             base_food_per_wave: data.constants.waves.food_per_wave,
@@ -419,6 +423,9 @@ impl GameplayState {
     }
 
     fn autosave(&self) {
+        if !self.autosave_enabled {
+            return;
+        }
         let _ = self.build_save_data().save();
     }
 }

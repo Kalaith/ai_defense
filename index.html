@@ -86,6 +86,12 @@
     <script src="storage.js"></script>
     <script>
         document.getElementById('loading').style.display = 'none';
+        const proofMode = new URLSearchParams(window.location.search).get('proof');
+        if (proofMode === 'survive10') {
+            localStorage.setItem('last_assembly_proof_mode', 'survive10');
+        } else {
+            localStorage.removeItem('last_assembly_proof_mode');
+        }
         
         load("ai_defense.wasm");
 

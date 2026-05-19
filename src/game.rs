@@ -9,22 +9,38 @@ use crate::state::{GameState, StateTransition};
 pub struct Game {
     pub state: GameState,
     pub data: GameData,
+    survival_proof_mode: bool,
 }
 
 impl Game {
     pub async fn new() -> Self {
         let data = GameData::load();
+        let survival_proof_mode = survival_proof_requested();
+        let state = if survival_proof_mode {
+            let mut gameplay = GameplayState::new(&data);
+            gameplay.enable_survival_proof();
+            GameState::Gameplay(gameplay)
+        } else {
+            GameState::Menu(MenuState::new())
+        };
 
         Self {
-            state: GameState::Menu(MenuState::new()),
+            state,
             data,
+            survival_proof_mode,
         }
     }
 
     pub fn update(&mut self) {
         let transition = match &mut self.state {
             GameState::Menu(s) => s.update(),
-            GameState::Gameplay(s) => s.update(),
+            GameState::Gameplay(s) => {
+                if self.survival_proof_mode {
+                    s.update_survival_proof(&self.data)
+                } else {
+                    s.update()
+                }
+            }
             GameState::Results(s) => s.update(),
         };
 
@@ -53,4 +69,15 @@ impl Game {
             }
         };
     }
+}
+
+#[cfg(target_arch = "wasm32")]
+fn survival_proof_requested() -> bool {
+    macroquad_toolkit::wasm_storage::storage_get("last_assembly_proof_mode").as_deref()
+        == Some("survive10")
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn survival_proof_requested() -> bool {
+    std::env::var("LAST_ASSEMBLY_PROOF_MODE").as_deref() == Ok("survive10")
 }

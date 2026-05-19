@@ -85,7 +85,7 @@ impl Factory {
             .iter()
             .filter(|s| s.unlocked && s.integrity > 0.0 && s.id != "power_core")
             .count();
-        20.0 + other_unlocked as f32 * 2.0
+        40.0 + other_unlocked as f32 * 4.0
     }
 
     pub fn power_consumption(&self) -> f32 {

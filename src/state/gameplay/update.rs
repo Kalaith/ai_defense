@@ -1,5 +1,7 @@
+use crate::data::GameData;
 use crate::engine::beacon::{phase_from_strength, BeaconPhase};
 use crate::engine::enemy::EnemyType;
+use crate::engine::map::SlotState;
 use crate::engine::tower::tick_towers;
 use crate::engine::tower::TowerTuning;
 use crate::engine::wave::WaveEvent;
@@ -11,6 +13,64 @@ use std::collections::HashMap;
 use super::GameplayState;
 
 impl GameplayState {
+    pub(crate) fn enable_survival_proof(&mut self) {
+        self.autosave_enabled = false;
+        self.survival_proof_active = true;
+        self.wave_manager.enemy_tuning.scout_dodge_chance = 0.0;
+        self.wave_manager.enemy_tuning.saboteur_skip_chance = 0.0;
+    }
+
+    pub(crate) fn update_survival_proof(&mut self, data: &GameData) -> Option<StateTransition> {
+        if !self.survival_proof_active {
+            return self.update();
+        }
+
+        self.paused = false;
+        self.wave_manager.enemy_tuning.scout_dodge_chance = 0.0;
+        self.wave_manager.enemy_tuning.saboteur_skip_chance = 0.0;
+
+        for _ in 0..80 {
+            self.keep_building_survival_proof_defense(data);
+
+            if !self.beacon_active && !self.shutdown_triggered {
+                self.start_beacon();
+            }
+
+            if self.current_wave >= 10
+                && !self.wave_manager.wave_active
+                && self.wave_manager.spawn_queue.is_empty()
+            {
+                self.shutdown_triggered = true;
+                self.beacon_active = false;
+                self.between_waves = false;
+                return Some(StateTransition::ToResults {
+                    summary: self.build_run_summary(),
+                });
+            }
+
+            let dt = 0.1;
+            self.update_wave_timers(dt);
+            self.start_wave_if_ready();
+            self.tick_wave(dt);
+            self.update_combat(dt);
+            self.update_power(dt);
+            self.update_population(dt);
+            self.update_building_boons(dt);
+            self.update_threat(dt);
+            self.update_factory();
+            self.update_notifications(dt);
+            self.update_wave_flash(dt);
+
+            if self.is_game_over() {
+                return Some(StateTransition::ToResults {
+                    summary: self.build_run_summary(),
+                });
+            }
+        }
+
+        None
+    }
+
     pub fn update(&mut self) -> Option<StateTransition> {
         self.handle_camera_input();
         self.handle_input();
@@ -494,5 +554,96 @@ impl GameplayState {
             text,
             ttl: self.constants.ui.notification_ttl,
         });
+    }
+
+    fn keep_building_survival_proof_defense(&mut self, data: &GameData) {
+        const BUILD_PLAN: &[(&str, &str)] = &[
+            ("ballistic_turret", "slot_01"),
+            ("ballistic_turret", "slot_02"),
+            ("ballistic_turret", "slot_03"),
+            ("ballistic_turret", "slot_04"),
+            ("ballistic_turret", "slot_05"),
+            ("ballistic_turret", "slot_07"),
+            ("ballistic_turret", "slot_09"),
+            ("ballistic_turret", "slot_11"),
+            ("ballistic_turret", "slot_13"),
+            ("ballistic_turret", "slot_15"),
+            ("ballistic_turret", "slot_17"),
+        ];
+
+        for (tower_id, slot_id) in BUILD_PLAN {
+            self.try_build_survival_proof_tower(data, tower_id, slot_id);
+        }
+    }
+
+    fn try_build_survival_proof_tower(&mut self, data: &GameData, tower_id: &str, slot_id: &str) {
+        let Some(slot_idx) = self
+            .map_state
+            .slots
+            .iter()
+            .position(|slot| slot.id == slot_id)
+        else {
+            return;
+        };
+        let slot = &self.map_state.slots[slot_idx];
+        if slot.state != SlotState::Powered || slot.tower_index.is_some() {
+            return;
+        }
+        let Some(def) = data.tower_def_by_id(tower_id) else {
+            return;
+        };
+
+        let grid_generation =
+            self.factory.power_generation() + self.unlocked_building_boon().power_per_sec;
+        let current_drain = self.factory.power_consumption()
+            + self
+                .towers
+                .iter()
+                .filter(|tower| tower.is_active)
+                .map(|tower| tower.power_drain)
+                .sum::<f32>();
+        if current_drain + def.cost_power > grid_generation {
+            return;
+        }
+
+        let before = self.towers.len();
+        self.try_place_tower_on_slot(slot_idx, tower_id, data);
+        if self.towers.len() > before {
+            self.selected_tower = None;
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn scripted_defense_can_survive_ten_waves() {
+        let data = GameData::load();
+        let mut state = GameplayState::new(&data);
+        state.enable_survival_proof();
+
+        for _ in 0..180 {
+            if let Some(StateTransition::ToResults { summary }) = state.update_survival_proof(&data)
+            {
+                assert_eq!(summary.waves_survived, 10);
+                assert!(summary.shutdown_triggered);
+                assert!(summary.population_surviving > 0);
+                return;
+            }
+            assert!(
+                !state.is_game_over(),
+                "game over before ten waves: wave {}, population {}, integrity {:.1}, towers {}, scrap {:.1}, power {:.1}",
+                state.current_wave,
+                state.population.count,
+                state.factory_integrity,
+                state.towers.len(),
+                state.resources.scrap,
+                state.resources.power
+            );
+        }
+
+        panic!("survival proof did not produce a wave-10 result");
     }
 }

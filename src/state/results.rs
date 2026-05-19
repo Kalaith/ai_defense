@@ -29,6 +29,7 @@ impl ResultsState {
     pub fn draw(&mut self) {
         let center_x = screen_width() / 2.0;
         let center_y = screen_height() / 2.0;
+        let report_top = (center_y - 70.0).max(150.0);
 
         let title = if self.summary.shutdown_triggered {
             "MISSION COMPLETE"
@@ -39,7 +40,7 @@ impl ResultsState {
         draw_text(
             title,
             center_x - dims.width / 2.0,
-            center_y - 60.0,
+            report_top - 70.0,
             40.0,
             if self.summary.shutdown_triggered {
                 dark::POSITIVE
@@ -49,16 +50,16 @@ impl ResultsState {
         );
 
         let lines = build_report_lines(&self.summary);
-        let mut y = center_y - 10.0;
-        for line in lines {
-            let dims = measure_text(&line, None, 20, 1.0);
-            draw_text(&line, center_x - dims.width / 2.0, y, 20.0, dark::TEXT);
+        let mut y = report_top;
+        for line in &lines {
+            let dims = measure_text(line, None, 20, 1.0);
+            draw_text(line, center_x - dims.width / 2.0, y, 20.0, dark::TEXT);
             y += 24.0;
         }
 
         let btn_w = 200.0;
         let btn_x = center_x - btn_w / 2.0;
-        if button(btn_x, center_y + 40.0, btn_w, 45.0, "Return to Menu") {
+        if button(btn_x, y + 20.0, btn_w, 45.0, "Return to Menu") {
             self.menu_clicked = true;
         }
     }
@@ -86,9 +87,9 @@ fn build_report_lines(summary: &RunSummary) -> Vec<String> {
     ));
 
     let outcome = if summary.shutdown_triggered {
-        "Beacon shut down — survivors evacuated"
+        "Beacon shut down - survivors evacuated"
     } else {
-        "Beacon lost — survivors scattered"
+        "Beacon lost - survivors scattered"
     };
     lines.push(outcome.to_string());
     lines
