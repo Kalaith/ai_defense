@@ -30,7 +30,6 @@ macroquad = "0.4"
 macroquad-toolkit = { path = "../macroquad-toolkit" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-rand = "0.8"
 ```
 
 > **Note**: Profile settings (`[profile.release]`) are defined at the workspace root.
@@ -45,7 +44,7 @@ rand = "0.8"
 | :--- | :--- | :--- |
 | **Frontend** | React/DOM/CSS | Macroquad (Canvas, Immediate UI) |
 | **Backend** | PHP/Node | Rust internal logic |
-| **Database** | MySQL | JSON files or SQLite |
+| **Database** | MySQL | JSON data or native/server DB |
 | **Styling** | CSS | Rust constants/functions |
 
 ### Tech Stack Philosophy
@@ -76,25 +75,25 @@ game_name/
 ├── src/
 │   ├── main.rs             # Entry point, window config
 │   ├── game.rs             # Game loop & state machine
-│   ├── state/              # Game states (one per screen)
-│   │   ├── mod.rs
+│   ├── state.rs            # State module root and re-exports
+│   ├── state/              # State child modules
 │   │   ├── menu.rs
 │   │   └── gameplay.rs
-│   ├── engine/             # Game logic (stateless)
-│   │   ├── mod.rs
+│   ├── engine.rs           # Engine module root and re-exports
+│   ├── engine/             # Engine child modules
 │   │   └── game_engine.rs
-│   ├── data/               # Data types & loaders
-│   │   ├── mod.rs
+│   ├── data.rs             # Data module root and re-exports
+│   ├── data/               # Data child modules
 │   │   └── loader.rs
-│   ├── ui/                 # UI helpers
-│   │   └── mod.rs
-│   └── save/               # Persistence
-│       └── mod.rs
+│   ├── ui.rs               # UI helpers module root
+│   └── save.rs             # Persistence
 ├── assets/
 │   ├── data.json           # Game data
 │   └── images/             # Sprites
 └── README.md
 ```
+
+Use Rust's named module source filenames: `foo.rs` for `mod foo;`, and `foo/bar.rs` for child modules declared inside `foo.rs`. Do not create new `mod.rs` files; when restructuring old modules, migrate `foo/mod.rs` to `foo.rs`.
 
 ---
 
@@ -137,7 +136,7 @@ async fn main() {
 ### State Machine Pattern
 
 ```rust
-// state/mod.rs
+// state.rs
 pub enum GameState {
     Menu(MenuState),
     Gameplay(GameplayState),
@@ -281,10 +280,8 @@ pub struct CardData {
 }
 
 impl CardData {
-    pub fn load_all() -> Result<Vec<CardData>, Box<dyn std::error::Error>> {
-        let json = std::fs::read_to_string("assets/cards.json")?;
-        let cards: Vec<CardData> = serde_json::from_str(&json)?;
-        Ok(cards)
+    pub async fn load_all() -> Result<Vec<CardData>, String> {
+        macroquad_toolkit::data_loader::load_json_file("assets/cards.json").await
     }
 }
 ```
@@ -296,8 +293,6 @@ impl CardData {
 ### JSON (Recommended for Save Files)
 
 ```rust
-use std::fs;
-
 #[derive(Serialize, Deserialize)]
 pub struct SaveData {
     pub version: u32,
@@ -305,45 +300,19 @@ pub struct SaveData {
 }
 
 impl SaveData {
-    pub fn save(&self) -> Result<(), Box<dyn std::error::Error>> {
-        let json = serde_json::to_string_pretty(self)?;
-        fs::write("save.json", json)?;
-        Ok(())
+    pub fn save(&self) -> Result<(), String> {
+        macroquad_toolkit::persistence::save_to_slot("my_game", "slot_1", self)
     }
     
-    pub fn load() -> Result<Self, Box<dyn std::error::Error>> {
-        let json = fs::read_to_string("save.json")?;
-        let data: SaveData = serde_json::from_str(&json)?;
-        Ok(data)
+    pub fn load() -> Result<Self, String> {
+        macroquad_toolkit::persistence::load_from_slot("my_game", "slot_1")
     }
 }
 ```
 
-### SQLite (For Complex Data)
+### Native/Server Databases
 
-Use `rusqlite` if migrating a complex MySQL database:
-
-```rust
-use rusqlite::{Connection, Result};
-
-pub struct Database {
-    conn: Connection,
-}
-
-impl Database {
-    pub fn init() -> Result<Self> {
-        let conn = Connection::open("game_data.db")?;
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS player_stats (
-                id INTEGER PRIMARY KEY,
-                gold INTEGER NOT NULL
-            )",
-            (),
-        )?;
-        Ok(Self { conn })
-    }
-}
-```
+Use database crates only for native/server code. Keep WebGL clients on JSON data plus toolkit persistence.
 
 ---
 
@@ -354,6 +323,14 @@ impl Database {
 Every game MUST have:
 - `publish.ps1` – Build and deploy script
 - `index.html` – WebGL host page
+
+### Validation
+
+Run this with no parameters from the affected project directory after meaningful changes:
+
+```powershell
+.\publish.ps1
+```
 
 ### Build Targets
 
