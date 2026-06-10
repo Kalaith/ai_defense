@@ -6,8 +6,8 @@ use crate::engine::threat::{ReactionTier, ThreatSignature};
 use crate::engine::tower::Tower;
 use crate::engine::wave::preview_wave;
 use macroquad::prelude::*;
-use macroquad::rand::gen_range;
 use macroquad_toolkit::colors::dark;
+use macroquad_toolkit::rng;
 
 use super::{GameplayState, Particle};
 
@@ -219,13 +219,13 @@ impl GameplayState {
 
     pub fn spawn_death_particles(&mut self, positions: &[Vec2]) {
         for pos in positions {
-            let count = gen_range(
+            let count = rng::gen_range(
                 self.constants.particles.count_min as i32,
                 (self.constants.particles.count_max + 1) as i32,
             );
             for _ in 0..count {
-                let angle = gen_range(0.0, std::f32::consts::TAU);
-                let speed = gen_range(
+                let angle = rng::gen_range(0.0, std::f32::consts::TAU);
+                let speed = rng::gen_range(
                     self.constants.particles.speed_min,
                     self.constants.particles.speed_max,
                 );
@@ -265,7 +265,7 @@ impl GameplayState {
         let idx = if unlocked_indices.len() == 1 {
             unlocked_indices[0]
         } else {
-            let pick = gen_range(0, unlocked_indices.len() as i32) as usize;
+            let pick = rng::gen_range(0, unlocked_indices.len());
             unlocked_indices[pick]
         };
 

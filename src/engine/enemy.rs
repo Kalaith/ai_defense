@@ -1,7 +1,7 @@
 //! Enemy types, pathing, and behavior.
 
 use macroquad::prelude::Vec2;
-use macroquad::rand::gen_range;
+use macroquad_toolkit::rng;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -67,9 +67,7 @@ impl Enemy {
     }
 
     pub fn take_damage(&mut self, amount: f32) {
-        if self.enemy_type == EnemyType::Scout
-            && gen_range(0.0, 1.0) < self.tuning.scout_dodge_chance
-        {
+        if self.enemy_type == EnemyType::Scout && rng::chance(self.tuning.scout_dodge_chance) {
             self.dodge_timer = self.tuning.scout_dodge_duration;
             return;
         }
@@ -110,7 +108,7 @@ impl Enemy {
             self.path_index += 1;
             if self.enemy_type == EnemyType::Saboteur
                 && self.path_index < path.len().saturating_sub(1)
-                && gen_range(0.0, 1.0) < self.tuning.saboteur_skip_chance
+                && rng::chance(self.tuning.saboteur_skip_chance)
             {
                 self.path_index += 1;
             }

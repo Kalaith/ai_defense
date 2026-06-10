@@ -1,8 +1,8 @@
 use crate::data::GameData;
 use crate::ui::{self, SectorPanelAction};
 use macroquad::prelude::*;
-use macroquad::rand::gen_range;
 use macroquad_toolkit::colors::dark;
+use macroquad_toolkit::rng;
 use macroquad_toolkit::ui::button;
 
 use super::GameplayState;
@@ -302,7 +302,7 @@ impl GameplayState {
         if still_out > 0 {
             let mut lost = 0u32;
             for _ in 0..still_out {
-                if gen_range(0.0f32, 1.0) < self.constants.scavenger.shutdown_loss_chance {
+                if rng::chance(self.constants.scavenger.shutdown_loss_chance) {
                     lost += 1;
                 }
             }

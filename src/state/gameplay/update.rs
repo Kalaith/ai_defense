@@ -7,7 +7,7 @@ use crate::engine::tower::TowerTuning;
 use crate::engine::wave::WaveEvent;
 use crate::state::{RunSummary, StateTransition};
 use macroquad::prelude::*;
-use macroquad::rand::gen_range;
+use macroquad_toolkit::rng;
 use std::collections::HashMap;
 
 use super::GameplayState;
@@ -477,7 +477,7 @@ impl GameplayState {
                 0,
             ),
             BeaconPhase::SustainedCall => {
-                let pop = if gen_range(0.0, 1.0) < self.constants.scavenger.sustained_pop_chance {
+                let pop = if rng::chance(self.constants.scavenger.sustained_pop_chance) {
                     1
                 } else {
                     0
@@ -494,7 +494,7 @@ impl GameplayState {
                 self.constants.scavenger.screaming_pop_gain,
             ),
             BeaconPhase::TerminalHowl => {
-                if gen_range(0.0, 1.0) < self.constants.scavenger.terminal_loss_chance {
+                if rng::chance(self.constants.scavenger.terminal_loss_chance) {
                     self.scavengers_out = self.scavengers_out.saturating_sub(1);
                     self.scavengers_lost += 1;
                     self.push_notification("Scavenger team lost in the field".to_string());
