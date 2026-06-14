@@ -4,6 +4,7 @@ use crate::state::{RunSummary, StateTransition};
 use macroquad::prelude::*;
 use macroquad_toolkit::colors::dark;
 use macroquad_toolkit::ui::button;
+use macroquad_toolkit::ui::{draw_ui_text, measure_ui_text};
 
 pub struct ResultsState {
     pub summary: RunSummary,
@@ -36,8 +37,8 @@ impl ResultsState {
         } else {
             "FACTORY LOST"
         };
-        let dims = measure_text(title, None, 40, 1.0);
-        draw_text(
+        let dims = measure_ui_text(title, None, 40, 1.0);
+        draw_ui_text(
             title,
             center_x - dims.width / 2.0,
             report_top - 70.0,
@@ -52,8 +53,8 @@ impl ResultsState {
         let lines = build_report_lines(&self.summary);
         let mut y = report_top;
         for line in &lines {
-            let dims = measure_text(line, None, 20, 1.0);
-            draw_text(line, center_x - dims.width / 2.0, y, 20.0, dark::TEXT);
+            let dims = measure_ui_text(line, None, 20, 1.0);
+            draw_ui_text(line, center_x - dims.width / 2.0, y, 20.0, dark::TEXT);
             y += 24.0;
         }
 

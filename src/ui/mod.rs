@@ -3,6 +3,7 @@
 use crate::data::TowerDef;
 use macroquad::prelude::*;
 use macroquad_toolkit::colors::dark;
+use macroquad_toolkit::ui::{draw_ui_text, measure_ui_text};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ConsoleButtonState {
@@ -55,19 +56,19 @@ pub fn draw_console_panel(rect: Rect, accent: Color) {
 }
 
 pub fn draw_console_header(x: f32, y: f32, label: &str, sublabel: &str, color: Color) {
-    draw_text(label, x, y, 17.0, color);
+    draw_ui_text(label, x, y, 17.0, color);
     if !sublabel.is_empty() {
-        draw_text(sublabel, x, y + 16.0, 10.0, dark::TEXT_DIM);
+        draw_ui_text(sublabel, x, y + 16.0, 10.0, dark::TEXT_DIM);
     }
 }
 
 pub fn draw_status_pill(x: f32, y: f32, label: &str, color: Color) {
     let font_size = 11.0;
     let h = 18.0;
-    let w = measure_text(label, None, font_size as u16, 1.0).width + 16.0;
+    let w = measure_ui_text(label, None, font_size as u16, 1.0).width + 16.0;
     draw_rectangle(x, y, w, h, Color::new(color.r, color.g, color.b, 0.16));
     draw_rectangle_lines(x, y, w, h, 1.0, Color::new(color.r, color.g, color.b, 0.82));
-    draw_text(label, x + 8.0, y + 12.5, font_size, color);
+    draw_ui_text(label, x + 8.0, y + 12.5, font_size, color);
 }
 
 pub fn draw_console_button(
@@ -192,8 +193,8 @@ pub fn draw_console_button(
     };
     let text_pad = if w >= 128.0 && h >= 36.0 { 42.0 } else { 14.0 };
     let bounded = truncate_text(label, w - text_pad, font_size as u16);
-    let dims = measure_text(&bounded, None, font_size as u16, 1.0);
-    draw_text(
+    let dims = measure_ui_text(&bounded, None, font_size as u16, 1.0);
+    draw_ui_text(
         &bounded,
         x + (w - text_pad - dims.width) * 0.5 + 8.0,
         y + (h + font_size * 0.55) * 0.5,
@@ -362,8 +363,8 @@ pub fn draw_build_panel(
     let sidebar = Rect::new(x, y, w, screen_height() - y);
     let sidebar_surface = macroquad_toolkit::ui::SurfaceStyle::new(Color::new(0.1, 0.1, 0.12, 0.9));
     macroquad_toolkit::ui::draw_surface(sidebar, &sidebar_surface);
-    draw_text("TOWERS", x + 10.0, y + 20.0, 18.0, dark::ACCENT);
-    draw_text(
+    draw_ui_text("TOWERS", x + 10.0, y + 20.0, 18.0, dark::ACCENT);
+    draw_ui_text(
         "Select, then place on powered pads",
         x + 10.0,
         y + 36.0,
@@ -497,7 +498,7 @@ pub fn draw_build_panel(
 
 fn draw_bounded_text(text: &str, x: f32, y: f32, max_w: f32, font_size: f32, color: Color) {
     let bounded = truncate_text(text, max_w, font_size as u16);
-    draw_text(&bounded, x, y, font_size, color);
+    draw_ui_text(&bounded, x, y, font_size, color);
 }
 
 fn draw_button_corners(rect: Rect, color: Color) {
@@ -572,14 +573,14 @@ fn draw_button_corners(rect: Rect, color: Color) {
 }
 
 fn truncate_text(text: &str, max_w: f32, font_size: u16) -> String {
-    if measure_text(text, None, font_size, 1.0).width <= max_w {
+    if measure_ui_text(text, None, font_size, 1.0).width <= max_w {
         return text.to_string();
     }
 
     let mut out = String::new();
     for ch in text.chars() {
         let candidate = format!("{}{}...", out, ch);
-        if measure_text(&candidate, None, font_size, 1.0).width > max_w {
+        if measure_ui_text(&candidate, None, font_size, 1.0).width > max_w {
             break;
         }
         out.push(ch);

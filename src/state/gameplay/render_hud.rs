@@ -9,6 +9,7 @@ use macroquad_toolkit::notifications::{
 use super::helpers::{beacon_color, threat_color};
 use super::ui_advice::{AdviceTarget, AlertBanner, AlertSeverity, PowerGridSnapshot, UiAdvice};
 use super::GameplayState;
+use macroquad_toolkit::ui::{draw_ui_text, measure_ui_text};
 
 impl GameplayState {
     pub(super) fn draw_hud(&mut self, data: &GameData) {
@@ -203,7 +204,7 @@ impl GameplayState {
             net_color,
         );
         if power.offline_towers > 0 {
-            draw_text(
+            draw_ui_text(
                 &format!("{} OFFLINE", power.offline_towers),
                 bar_x,
                 bar_y - 8.0,
@@ -262,7 +263,7 @@ impl GameplayState {
 
     fn draw_objective_strip(&mut self, rect: Rect, advice: &UiAdvice, data: &GameData) {
         ui::draw_console_panel(rect, Color::new(0.2, 0.42, 0.64, 0.9));
-        draw_text(
+        draw_ui_text(
             "NEXT STEP",
             rect.x + 12.0,
             rect.y + 16.0,
@@ -309,8 +310,8 @@ impl GameplayState {
         if max_visible == 0 {
             let rect = Rect::new(x, y, w, h);
             ui::draw_console_panel(rect, Color::new(0.2, 0.32, 0.34, 0.5));
-            draw_text("ALL CLEAR", x + 12.0, y + 22.0, 13.0, dark::TEXT_DIM);
-            draw_text(
+            draw_ui_text("ALL CLEAR", x + 12.0, y + 22.0, 13.0, dark::TEXT_DIM);
+            draw_ui_text(
                 "Hold resources or start a controlled draw",
                 x + 12.0,
                 y + 41.0,
@@ -367,7 +368,7 @@ impl GameplayState {
         };
         let pulse = 0.68 + 0.18 * (get_time() as f32 * (4.0 + danger * 4.0)).sin().abs();
         ui::draw_console_panel(rect, Color::new(0.78, 0.16, 0.12, pulse));
-        draw_text(
+        draw_ui_text(
             "BEACON CONTROL",
             rect.x + 14.0,
             rect.y + 18.0,
@@ -582,15 +583,15 @@ impl GameplayState {
         let y = self.constants.ui.hud_height + 14.0;
         draw_rectangle(x, y, w, h, Color::new(0.08, 0.07, 0.06, 0.84 * alpha));
         draw_rectangle_lines(x, y, w, h, 2.0, Color::new(1.0, 0.58, 0.18, 0.9 * alpha));
-        draw_text(
+        draw_ui_text(
             "INCOMING",
             x + 18.0,
             y + 17.0,
             11.0,
             Color::new(1.0, 0.72, 0.34, alpha),
         );
-        let dims = measure_text(&text, None, 24, 1.0);
-        draw_text(
+        let dims = measure_ui_text(&text, None, 24, 1.0);
+        draw_ui_text(
             &text,
             x + (w - dims.width) * 0.5,
             y + 34.0,
@@ -637,13 +638,13 @@ fn draw_metric_icon(icon: ConsoleIcon, x: f32, y: f32, label: &str, value: &str,
         20.0,
         Color::new(color.r, color.g, color.b, 0.86),
     );
-    draw_text(label, x + 25.0, y - 10.0, 10.0, dark::TEXT_DIM);
-    draw_text(value, x + 25.0, y + 11.0, 19.0, color);
+    draw_ui_text(label, x + 25.0, y - 10.0, 10.0, dark::TEXT_DIM);
+    draw_ui_text(value, x + 25.0, y + 11.0, 19.0, color);
 }
 
 fn draw_small_metric(x: f32, y: f32, label: &str, value: &str, color: Color) {
-    draw_text(label, x, y - 10.0, 10.0, dark::TEXT_DIM);
-    draw_text(value, x, y + 12.0, 18.0, color);
+    draw_ui_text(label, x, y - 10.0, 10.0, dark::TEXT_DIM);
+    draw_ui_text(value, x, y + 12.0, 18.0, color);
 }
 
 fn draw_segmented_meter(x: f32, y: f32, w: f32, h: f32, value: f32, color: Color) {
@@ -665,18 +666,18 @@ fn draw_segmented_meter(x: f32, y: f32, w: f32, h: f32, value: f32, color: Color
 
 fn draw_bounded_text(text: &str, x: f32, y: f32, max_w: f32, size: f32, color: Color) {
     let bounded = truncate_to_width(text, max_w, size as u16);
-    draw_text(&bounded, x, y, size, color);
+    draw_ui_text(&bounded, x, y, size, color);
 }
 
 fn truncate_to_width(text: &str, max_w: f32, font_size: u16) -> String {
-    if measure_text(text, None, font_size, 1.0).width <= max_w {
+    if measure_ui_text(text, None, font_size, 1.0).width <= max_w {
         return text.to_string();
     }
 
     let mut out = String::new();
     for ch in text.chars() {
         let candidate = format!("{}{}...", out, ch);
-        if measure_text(&candidate, None, font_size, 1.0).width > max_w {
+        if measure_ui_text(&candidate, None, font_size, 1.0).width > max_w {
             break;
         }
         out.push(ch);
@@ -685,8 +686,8 @@ fn truncate_to_width(text: &str, max_w: f32, font_size: u16) -> String {
 }
 
 fn draw_centered_text(text: &str, center_x: f32, baseline_y: f32, font_size: f32, color: Color) {
-    let dims = measure_text(text, None, font_size as u16, 1.0);
-    draw_text(
+    let dims = measure_ui_text(text, None, font_size as u16, 1.0);
+    draw_ui_text(
         text,
         center_x - dims.width * 0.5,
         baseline_y,

@@ -3,6 +3,7 @@
 use crate::save::SaveData;
 use crate::state::StateTransition;
 use macroquad::prelude::*;
+use macroquad_toolkit::ui::{draw_ui_text, measure_ui_text};
 
 pub struct MenuState {
     start_clicked: bool,
@@ -224,18 +225,18 @@ fn draw_title_button(rect: Rect, label: &str, detail: &str, enabled: bool, prima
 
 fn draw_bounded_text(text: &str, x: f32, y: f32, max_w: f32, font_size: f32, color: Color) {
     let bounded = truncate_text(text, max_w, font_size as u16);
-    draw_text(&bounded, x, y, font_size, color);
+    draw_ui_text(&bounded, x, y, font_size, color);
 }
 
 fn truncate_text(text: &str, max_w: f32, font_size: u16) -> String {
-    if measure_text(text, None, font_size, 1.0).width <= max_w {
+    if measure_ui_text(text, None, font_size, 1.0).width <= max_w {
         return text.to_string();
     }
 
     let mut out = String::new();
     for ch in text.chars() {
         let candidate = format!("{}{}...", out, ch);
-        if measure_text(&candidate, None, font_size, 1.0).width > max_w {
+        if measure_ui_text(&candidate, None, font_size, 1.0).width > max_w {
             break;
         }
         out.push(ch);

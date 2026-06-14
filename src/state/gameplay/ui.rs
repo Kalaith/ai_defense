@@ -6,6 +6,7 @@ use macroquad_toolkit::rng;
 use macroquad_toolkit::ui::button;
 
 use super::GameplayState;
+use macroquad_toolkit::ui::{draw_ui_text, measure_ui_text};
 
 impl GameplayState {
     pub fn draw_build_panel(&mut self, data: &GameData) {
@@ -74,7 +75,7 @@ impl GameplayState {
                 draw_circle_lines(pos.x, pos.y, def.base_range * range_mult, 1.0, range_color);
 
                 let hint = format!("Place {} - Click to confirm, Right-click to cancel", def.name);
-                draw_text(&hint, self.constants.ui.build_panel_w + 10.0, screen_height() - 15.0, 14.0, dark::TEXT_DIM);
+                draw_ui_text(&hint, self.constants.ui.build_panel_w + 10.0, screen_height() - 15.0, 14.0, dark::TEXT_DIM);
             }
         }
     }
@@ -127,15 +128,15 @@ impl GameplayState {
         let info_x = panel_x + 10.0;
         let mut info_y = panel_y + panel_h - 110.0;
 
-        draw_text("SELECTED", info_x, info_y, 14.0, dark::TEXT_DIM);
+        draw_ui_text("SELECTED", info_x, info_y, 14.0, dark::TEXT_DIM);
         info_y += 16.0;
-        draw_text(&format!("{} (Lv {})", name, tower.level), info_x, info_y, 14.0, dark::TEXT_BRIGHT);
+        draw_ui_text(&format!("{} (Lv {})", name, tower.level), info_x, info_y, 14.0, dark::TEXT_BRIGHT);
         info_y += 16.0;
-        draw_text(&format!("Dmg: {:.1}", tower.damage), info_x, info_y, 12.0, dark::TEXT);
+        draw_ui_text(&format!("Dmg: {:.1}", tower.damage), info_x, info_y, 12.0, dark::TEXT);
         info_y += 14.0;
-        draw_text(&format!("Rng: {:.0}", tower.range), info_x, info_y, 12.0, dark::TEXT);
+        draw_ui_text(&format!("Rng: {:.0}", tower.range), info_x, info_y, 12.0, dark::TEXT);
         info_y += 14.0;
-        draw_text(&format!("Rate: {:.2}/s", tower.fire_rate), info_x, info_y, 12.0, dark::TEXT);
+        draw_ui_text(&format!("Rate: {:.2}/s", tower.fire_rate), info_x, info_y, 12.0, dark::TEXT);
 
         let btn_w = panel_w - 20.0;
         let btn_h = 24.0;
@@ -143,12 +144,12 @@ impl GameplayState {
         let btn_y = panel_y + panel_h - 30.0;
 
         if tower.level >= self.constants.tower.upgrade_max_level {
-            draw_text("Max Level", btn_x, btn_y + 16.0, 12.0, dark::TEXT_DIM);
+            draw_ui_text("Max Level", btn_x, btn_y + 16.0, 12.0, dark::TEXT_DIM);
             return;
         }
 
         if !self.factory.is_sector_active("research_lab") {
-            draw_text("Requires Research Lab", btn_x, btn_y + 16.0, 12.0, dark::TEXT_DIM);
+            draw_ui_text("Requires Research Lab", btn_x, btn_y + 16.0, 12.0, dark::TEXT_DIM);
             return;
         }
 
@@ -160,8 +161,8 @@ impl GameplayState {
             }
         } else {
             draw_rectangle(btn_x, btn_y, btn_w, btn_h, Color::new(0.2, 0.2, 0.2, 0.5));
-            let dims = measure_text(&label, None, 12, 1.0);
-            draw_text(&label, btn_x + (btn_w - dims.width) / 2.0, btn_y + 16.0, 12.0, dark::TEXT_DIM);
+            let dims = measure_ui_text(&label, None, 12, 1.0);
+            draw_ui_text(&label, btn_x + (btn_w - dims.width) / 2.0, btn_y + 16.0, 12.0, dark::TEXT_DIM);
         }
     }
 
@@ -342,3 +343,4 @@ impl GameplayState {
         false
     }
 }
+

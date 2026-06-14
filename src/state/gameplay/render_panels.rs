@@ -7,6 +7,7 @@ use macroquad_toolkit::colors::dark;
 use super::helpers::entrance_label;
 use super::ui_advice::{format_enemy_counts, AdviceTarget, WavePreviewCard};
 use super::GameplayState;
+use macroquad_toolkit::ui::{draw_ui_text, measure_ui_text};
 
 impl GameplayState {
     pub(super) fn draw_slot_panel(&mut self, data: &GameData) {
@@ -672,7 +673,7 @@ impl GameplayState {
     #[allow(dead_code)]
     fn draw_wave_preview_card(&self, rect: Rect, card: &WavePreviewCard) {
         ui::draw_console_panel(rect, Color::new(0.4, 0.28, 0.16, 0.64));
-        draw_text(
+        draw_ui_text(
             &card.title,
             rect.x + 10.0,
             rect.y + 16.0,
@@ -731,7 +732,7 @@ impl GameplayState {
     #[allow(dead_code)]
     fn draw_resource_affordance(&self, rect: Rect) {
         ui::draw_console_panel(rect, Color::new(0.18, 0.34, 0.28, 0.56));
-        draw_text(
+        draw_ui_text(
             "CAN AFFORD",
             rect.x + 10.0,
             rect.y + 16.0,
@@ -921,18 +922,18 @@ fn draw_tooltip_box(mx: f32, my: f32, w: f32, lines: &[String]) {
 
 fn draw_bounded_text(text: &str, x: f32, y: f32, max_w: f32, font_size: f32, color: Color) {
     let bounded = truncate_text(text, max_w, font_size as u16);
-    draw_text(&bounded, x, y, font_size, color);
+    draw_ui_text(&bounded, x, y, font_size, color);
 }
 
 fn truncate_text(text: &str, max_w: f32, font_size: u16) -> String {
-    if measure_text(text, None, font_size, 1.0).width <= max_w {
+    if measure_ui_text(text, None, font_size, 1.0).width <= max_w {
         return text.to_string();
     }
 
     let mut out = String::new();
     for ch in text.chars() {
         let candidate = format!("{}{}...", out, ch);
-        if measure_text(&candidate, None, font_size, 1.0).width > max_w {
+        if measure_ui_text(&candidate, None, font_size, 1.0).width > max_w {
             break;
         }
         out.push(ch);

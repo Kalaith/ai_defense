@@ -7,6 +7,7 @@ use macroquad_toolkit::ui::button;
 
 use super::helpers::{beacon_color, threat_color};
 use super::{GameplayState, TowerUiStats};
+use macroquad_toolkit::ui::{draw_ui_text, measure_ui_text};
 
 impl GameplayState {
     fn building_display_name_by_id(&self, id: &str) -> String {
@@ -338,7 +339,7 @@ impl GameplayState {
                     Color::new(0.45, 0.48, 0.5, 0.32),
                 );
                 if preview.hovered_slot == Some(idx) {
-                    draw_text(
+                    draw_ui_text(
                         reason.label(),
                         slot.position.x + 18.0,
                         slot.position.y + 4.0,
@@ -392,7 +393,7 @@ impl GameplayState {
             &panel_surface,
         );
 
-        draw_text(
+        draw_ui_text(
             "BEACON DRAW",
             panel_x + 10.0,
             panel_y + 14.0,
@@ -417,14 +418,14 @@ impl GameplayState {
             phase_color,
         );
 
-        draw_text(
+        draw_ui_text(
             &format!("Teams {}", self.scavengers_out),
             panel_x + 108.0,
             panel_y + 31.0,
             11.0,
             dark::TEXT_DIM,
         );
-        draw_text(
+        draw_ui_text(
             &format!(
                 "{} {:.0}",
                 self.threat.reaction_tier().label(),
@@ -508,9 +509,9 @@ impl GameplayState {
         let info_x = panel_x + 10.0;
         let mut info_y = panel_y + panel_h - 110.0;
 
-        draw_text("SELECTED", info_x, info_y, 14.0, dark::TEXT_DIM);
+        draw_ui_text("SELECTED", info_x, info_y, 14.0, dark::TEXT_DIM);
         info_y += 16.0;
-        draw_text(
+        draw_ui_text(
             &format!("{} (Lv {})", name, tower.level),
             info_x,
             info_y,
@@ -518,7 +519,7 @@ impl GameplayState {
             dark::TEXT_BRIGHT,
         );
         info_y += 16.0;
-        draw_text(
+        draw_ui_text(
             &format!("Dmg: {:.1}", tower.damage),
             info_x,
             info_y,
@@ -526,7 +527,7 @@ impl GameplayState {
             dark::TEXT,
         );
         info_y += 14.0;
-        draw_text(
+        draw_ui_text(
             &format!("Rng: {:.0}", tower.range),
             info_x,
             info_y,
@@ -534,7 +535,7 @@ impl GameplayState {
             dark::TEXT,
         );
         info_y += 14.0;
-        draw_text(
+        draw_ui_text(
             &format!("Rate: {:.2}/s", tower.fire_rate),
             info_x,
             info_y,
@@ -548,12 +549,12 @@ impl GameplayState {
         let btn_y = panel_y + panel_h - 30.0;
 
         if tower.level >= self.constants.tower.upgrade_max_level {
-            draw_text("Max Level", btn_x, btn_y + 16.0, 12.0, dark::TEXT_DIM);
+            draw_ui_text("Max Level", btn_x, btn_y + 16.0, 12.0, dark::TEXT_DIM);
             return;
         }
 
         if !self.factory.is_sector_active("research_lab") {
-            draw_text(
+            draw_ui_text(
                 "Requires Research Lab",
                 btn_x,
                 btn_y + 16.0,
@@ -576,8 +577,8 @@ impl GameplayState {
                 Rect::new(btn_x, btn_y, btn_w, btn_h),
                 &disabled_surface,
             );
-            let dims = measure_text(&label, None, 12, 1.0);
-            draw_text(
+            let dims = measure_ui_text(&label, None, 12, 1.0);
+            draw_ui_text(
                 &label,
                 btn_x + (btn_w - dims.width) / 2.0,
                 btn_y + 16.0,
@@ -902,18 +903,18 @@ impl GameplayState {
 
 fn draw_panel_text(text: &str, x: f32, y: f32, max_w: f32, font_size: f32, color: Color) {
     let bounded = truncate_text(text, max_w, font_size as u16);
-    draw_text(&bounded, x, y, font_size, color);
+    draw_ui_text(&bounded, x, y, font_size, color);
 }
 
 fn truncate_text(text: &str, max_w: f32, font_size: u16) -> String {
-    if measure_text(text, None, font_size, 1.0).width <= max_w {
+    if measure_ui_text(text, None, font_size, 1.0).width <= max_w {
         return text.to_string();
     }
 
     let mut out = String::new();
     for ch in text.chars() {
         let candidate = format!("{}{}...", out, ch);
-        if measure_text(&candidate, None, font_size, 1.0).width > max_w {
+        if measure_ui_text(&candidate, None, font_size, 1.0).width > max_w {
             break;
         }
         out.push(ch);
@@ -930,8 +931,8 @@ fn draw_signal_bar(x: f32, y: f32, w: f32, h: f32, strength: f32, color: Color) 
 
 #[allow(dead_code)]
 fn draw_centered_ui_text(text: &str, center_x: f32, baseline_y: f32, font_size: f32, color: Color) {
-    let dims = measure_text(text, None, font_size as u16, 1.0);
-    draw_text(
+    let dims = measure_ui_text(text, None, font_size as u16, 1.0);
+    draw_ui_text(
         text,
         center_x - dims.width * 0.5,
         baseline_y,

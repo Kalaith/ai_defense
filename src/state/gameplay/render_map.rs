@@ -5,6 +5,7 @@ use macroquad_toolkit::colors::dark;
 
 use super::helpers::entrance_label;
 use super::GameplayState;
+use macroquad_toolkit::ui::{draw_ui_text, measure_ui_text};
 
 impl GameplayState {
     pub(super) fn draw_circuit_board(&self) {
@@ -182,7 +183,7 @@ impl GameplayState {
             } else {
                 Color::new(0.30, 0.42, 0.46, 0.28)
             };
-            draw_text(
+            draw_ui_text(
                 &section.label,
                 min.x + 14.0,
                 min.y + 20.0,
@@ -191,7 +192,7 @@ impl GameplayState {
             );
 
             if !section.visible {
-                draw_text(
+                draw_ui_text(
                     "UNPOWERED",
                     min.x + 14.0,
                     min.y + 38.0,
@@ -199,7 +200,7 @@ impl GameplayState {
                     Color::new(0.35, 0.52, 0.58, 0.55),
                 );
             } else if let Some(ref entrance) = section.unlock_entrance {
-                draw_text(
+                draw_ui_text(
                     &format!("Can open {}", entrance_label(entrance)),
                     min.x + 14.0,
                     min.y + 38.0,
@@ -341,7 +342,7 @@ impl GameplayState {
                 let pulse = 0.55 + 0.3 * (get_time() as f32 * 4.0).sin().abs();
                 draw_circle(e.x, e.y, 17.0, Color::new(0.92, 0.18, 0.08, 0.88));
                 draw_circle_lines(e.x, e.y, 24.0, 3.0, Color::new(1.0, 0.46, 0.12, pulse));
-                draw_text(
+                draw_ui_text(
                     entrance_label(&path.id),
                     e.x + 24.0,
                     e.y + 5.0,
@@ -351,7 +352,7 @@ impl GameplayState {
             } else {
                 draw_circle(e.x, e.y, 10.0, Color::new(0.45, 0.08, 0.08, 0.34));
                 draw_circle_lines(e.x, e.y, 16.0, 2.0, Color::new(0.85, 0.24, 0.14, 0.28));
-                draw_text(
+                draw_ui_text(
                     "LOCKED PATH",
                     e.x + 18.0,
                     e.y + 4.0,
@@ -585,7 +586,7 @@ impl GameplayState {
         let pulse = 0.6 + 0.4 * (get_time() as f32 * 3.0).sin().abs();
         draw_circle(core.x, core.y, 20.0, Color::new(0.1, 0.5, 0.2, pulse));
         draw_circle_lines(core.x, core.y, 22.0, 2.0, Color::new(0.3, 0.9, 0.4, 0.8));
-        draw_text(
+        draw_ui_text(
             "FACTORY",
             core.x - 25.0,
             core.y + 30.0,
@@ -817,8 +818,8 @@ fn building_node_label(kind: &str) -> &str {
 }
 
 fn draw_centered_text(text: &str, center_x: f32, baseline_y: f32, font_size: f32, color: Color) {
-    let dims = measure_text(text, None, font_size as u16, 1.0);
-    draw_text(
+    let dims = measure_ui_text(text, None, font_size as u16, 1.0);
+    draw_ui_text(
         text,
         center_x - dims.width * 0.5,
         baseline_y,
@@ -829,10 +830,10 @@ fn draw_centered_text(text: &str, center_x: f32, baseline_y: f32, font_size: f32
 
 fn draw_label_tag(text: &str, pos: Vec2, color: Color) {
     let font_size = 12.0;
-    let dims = measure_text(text, None, font_size as u16, 1.0);
+    let dims = measure_ui_text(text, None, font_size as u16, 1.0);
     let w = dims.width + 16.0;
     let h = 20.0;
     draw_rectangle(pos.x, pos.y, w, h, Color::new(0.03, 0.05, 0.07, 0.88));
     draw_rectangle_lines(pos.x, pos.y, w, h, 1.5, color);
-    draw_text(text, pos.x + 8.0, pos.y + 14.0, font_size, color);
+    draw_ui_text(text, pos.x + 8.0, pos.y + 14.0, font_size, color);
 }
