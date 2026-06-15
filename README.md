@@ -24,3 +24,10 @@ Keep the beacon and survivors alive through escalating machine pressure. Stronge
 ## Current Scope
 
 Playable tower defense and factory-management loop with resource pressure, wave survival, and strategic expansion.
+# Practical Future Improvements
+
+- Add deterministic wave and tower-targeting tests covering simultaneous enemies, tower priority ties, and late-wave pressure spikes.
+- Move tower, enemy, and resource tuning into data fixtures so balance changes can be reviewed without touching render or input code.
+- Split HUD, map, and panel rendering around reusable view models so gameplay state is easier to test without Macroquad draw calls.
+- Add scripted scenario replays for common defense builds to catch balance regressions before publishing.
+
