@@ -323,7 +323,7 @@ fn build_spawn_queue(
         .iter()
         .filter(|d| d.tier <= max_tier)
         .collect();
-    eligible.sort_by(|a, b| b.threat_value.cmp(&a.threat_value));
+    eligible.sort_by_key(|enemy| std::cmp::Reverse(enemy.threat_value));
 
     let mut queue = Vec::new();
 

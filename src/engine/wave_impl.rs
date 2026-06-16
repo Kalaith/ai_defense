@@ -324,7 +324,7 @@ fn build_spawn_queue(
     max_tier = max_tier.max(tier_floor);
 
     let mut eligible: Vec<&EnemyDef> = enemy_defs.iter().filter(|d| d.tier <= max_tier).collect();
-    eligible.sort_by(|a, b| b.threat_value.cmp(&a.threat_value));
+    eligible.sort_by_key(|enemy| std::cmp::Reverse(enemy.threat_value));
 
     let mut queue = Vec::new();
     let mut path_robin = 0usize;
