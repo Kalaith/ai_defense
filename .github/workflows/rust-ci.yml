@@ -1,9 +1,9 @@
-name: AI Defense CI
+name: Rust Game CI
 
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, master]
   pull_request:
 
 permissions:
@@ -22,13 +22,13 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ai_defense
+        working-directory: game
 
     steps:
-      - name: Checkout AI Defense
+      - name: Checkout game
         uses: actions/checkout@v4
         with:
-          path: ai_defense
+          path: game
 
       - name: Checkout macroquad-toolkit
         uses: actions/checkout@v4
@@ -65,50 +65,52 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            ai_defense/target
-          key: ${{ runner.os }}-ai-defense-cargo-${{ hashFiles('ai_defense/Cargo.lock', 'ai_defense/Cargo.toml', 'macroquad-toolkit/Cargo.toml') }}
+            game/target
+          key: ${{ runner.os }}-rust-game-cargo-${{ hashFiles('game/Cargo.lock', 'game/Cargo.toml', 'macroquad-toolkit/Cargo.toml') }}
           restore-keys: |
-            ${{ runner.os }}-ai-defense-cargo-
+            ${{ runner.os }}-rust-game-cargo-
 
       - name: Verify project files
         run: |
           test -f Cargo.toml
           test -f index.html
-          test -s catalog_thumbnail.png
-          test -f storage.js
           test -d assets
           test -d ../macroquad-toolkit
-          grep -q 'load("ai_defense.wasm")' index.html
+          if [ ! -s catalog_thumbnail.png ]; then
+            echo "::warning::catalog_thumbnail.png is missing or empty"
+          fi
 
       - name: Check formatting
-        run: cargo fmt -- --check
+        run: cargo fmt --manifest-path Cargo.toml -- --check
 
       - name: Run Clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings
+        run: cargo clippy --manifest-path Cargo.toml --all-targets --all-features -- -D warnings
 
       - name: Run tests
-        run: cargo test --all-features
+        run: cargo test --manifest-path Cargo.toml --all-features
 
       - name: Build WebGL release
-        run: cargo build --release --target wasm32-unknown-unknown
+        run: cargo build --manifest-path Cargo.toml --release --target wasm32-unknown-unknown
         env:
           RUSTFLAGS: "-C link-arg=--allow-undefined"
 
       - name: Verify WebGL output
-        run: test -s target/wasm32-unknown-unknown/release/ai_defense.wasm
+        run: |
+          wasm_name="$(cargo metadata --manifest-path Cargo.toml --no-deps --format-version 1 | python3 -c 'import json, sys; from pathlib import Path; metadata = json.load(sys.stdin); manifest = Path("Cargo.toml").resolve(); package = next((package for package in metadata["packages"] if Path(package["manifest_path"]).resolve() == manifest), metadata["packages"][0]); bins = [target["name"] for target in package["targets"] if "bin" in target["kind"]]; name = bins[0] if bins else package["name"]; print(name.replace("-", "_") + ".wasm")')"
+          test -s "target/wasm32-unknown-unknown/release/${wasm_name}"
 
   windows-build:
     name: Build Windows release
     runs-on: windows-latest
     defaults:
       run:
-        working-directory: ai_defense
+        working-directory: game
 
     steps:
-      - name: Checkout AI Defense
+      - name: Checkout game
         uses: actions/checkout@v4
         with:
-          path: ai_defense
+          path: game
 
       - name: Checkout macroquad-toolkit
         uses: actions/checkout@v4
@@ -130,16 +132,27 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            ai_defense/target
-          key: ${{ runner.os }}-ai-defense-cargo-${{ hashFiles('ai_defense/Cargo.lock', 'ai_defense/Cargo.toml', 'macroquad-toolkit/Cargo.toml') }}
+            game/target
+          key: ${{ runner.os }}-rust-game-cargo-${{ hashFiles('game/Cargo.lock', 'game/Cargo.toml', 'macroquad-toolkit/Cargo.toml') }}
           restore-keys: |
-            ${{ runner.os }}-ai-defense-cargo-
+            ${{ runner.os }}-rust-game-cargo-
 
       - name: Build Windows release
-        run: cargo build --release
+        run: cargo build --manifest-path Cargo.toml --release
 
       - name: Verify Windows output
         run: |
-          if (-not (Test-Path "target\release\ai_defense.exe" -PathType Leaf)) {
-            throw "Missing target\release\ai_defense.exe"
+          $metadata = cargo metadata --manifest-path Cargo.toml --no-deps --format-version 1 | ConvertFrom-Json
+          $manifestPath = (Resolve-Path "Cargo.toml").Path
+          $package = @($metadata.packages | Where-Object { (Resolve-Path $_.manifest_path).Path -eq $manifestPath } | Select-Object -First 1)
+          if (-not $package) {
+            $package = $metadata.packages[0]
+          }
+          $bin = @($package.targets | Where-Object { $_.kind -contains "bin" } | Select-Object -First 1).name
+          if (-not $bin) {
+            $bin = $package.name
+          }
+          $exePath = Join-Path "target\release" "$bin.exe"
+          if (-not (Test-Path $exePath -PathType Leaf)) {
+            throw "Missing $exePath"
           }
