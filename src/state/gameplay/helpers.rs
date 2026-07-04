@@ -90,12 +90,15 @@ impl GameplayState {
     }
 
     fn unlock_requires_met(&self, requires: &[String]) -> bool {
-        requires.iter().all(|req| {
-            if self.map_state.is_building_powered(req) {
-                return true;
-            }
-            self.factory.is_sector_unlocked(req) || self.factory.has_upgrade(req)
-        })
+        requires.iter().all(|req| self.requirement_met(req))
+    }
+
+    /// True when a single unlock token (a powered building, an unlocked sector,
+    /// or a purchased upgrade) is satisfied.
+    pub fn requirement_met(&self, req: &str) -> bool {
+        self.map_state.is_building_powered(req)
+            || self.factory.is_sector_unlocked(req)
+            || self.factory.has_upgrade(req)
     }
 
     pub fn unlocked_building_boon(&self) -> BuildingBoon {

@@ -1627,7 +1627,7 @@
         "slot_14"
       ],
       "unlock_entrance": "northwest_breach",
-      "visible_at_start": true
+      "visible_at_start": false
     },
     {
       "id": "section_3_power_spine",
@@ -1645,7 +1645,7 @@
         "slot_20"
       ],
       "unlock_entrance": null,
-      "visible_at_start": true
+      "visible_at_start": false
     },
     {
       "id": "section_4_assembly",

@@ -5,6 +5,55 @@ use serde::{Deserialize, Serialize};
 
 const GAME_NAME: &str = "ai_defense";
 const SAVE_FILE: &str = "save.json";
+const SETTINGS_FILE: &str = "settings.json";
+
+/// Persistent player settings + first-run state, stored separately from the
+/// campaign save so they survive across runs.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Settings {
+    #[serde(default)]
+    pub tutorial_seen: bool,
+    #[serde(default = "default_volume")]
+    pub master_volume: f32,
+    #[serde(default = "default_volume")]
+    pub sfx_volume: f32,
+    #[serde(default)]
+    pub default_fast_speed: bool,
+    #[serde(default = "default_true")]
+    pub autosave: bool,
+}
+
+fn default_volume() -> f32 {
+    0.8
+}
+
+fn default_true() -> bool {
+    true
+}
+
+impl Default for Settings {
+    fn default() -> Self {
+        Self {
+            tutorial_seen: false,
+            master_volume: default_volume(),
+            sfx_volume: default_volume(),
+            default_fast_speed: false,
+            autosave: true,
+        }
+    }
+}
+
+impl Settings {
+    pub fn load() -> Self {
+        save_root()
+            .and_then(|root| root.load_json(SETTINGS_FILE))
+            .unwrap_or_default()
+    }
+
+    pub fn save(&self) -> Result<(), String> {
+        save_root()?.save_json(SETTINGS_FILE, self)
+    }
+}
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SaveData {

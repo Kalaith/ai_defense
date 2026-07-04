@@ -1,7 +1,8 @@
 //! Main menu state.
 
-use crate::save::SaveData;
+use crate::save::{SaveData, Settings};
 use crate::state::StateTransition;
+use crate::ui;
 use macroquad::prelude::*;
 use macroquad_toolkit::ui::{draw_ui_text, measure_ui_text};
 
@@ -10,6 +11,8 @@ pub struct MenuState {
     continue_clicked: bool,
     has_save: bool,
     title_texture: Option<Texture2D>,
+    show_settings: bool,
+    settings: Settings,
 }
 
 impl MenuState {
@@ -19,6 +22,8 @@ impl MenuState {
             continue_clicked: false,
             has_save: SaveData::exists(),
             title_texture: load_title_texture(),
+            show_settings: false,
+            settings: Settings::load(),
         }
     }
 
@@ -41,13 +46,20 @@ impl MenuState {
         draw_title_background(self.title_texture.as_ref());
         draw_title_scanlines();
 
+        if self.show_settings {
+            if ui::draw_settings_overlay(&mut self.settings) == ui::SettingsAction::Close {
+                self.show_settings = false;
+            }
+            return;
+        }
+
         let w = screen_width();
         let h = screen_height();
         let panel_x = (w * 0.065).clamp(28.0, 92.0);
-        let panel_y = (h * 0.57).clamp(315.0, h - 190.0);
+        let btn_h = 56.0;
+        let gap = 11.0;
         let panel_w = (w * 0.34).clamp(300.0, 430.0);
-        let btn_h = 58.0;
-        let gap = 12.0;
+        let panel_y = (h * 0.52).clamp(280.0, h - (btn_h * 4.0 + gap * 3.0) - 40.0);
 
         let continue_label = if self.has_save {
             "CONTINUE SIGNAL"
@@ -79,7 +91,34 @@ impl MenuState {
         ) {
             self.start_clicked = true;
         }
+
+        if draw_title_button(
+            Rect::new(panel_x, panel_y + (btn_h + gap) * 2.0, panel_w, btn_h),
+            "SETTINGS",
+            "Audio, autosave, speed, and tutorial options",
+            true,
+            false,
+        ) {
+            self.show_settings = true;
+        }
+
+        if draw_title_button(
+            Rect::new(panel_x, panel_y + (btn_h + gap) * 3.0, panel_w, btn_h),
+            "EXIT GAME",
+            "Power down the console and quit",
+            true,
+            false,
+        ) {
+            request_exit();
+        }
     }
+}
+
+/// Quit the process on native builds. On the web there is no process to exit,
+/// so this is a no-op.
+pub fn request_exit() {
+    #[cfg(not(target_arch = "wasm32"))]
+    std::process::exit(0);
 }
 
 fn load_title_texture() -> Option<Texture2D> {

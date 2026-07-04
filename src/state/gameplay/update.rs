@@ -44,7 +44,7 @@ impl GameplayState {
                 self.beacon_active = false;
                 self.between_waves = false;
                 return Some(StateTransition::ToResults {
-                    summary: self.build_run_summary(),
+                    summary: self.build_run_summary(true),
                 });
             }
 
@@ -63,7 +63,7 @@ impl GameplayState {
 
             if self.is_game_over() {
                 return Some(StateTransition::ToResults {
-                    summary: self.build_run_summary(),
+                    summary: self.build_run_summary(false),
                 });
             }
         }
@@ -72,7 +72,20 @@ impl GameplayState {
     }
 
     pub fn update(&mut self) -> Option<StateTransition> {
+        if self.end_campaign_requested {
+            return Some(StateTransition::ToResults {
+                summary: self.build_run_summary(true),
+            });
+        }
+
         self.handle_camera_input();
+
+        // The intro card and salvage report freeze the sim; each handles its own
+        // buttons during draw.
+        if self.show_intro || self.salvage_report.is_some() {
+            return None;
+        }
+
         self.handle_input();
         if self.paused {
             return None;
@@ -98,20 +111,79 @@ impl GameplayState {
         self.update_factory();
         self.update_notifications(dt);
         self.update_wave_flash(dt);
+        self.update_coach();
 
         if self.shutdown_triggered && self.enemies_cleared() {
-            return Some(StateTransition::ToResults {
-                summary: self.build_run_summary(),
-            });
+            self.finish_beacon_cycle();
+            return None;
         }
 
         if self.is_game_over() {
             return Some(StateTransition::ToResults {
-                summary: self.build_run_summary(),
+                summary: self.build_run_summary(false),
             });
         }
 
         None
+    }
+
+    /// Beacon shut down and the field is clear: bank any remaining scavengers,
+    /// produce this cycle's salvage report, and drop back to base-build mode so
+    /// the player can rebuild and raise the beacon again.
+    fn finish_beacon_cycle(&mut self) {
+        self.resolve_remaining_scavengers();
+        self.beacon_cycles_completed += 1;
+        self.salvage_report = Some(self.build_salvage_report());
+        self.beacon_start_difficulty_bonus = 0.0;
+        self.autosave();
+    }
+
+    /// Force any field teams still out to return home when the beacon goes dark,
+    /// each risking loss at the shutdown loss rate.
+    fn resolve_remaining_scavengers(&mut self) {
+        let still_out = self.scavengers_out;
+        if still_out == 0 {
+            return;
+        }
+        let mut lost = 0u32;
+        for _ in 0..still_out {
+            if rng::chance(self.constants.scavenger.shutdown_loss_chance) {
+                lost += 1;
+            }
+        }
+        let returned = still_out - lost;
+        self.scavengers_out = 0;
+        self.scavengers_lost += lost;
+        self.scavengers_returned += returned;
+        self.scavenger_recall_active = false;
+    }
+
+    fn build_salvage_report(&self) -> super::SalvageReport {
+        let b = &self.cycle_baseline;
+        super::SalvageReport {
+            cycle: self.beacon_cycles_completed,
+            waves: self.current_wave.saturating_sub(b.wave),
+            scavengers_sent: self.scavengers_sent.saturating_sub(b.sent),
+            scavengers_returned: self.scavengers_returned.saturating_sub(b.returned),
+            scavengers_lost: self.scavengers_lost.saturating_sub(b.lost),
+            scrap: (self.scavenger_scrap_gained - b.scrap).max(0.0),
+            food: (self.scavenger_food_gained - b.food).max(0.0),
+            population: self.scavenger_population_gained.saturating_sub(b.population),
+            beacon_phase: self.beacon_phase.clone(),
+        }
+    }
+
+    /// Dismiss the salvage report and return to base-build mode for the next
+    /// beacon cycle.
+    pub(crate) fn dismiss_salvage_report(&mut self) {
+        self.salvage_report = None;
+        self.shutdown_triggered = false;
+        self.beacon_active = false;
+        self.between_waves = true;
+        self.wave_timer = self.constants.ui.wave_start_delay;
+        self.push_notification(
+            "Field secured. Rebuild the line, then raise the beacon again.".to_string(),
+        );
     }
 
     fn handle_camera_input(&mut self) {
@@ -125,7 +197,9 @@ impl GameplayState {
 
     fn handle_input(&mut self) {
         if is_key_pressed(KeyCode::Escape) {
-            if self.placing_tower.is_some() {
+            if self.show_settings {
+                self.show_settings = false;
+            } else if self.placing_tower.is_some() {
                 self.placing_tower = None;
             } else {
                 self.paused = !self.paused;
@@ -380,6 +454,7 @@ impl GameplayState {
         self.factory.check_awakening();
         self.recalc_factory_integrity();
         self.map_state.update_section_visibility();
+        self.sync_camera_bounds();
     }
 
     fn update_notifications(&mut self, dt: f32) {
@@ -451,6 +526,9 @@ impl GameplayState {
 
         let next_phase = phase_from_strength(self.beacon_strength);
         if next_phase.rank() > self.beacon_phase.rank() {
+            if let Some(flavor) = beacon_phase_flavor(&next_phase) {
+                self.push_notification(flavor.to_string());
+            }
             self.beacon_phase = next_phase;
         }
     }
@@ -533,7 +611,7 @@ impl GameplayState {
         self.population.count == 0 || self.factory_integrity <= 0.0
     }
 
-    fn build_run_summary(&self) -> RunSummary {
+    fn build_run_summary(&self, survived: bool) -> RunSummary {
         RunSummary {
             waves_survived: self.current_wave,
             beacon_phase: self.beacon_phase.clone(),
@@ -545,7 +623,7 @@ impl GameplayState {
             scavenger_population: self.scavenger_population_gained,
             factory_online: self.factory_online_count(),
             population_surviving: self.population.count,
-            shutdown_triggered: self.shutdown_triggered,
+            shutdown_triggered: survived,
         }
     }
 
@@ -614,6 +692,23 @@ impl GameplayState {
     }
 }
 
+/// Short narrative line pushed as a notification when the beacon escalates to a
+/// new phase. `WarmSignal` is the opening state, so it has no line.
+fn beacon_phase_flavor(phase: &BeaconPhase) -> Option<&'static str> {
+    match phase {
+        BeaconPhase::WarmSignal => None,
+        BeaconPhase::SustainedCall => {
+            Some("The beacon steadies into a sustained call — the swarm has your scent.")
+        }
+        BeaconPhase::ScreamingBeacon => {
+            Some("Screaming beacon. Everything within range is turning toward you.")
+        }
+        BeaconPhase::TerminalHowl => {
+            Some("Terminal howl — the factory is a dying star. Bank what you can.")
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -645,5 +740,45 @@ mod tests {
         }
 
         panic!("survival proof did not produce a wave-10 result");
+    }
+
+    #[test]
+    fn beacon_shutdown_yields_report_then_allows_another_cycle() {
+        let data = GameData::load();
+        let mut state = GameplayState::new(&data);
+        state.autosave_enabled = false;
+
+        // Raise the beacon: a fresh field team goes out and this cycle's
+        // baseline is snapshotted.
+        state.start_beacon();
+        assert!(state.beacon_active);
+        let teams = data.constants.scavenger.initial_scavengers;
+        assert_eq!(state.scavengers_out, teams);
+
+        // Shut it down; with no enemies in the field the cycle finishes and
+        // produces a salvage report instead of ending the run.
+        state.trigger_shutdown();
+        assert!(state.enemies_cleared());
+        state.finish_beacon_cycle();
+
+        let report = state
+            .salvage_report
+            .as_ref()
+            .expect("shutdown with a clear field should produce a salvage report");
+        assert_eq!(report.cycle, 1);
+        assert_eq!(state.beacon_cycles_completed, 1);
+        assert_eq!(state.scavengers_out, 0, "field teams resolve on shutdown");
+
+        // Dismiss the report: back to base-build mode, beacon down, restartable.
+        state.dismiss_salvage_report();
+        assert!(state.salvage_report.is_none());
+        assert!(!state.beacon_active);
+        assert!(!state.shutdown_triggered);
+
+        // A second beacon cycle sends another fresh team out.
+        state.start_beacon();
+        assert!(state.beacon_active);
+        assert_eq!(state.scavengers_out, teams);
+        assert_eq!(state.scavengers_sent, teams * 2);
     }
 }

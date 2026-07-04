@@ -350,11 +350,20 @@ pub fn draw_icon(icon: ConsoleIcon, x: f32, y: f32, size: f32, color: Color) {
 }
 
 /// Draw tower build panel on the left sidebar. Returns tower id if one was clicked.
+/// Per-tower unlock state, parallel to the `tower_defs` slice, so the build
+/// panel can show gated towers greyed-out with their unlock requirement.
+pub struct TowerButtonInfo {
+    pub unlocked: bool,
+    /// Human-readable requirement (e.g. "Research Core"); shown when locked.
+    pub requirement: String,
+}
+
 pub fn draw_build_panel(
     x: f32,
     y: f32,
     w: f32,
     tower_defs: &[TowerDef],
+    infos: &[TowerButtonInfo],
     scrap: f32,
     power: f32,
 ) -> Option<String> {
@@ -376,8 +385,9 @@ pub fn draw_build_panel(
     let btn_h = 68.0;
     let padding = 8.0;
 
-    for def in tower_defs {
-        let can_afford = scrap >= def.cost_scrap && power >= def.cost_power;
+    for (i, def) in tower_defs.iter().enumerate() {
+        let unlocked = infos.get(i).map(|info| info.unlocked).unwrap_or(true);
+        let can_afford = unlocked && scrap >= def.cost_scrap && power >= def.cost_power;
         let label = format!(
             "{} ({}s/{}p)",
             def.name, def.cost_scrap as i32, def.cost_power as i32
@@ -391,7 +401,8 @@ pub fn draw_build_panel(
 
         let button_rect = Rect::new(x + 5.0, btn_y, w - 10.0, btn_h);
         let (mx, my) = mouse_position();
-        let hovered = mx >= button_rect.x
+        let hovered = unlocked
+            && mx >= button_rect.x
             && mx <= button_rect.x + button_rect.w
             && my >= btn_y
             && my <= btn_y + btn_h;
@@ -458,7 +469,18 @@ pub fn draw_build_panel(
         }
         draw_button_corners(button_rect, accent);
         draw_bounded_text(&label, x + 15.0, btn_y + 23.0, w - 50.0, 15.0, color);
-        let afford_line = if can_afford {
+        let locked = !unlocked;
+        let requirement = infos
+            .get(i)
+            .map(|info| info.requirement.as_str())
+            .unwrap_or("");
+        let afford_line = if locked {
+            if requirement.is_empty() {
+                "Locked".to_string()
+            } else {
+                format!("Locked — needs {}", requirement)
+            }
+        } else if can_afford {
             "Affordable".to_string()
         } else if scrap < def.cost_scrap {
             format!("Need {:.0} more scrap", def.cost_scrap - scrap)
@@ -473,6 +495,8 @@ pub fn draw_build_panel(
             11.0,
             if can_afford {
                 dark::POSITIVE
+            } else if locked {
+                dark::TEXT_DIM
             } else {
                 dark::WARNING
             },
@@ -586,4 +610,114 @@ fn truncate_text(text: &str, max_w: f32, font_size: u16) -> String {
         out.push(ch);
     }
     format!("{}...", out)
+}
+
+/// Result of a settings-overlay frame.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SettingsAction {
+    None,
+    Close,
+}
+
+/// Shared modal settings overlay, reused by the main menu and the in-game pause
+/// menu. Mutates and persists `settings` in place; returns `Close` when the
+/// player dismisses it.
+pub fn draw_settings_overlay(settings: &mut crate::save::Settings) -> SettingsAction {
+    let sw = screen_width();
+    let sh = screen_height();
+    draw_rectangle(0.0, 0.0, sw, sh, Color::new(0.0, 0.0, 0.0, 0.7));
+
+    let pw = 480.0_f32.min(sw - 40.0);
+    let ph = 430.0_f32.min(sh - 40.0);
+    let px = (sw - pw) * 0.5;
+    let py = (sh - ph) * 0.5;
+    let surface = macroquad_toolkit::ui::SurfaceStyle::new(Color::new(0.04, 0.06, 0.07, 0.98))
+        .with_border(1.6, Color::new(0.24, 0.58, 0.62, 0.9));
+    macroquad_toolkit::ui::draw_surface(Rect::new(px, py, pw, ph), &surface);
+
+    draw_ui_text("SETTINGS", px + 24.0, py + 42.0, 26.0, dark::ACCENT);
+
+    let row_x = px + 24.0;
+    let row_w = pw - 48.0;
+    let row_h = 34.0;
+    let gap = 14.0;
+    let mut y = py + 74.0;
+    let mut changed = false;
+
+    if toggle_row(row_x, y, row_w, row_h, "Autosave", settings.autosave) {
+        settings.autosave = !settings.autosave;
+        changed = true;
+    }
+    y += row_h + gap;
+    if toggle_row(row_x, y, row_w, row_h, "Start runs at 2x speed", settings.default_fast_speed) {
+        settings.default_fast_speed = !settings.default_fast_speed;
+        changed = true;
+    }
+    y += row_h + gap;
+    if let Some(v) = slider_row(row_x, y, row_w, row_h, "Master volume", settings.master_volume) {
+        settings.master_volume = v;
+        changed = true;
+    }
+    y += row_h + gap;
+    if let Some(v) = slider_row(row_x, y, row_w, row_h, "SFX volume", settings.sfx_volume) {
+        settings.sfx_volume = v;
+        changed = true;
+    }
+    y += row_h + gap;
+    let tut_label = if settings.tutorial_seen {
+        "Replay tutorial on next new run"
+    } else {
+        "Tutorial will show on next new run"
+    };
+    if macroquad_toolkit::ui::button(row_x, y, row_w, row_h, tut_label) && settings.tutorial_seen {
+        settings.tutorial_seen = false;
+        changed = true;
+    }
+
+    if changed {
+        let _ = settings.save();
+    }
+
+    let close_w = 150.0;
+    if macroquad_toolkit::ui::button(
+        px + (pw - close_w) * 0.5,
+        py + ph - 48.0,
+        close_w,
+        34.0,
+        "Close",
+    ) {
+        return SettingsAction::Close;
+    }
+    SettingsAction::None
+}
+
+fn toggle_row(x: f32, y: f32, w: f32, h: f32, label: &str, on: bool) -> bool {
+    draw_ui_text(label, x + 4.0, y + h * 0.5 + 5.0, 15.0, dark::TEXT);
+    let bw = 92.0;
+    macroquad_toolkit::ui::button(x + w - bw, y, bw, h, if on { "On" } else { "Off" })
+}
+
+fn slider_row(x: f32, y: f32, w: f32, h: f32, label: &str, value: f32) -> Option<f32> {
+    draw_ui_text(label, x + 4.0, y + h * 0.5 + 5.0, 15.0, dark::TEXT);
+    let bw = 34.0;
+    let val_w = 60.0;
+    let mut out = None;
+    let minus_x = x + w - bw * 2.0 - val_w;
+    if macroquad_toolkit::ui::button(minus_x, y, bw, h, "-") {
+        out = Some((value - 0.1).clamp(0.0, 1.0));
+    }
+    let pct = format!("{:.0}%", value * 100.0);
+    let dims = measure_ui_text(&pct, None, 15, 1.0);
+    draw_ui_text(
+        &pct,
+        minus_x + bw + (val_w - dims.width) * 0.5,
+        y + h * 0.5 + 5.0,
+        15.0,
+        dark::TEXT_BRIGHT,
+    );
+    let plus_x = x + w - bw;
+    if macroquad_toolkit::ui::button(plus_x, y, bw, h, "+") {
+        out = Some((value + 0.1).clamp(0.0, 1.0));
+    }
+    out
 }

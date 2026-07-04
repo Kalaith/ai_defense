@@ -89,6 +89,18 @@ pub struct GameplayState {
     pub shutdown_triggered: bool,
     pub beacon_active: bool,
 
+    // Beacon cycle loop: shutdown yields a salvage report, then the player
+    // rebuilds and can raise the beacon again instead of the run ending.
+    pub salvage_report: Option<SalvageReport>,
+    pub beacon_cycles_completed: u32,
+    pub cycle_baseline: CycleBaseline,
+    pub end_campaign_requested: bool,
+
+    pub coach: Coach,
+    pub show_settings: bool,
+    pub settings: crate::save::Settings,
+    pub show_intro: bool,
+
     pub upgrade_defs: Vec<UpgradeDef>,
     pub beacon_start_difficulty_bonus: f32,
     pub unlocks: crate::data::UnlocksDef,
@@ -104,10 +116,67 @@ pub struct Resources {
     pub data_cores: u32,
 }
 
+/// Cumulative run totals captured when a beacon cycle starts, so the
+/// end-of-cycle salvage report can show only that cycle's contribution.
+#[derive(Clone, Debug, Default)]
+pub struct CycleBaseline {
+    pub wave: u32,
+    pub sent: u32,
+    pub returned: u32,
+    pub lost: u32,
+    pub scrap: f32,
+    pub food: f32,
+    pub population: u32,
+}
+
+/// Result of a single beacon cycle, shown inline when the beacon is shut down
+/// and the field clears — after which the player rebuilds and can raise the
+/// beacon again for another cycle.
+#[derive(Clone, Debug)]
+pub struct SalvageReport {
+    pub cycle: u32,
+    pub waves: u32,
+    pub scavengers_sent: u32,
+    pub scavengers_returned: u32,
+    pub scavengers_lost: u32,
+    pub scrap: f32,
+    pub food: f32,
+    pub population: u32,
+    pub beacon_phase: BeaconPhase,
+}
+
 pub struct Notification {
     pub text: String,
     pub ttl: f32,
 }
+
+/// First-run onboarding coach: a short, skippable sequence that walks the
+/// player through the core loop. Advances as each step is actually performed.
+#[derive(Clone, Debug, Default)]
+pub struct Coach {
+    pub active: bool,
+    pub step: usize,
+}
+
+/// (title, instruction) for each onboarding step, in order.
+pub const COACH_STEPS: &[(&str, &str)] = &[
+    (
+        "Repair a machine",
+        "Click the Scrap Converter near the core, then Repair it. Machines fund and power your defense.",
+    ),
+    (
+        "Power it on",
+        "Select the repaired machine and Power it. Powering machines brings new factory sections online.",
+    ),
+    (
+        "Build a turret",
+        "Pick a tower on the left, then click a glowing powered pad on the enemy route to place it.",
+    ),
+    (
+        "Raise the beacon",
+        "When the line is ready, press START BEACON (top right) to draw the machines and send scavengers out.",
+    ),
+];
 
 pub struct Particle {
     pub position: Vec2,
@@ -126,13 +195,37 @@ impl GameplayState {
     pub fn new(data: &GameData) -> Self {
         let constants = data.constants.clone();
         let map_state = MapState::from_def(data.map_def.clone());
-        let camera_bounds = map_state.map_size;
+
+        // Frame the camera on the currently-revealed area so the map opens small
+        // and grows as sections are powered back online (see sync_camera_bounds).
+        let (vmin, vmax) = map_state.visible_bounds();
+        let view_center = (vmin + vmax) * 0.5;
+        let content_w = (vmax.x - vmin.x).max(1.0) + 360.0;
+        let content_h = (vmax.y - vmin.y).max(1.0) + 320.0;
+        let init_zoom = (900.0 / content_w)
+            .min(560.0 / content_h)
+            .clamp(0.6, 1.7);
+        let cam_pad = 240.0;
+        let cam_min = vec2((vmin.x - cam_pad).max(0.0), (vmin.y - cam_pad).max(0.0));
+        let cam_max = vec2(
+            (vmax.x + cam_pad).min(map_state.map_size.x),
+            (vmax.y + cam_pad).min(map_state.map_size.y),
+        );
 
         let mut factory = Factory::new();
         factory.init_sectors(&data.sector_defs);
 
         let threat = ThreatSignature::new();
         let last_reaction_tier = threat.reaction_tier();
+
+        let settings = crate::save::Settings::load();
+        let coach_active = !settings.tutorial_seen;
+        let start_time_scale = if settings.default_fast_speed {
+            data.constants.gameplay.speed_multiplier
+        } else {
+            1.0
+        };
+        let autosave_enabled = settings.autosave;
 
         Self {
             constants,
@@ -191,7 +284,7 @@ impl GameplayState {
             particles: Vec::new(),
             wave_flash_timer: 0.0,
             last_wave_started: 0,
-            time_scale: 1.0,
+            time_scale: start_time_scale,
 
             wave_timer: data.constants.ui.wave_start_delay,
             wave_interval: data.constants.waves.interval_seconds,
@@ -205,7 +298,7 @@ impl GameplayState {
             selected_upgrade: None,
 
             factory_integrity: 100.0,
-            autosave_enabled: true,
+            autosave_enabled,
             survival_proof_active: false,
 
             base_health_scale_per_wave: data.constants.waves.health_scale_per_wave,
@@ -214,14 +307,29 @@ impl GameplayState {
             shutdown_triggered: false,
             beacon_active: false,
 
+            salvage_report: None,
+            beacon_cycles_completed: 0,
+            cycle_baseline: CycleBaseline::default(),
+            end_campaign_requested: false,
+
+            // Onboarding shows only until the player has seen it once.
+            coach: Coach {
+                active: coach_active,
+                step: 0,
+            },
+            show_settings: false,
+            settings,
+            // Fresh runs open on the premise card; continuing a save skips it.
+            show_intro: true,
+
             upgrade_defs: data.upgrade_defs.clone(),
             beacon_start_difficulty_bonus: 0.0,
             unlocks: data.unlocks.clone(),
             enemy_defs: data.enemy_defs.clone(),
 
             camera: ToolkitCamera2D::with_config(
-                vec2(620.0, 390.0),
-                0.82,
+                view_center,
+                init_zoom,
                 Camera2DConfig {
                     drag_button: Some(macroquad::prelude::MouseButton::Middle),
                     min_zoom: 0.25,
@@ -231,7 +339,7 @@ impl GameplayState {
                     zoom_out_factor: 1.0 / 1.1,
                     mouse_wheel_zoom_to_cursor: false,
                     keyboard_zoom_enabled: false,
-                    bounds: Some(CameraBounds::new(vec2(0.0, 0.0), camera_bounds)),
+                    bounds: Some(CameraBounds::new(cam_min, cam_max)),
                     ..Default::default()
                 },
             ),
@@ -353,6 +461,8 @@ impl GameplayState {
         self.selected_building = None;
         self.selected_core = false;
         self.selected_upgrade = None;
+        self.coach.active = false;
+        self.show_intro = false;
         self.update_beacon();
     }
 
@@ -420,6 +530,20 @@ impl GameplayState {
                 })
                 .collect(),
         }
+    }
+
+    /// Grow the camera's pannable area to match the currently-revealed sections
+    /// so newly-powered wings of the factory become reachable, while keeping the
+    /// unrevealed expanse out of reach.
+    pub(crate) fn sync_camera_bounds(&mut self) {
+        let (vmin, vmax) = self.map_state.visible_bounds();
+        let pad = 240.0;
+        let bmin = vec2((vmin.x - pad).max(0.0), (vmin.y - pad).max(0.0));
+        let bmax = vec2(
+            (vmax.x + pad).min(self.map_state.map_size.x),
+            (vmax.y + pad).min(self.map_state.map_size.y),
+        );
+        self.camera.set_bounds(Some(CameraBounds::new(bmin, bmax)));
     }
 
     fn autosave(&self) {

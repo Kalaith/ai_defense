@@ -429,28 +429,47 @@ impl GameplayState {
             );
         }
 
+        // Buttons behind a modal (salvage report) or the pause menu must not
+        // register clicks.
+        let interactive = self.salvage_report.is_none() && !self.paused;
+
         let btn_y = rect.y + rect.h - 29.0;
         if !self.beacon_active {
+            // While the salvage report modal is up the beacon can't be re-raised
+            // from the panel behind it; the player rebuilds first.
+            let start_state = if interactive {
+                ConsoleButtonState::Dangerous
+            } else {
+                ConsoleButtonState::Disabled
+            };
+            let start_rect = Rect::new(rect.x + 14.0, btn_y, rect.w - 28.0, 24.0);
             if ui::draw_console_button(
-                rect.x + 14.0,
-                btn_y,
-                rect.w - 28.0,
-                24.0,
+                start_rect.x,
+                start_rect.y,
+                start_rect.w,
+                start_rect.h,
                 "START BEACON",
-                ConsoleButtonState::Dangerous,
-            ) {
+                start_state,
+            ) && interactive
+            {
                 self.start_beacon();
             }
+            draw_button_hint(
+                start_rect,
+                "Raise the beacon",
+                "Draws the machines in and sends scavenger teams out for salvage.",
+            );
             return;
         }
 
         let left_w = (rect.w - 34.0) * 0.5;
-        if self.scavengers_out > 0 && !self.scavenger_recall_active {
+        let recall_rect = Rect::new(rect.x + 14.0, btn_y, left_w, 24.0);
+        if interactive && self.scavengers_out > 0 && !self.scavenger_recall_active {
             if ui::draw_console_button(
-                rect.x + 14.0,
-                btn_y,
-                left_w,
-                24.0,
+                recall_rect.x,
+                recall_rect.y,
+                recall_rect.w,
+                recall_rect.h,
                 "RECALL",
                 ConsoleButtonState::Recommended,
             ) {
@@ -459,16 +478,21 @@ impl GameplayState {
             }
         } else {
             ui::draw_console_button(
-                rect.x + 14.0,
-                btn_y,
-                left_w,
-                24.0,
+                recall_rect.x,
+                recall_rect.y,
+                recall_rect.w,
+                recall_rect.h,
                 "RECALL",
                 ConsoleButtonState::Disabled,
             );
         }
+        draw_button_hint(
+            recall_rect,
+            "Recall scavengers",
+            "Brings field teams home to bank their salvage before the beacon worsens.",
+        );
 
-        let shutdown_state = if self.shutdown_triggered || self.current_wave < 1 {
+        let shutdown_state = if self.shutdown_triggered || self.current_wave < 1 || !interactive {
             ConsoleButtonState::Disabled
         } else {
             ConsoleButtonState::Dangerous
@@ -478,16 +502,23 @@ impl GameplayState {
         } else {
             "SHUTDOWN"
         };
+        let shutdown_rect = Rect::new(rect.x + 20.0 + left_w, btn_y, left_w, 24.0);
         if ui::draw_console_button(
-            rect.x + 20.0 + left_w,
-            btn_y,
-            left_w,
-            24.0,
+            shutdown_rect.x,
+            shutdown_rect.y,
+            shutdown_rect.w,
+            shutdown_rect.h,
             shutdown_label,
             shutdown_state,
-        ) {
+        ) && interactive
+        {
             self.trigger_shutdown();
         }
+        draw_button_hint(
+            shutdown_rect,
+            "Shut down the beacon",
+            "Stops new waves. Clear the field for a salvage report, then rebuild.",
+        );
     }
 
     fn draw_scavenger_status_cards(&self, rect: Rect) {
@@ -683,6 +714,27 @@ fn truncate_to_width(text: &str, max_w: f32, font_size: u16) -> String {
         out.push(ch);
     }
     format!("{}...", out)
+}
+
+/// If the mouse is over `anchor`, draw a small explanatory tooltip just below
+/// it. Used to spell out what the beacon-control buttons actually do.
+fn draw_button_hint(anchor: Rect, title: &str, body: &str) {
+    let (mx, my) = mouse_position();
+    let hovered = mx >= anchor.x
+        && mx <= anchor.x + anchor.w
+        && my >= anchor.y
+        && my <= anchor.y + anchor.h;
+    if !hovered {
+        return;
+    }
+    let w = 232.0;
+    let h = 48.0;
+    let x = (anchor.x + anchor.w - w).clamp(6.0, screen_width() - w - 6.0);
+    let y = anchor.y + anchor.h + 6.0;
+    draw_rectangle(x, y, w, h, Color::new(0.03, 0.05, 0.06, 0.98));
+    draw_rectangle_lines(x, y, w, h, 1.2, Color::new(0.22, 0.52, 0.52, 0.85));
+    draw_ui_text(title, x + 9.0, y + 17.0, 12.0, dark::TEXT_BRIGHT);
+    draw_bounded_text(body, x + 9.0, y + 34.0, w - 18.0, 10.0, dark::TEXT_DIM);
 }
 
 fn draw_centered_text(text: &str, center_x: f32, baseline_y: f32, font_size: f32, color: Color) {

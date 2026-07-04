@@ -22,10 +22,31 @@ impl GameplayState {
         self.draw_wave_start_flash();
         self.draw_wave_status();
         self.draw_notifications();
+
+        // Opening premise card takes precedence over everything else.
+        if self.show_intro {
+            self.draw_intro();
+            return;
+        }
+
+        // When the salvage report modal is up, freeze the build UI behind it and
+        // let only the modal take input.
+        if self.salvage_report.is_some() {
+            self.draw_salvage_report();
+            return;
+        }
+
+        // Pause menu is a modal too: skip the interactive build UI behind it.
+        if self.paused {
+            self.draw_pause_menu();
+            return;
+        }
+
         self.draw_build_panel(data);
         self.draw_sector_panel();
         self.draw_slot_panel(data);
         self.draw_hover_tooltip(data);
+        self.draw_coach();
         self.handle_map_click(data);
     }
 }

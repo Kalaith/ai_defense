@@ -350,6 +350,33 @@ impl MapState {
         result
     }
 
+    /// World-space bounding box of everything currently visible (revealed
+    /// sections' slots + buildings). Falls back to the full map if nothing
+    /// section-scoped is visible yet. Used to frame and bound the camera so the
+    /// playable area appears to grow as the factory is powered back online.
+    pub fn visible_bounds(&self) -> (Vec2, Vec2) {
+        let mut min = Vec2::new(f32::MAX, f32::MAX);
+        let mut max = Vec2::new(f32::MIN, f32::MIN);
+        for slot in &self.slots {
+            if self.is_slot_visible(slot) {
+                min = min.min(slot.position);
+                max = max.max(slot.position);
+            }
+        }
+        for building in &self.buildings {
+            if self.building_sections.contains_key(&building.id) && self.is_building_visible(building)
+            {
+                min = min.min(building.position);
+                max = max.max(building.position);
+            }
+        }
+        if min.x == f32::MAX {
+            (Vec2::ZERO, self.map_size)
+        } else {
+            (min, max)
+        }
+    }
+
     pub fn max_visible_x(&self) -> f32 {
         let mut max_x: f32 = 0.0;
         for slot in &self.slots {
