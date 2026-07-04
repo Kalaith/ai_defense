@@ -80,120 +80,12 @@ impl GameplayState {
                 Color::new(0.17, 0.28, 0.32, 0.34)
             };
 
-            let kind = section.label.to_lowercase();
-            if kind.contains("intake") || kind.contains("scrap") {
-                draw_rectangle(min.x, min.y + h * 0.15, w, h * 0.7, fill);
-                draw_rectangle_lines(min.x, min.y + h * 0.15, w, h * 0.7, 2.0, border);
-            } else if kind.contains("water") || kind.contains("hydro") {
-                let cx = min.x + w * 0.5;
-                let cy = min.y + h * 0.5;
-                draw_circle(cx, cy, h * 0.45, fill);
-                draw_circle_lines(cx, cy, h * 0.45, 2.5, border);
-                draw_rectangle(
-                    min.x + w * 0.3,
-                    min.y + h * 0.15,
-                    w * 0.4,
-                    h * 0.7,
-                    Color::new(fill.r, fill.g, fill.b, 0.6),
-                );
-            } else if kind.contains("power") {
-                draw_rectangle(min.x, min.y + h * 0.35, w, h * 0.3, fill);
-                draw_rectangle_lines(min.x, min.y + h * 0.35, w, h * 0.3, 2.0, border);
-            } else if kind.contains("assembly") {
-                draw_rectangle(min.x, min.y, w, h, fill);
-                draw_rectangle_lines(min.x, min.y, w, h, 2.5, border);
-                for i in 1..4 {
-                    let x = min.x + w * (i as f32 / 4.0);
-                    draw_line(
-                        x,
-                        min.y + 6.0,
-                        x,
-                        min.y + h - 6.0,
-                        1.0,
-                        Color::new(border.r, border.g, border.b, 0.4),
-                    );
-                }
-                for i in 1..3 {
-                    let y = min.y + h * (i as f32 / 3.0);
-                    draw_line(
-                        min.x + 6.0,
-                        y,
-                        min.x + w - 6.0,
-                        y,
-                        1.0,
-                        Color::new(border.r, border.g, border.b, 0.4),
-                    );
-                }
-            } else if kind.contains("logistics") {
-                draw_rectangle(min.x, min.y, w, h, fill);
-                draw_rectangle_lines(min.x, min.y, w, h, 2.0, border);
-                draw_circle_lines(
-                    min.x + w * 0.3,
-                    min.y + h * 0.5,
-                    h * 0.25,
-                    2.0,
-                    Color::new(border.r, border.g, border.b, 0.6),
-                );
-                draw_circle_lines(
-                    min.x + w * 0.7,
-                    min.y + h * 0.5,
-                    h * 0.25,
-                    2.0,
-                    Color::new(border.r, border.g, border.b, 0.6),
-                );
-            } else if kind.contains("robotics") {
-                draw_rectangle(min.x, min.y + h * 0.1, w, h * 0.8, fill);
-                draw_rectangle_lines(min.x, min.y + h * 0.1, w, h * 0.8, 2.5, border);
-                draw_rectangle_lines(
-                    min.x + w * 0.2,
-                    min.y + h * 0.2,
-                    w * 0.6,
-                    h * 0.6,
-                    2.0,
-                    Color::new(border.r, border.g, border.b, 0.6),
-                );
-            } else if kind.contains("research") {
-                draw_rectangle(min.x, min.y, w, h, fill);
-                draw_rectangle_lines(min.x, min.y, w, h, 2.0, border);
-                let a = vec2(min.x + w * 0.15, min.y + h * 0.2);
-                let b = vec2(min.x + w * 0.85, min.y + h * 0.5);
-                let c = vec2(min.x + w * 0.25, min.y + h * 0.8);
-                draw_triangle_lines(a, b, c, 2.0, Color::new(border.r, border.g, border.b, 0.7));
-            } else if kind.contains("vault") || kind.contains("ai") {
-                draw_rectangle(min.x + w * 0.1, min.y + h * 0.1, w * 0.8, h * 0.8, fill);
-                draw_rectangle_lines(
-                    min.x + w * 0.1,
-                    min.y + h * 0.1,
-                    w * 0.8,
-                    h * 0.8,
-                    3.0,
-                    border,
-                );
-                draw_rectangle_lines(
-                    min.x + w * 0.2,
-                    min.y + h * 0.2,
-                    w * 0.6,
-                    h * 0.6,
-                    2.0,
-                    Color::new(border.r, border.g, border.b, 0.6),
-                );
-            } else if kind.contains("heart") {
-                let cx = min.x + w * 0.5;
-                let cy = min.y + h * 0.5;
-                let r = h.min(w) * 0.45;
-                draw_circle(cx, cy, r, fill);
-                draw_circle_lines(cx, cy, r, 3.0, border);
-                draw_circle_lines(
-                    cx,
-                    cy,
-                    r * 0.6,
-                    2.0,
-                    Color::new(border.r, border.g, border.b, 0.6),
-                );
-            } else {
-                draw_rectangle(min.x, min.y, w, h, fill);
-                draw_rectangle_lines(min.x, min.y, w, h, 2.0, border);
-            }
+            // Uniform, quiet backplate for every section. The old per-theme
+            // silhouettes (a giant circle for water, bands, nested boxes…)
+            // read as gameplay elements — the water circle in particular
+            // looked exactly like a tower range ring.
+            draw_rectangle(min.x, min.y, w, h, fill);
+            draw_rectangle_lines(min.x, min.y, w, h, 2.0, border);
 
             if label_fade > 0.01 {
                 if section.visible {
@@ -297,43 +189,60 @@ impl GameplayState {
             }
             points.push(to_pos);
 
+            // Route point-to-point traces as L-shaped circuit runs (horizontal
+            // then vertical) instead of bent diagonals — the old synthetic
+            // curve produced bright stray strokes across the play area that
+            // looked like they meant something.
             let mut render_points = points.clone();
             if render_points.len() == 2 {
                 let a = render_points[0];
                 let b = render_points[1];
-                let dir = (b - a).normalize_or_zero();
-                let perp = vec2(-dir.y, dir.x);
-                let bend = ((b - a).length() * 0.15).clamp(12.0, 40.0);
-                render_points.insert(1, (a + b) * 0.5 + perp * bend);
+                if (a.x - b.x).abs() > 4.0 && (a.y - b.y).abs() > 4.0 {
+                    render_points.insert(1, vec2(b.x, a.y));
+                }
             }
 
             for i in 0..render_points.len().saturating_sub(1) {
                 let a = render_points[i];
                 let b = render_points[i + 1];
-                let mid = (a + b) * 0.5;
-                let mut near_core = false;
-                for building in &self.map_state.buildings {
-                    if self.map_state.is_core_building(&building.id)
-                        && (building.position - mid).length() < 90.0
-                    {
-                        near_core = true;
-                        break;
-                    }
-                }
                 if powered {
-                    let wide = if near_core { 9.0 } else { 6.5 };
-                    let thin = if near_core { 3.0 } else { 2.4 };
-                    draw_line(a.x, a.y, b.x, b.y, wide, Color::new(0.0, 0.6, 0.2, 0.16));
-                    draw_line(a.x, a.y, b.x, b.y, thin, Color::new(0.2, 1.0, 0.4, 0.82));
+                    draw_line(a.x, a.y, b.x, b.y, 4.5, Color::new(0.0, 0.6, 0.2, 0.10));
+                    draw_line(a.x, a.y, b.x, b.y, 1.8, Color::new(0.2, 1.0, 0.4, 0.42));
                 } else {
-                    draw_line(a.x, a.y, b.x, b.y, 2.4, Color::new(0.08, 0.2, 0.1, 0.46));
+                    draw_line(a.x, a.y, b.x, b.y, 1.6, Color::new(0.08, 0.2, 0.1, 0.28));
                 }
             }
         }
 
         // 3. Enemy paths
+        //
+        // Locked routes are hidden by default — a second dim path on screen
+        // just confused new players. They appear only as a warning preview
+        // while the player has selected the pad/machine that would open them.
+        let previewed_entrance: Option<String> = self
+            .selected_slot
+            .and_then(|i| self.map_state.slots.get(i))
+            .and_then(|s| s.opens_entrance.clone())
+            .or_else(|| {
+                self.selected_building
+                    .and_then(|i| self.map_state.buildings.get(i))
+                    .and_then(|b| b.opens_entrance.clone())
+            });
+        let previews_path = |path: &crate::engine::map::MapPath| {
+            previewed_entrance.as_deref().is_some_and(|entrance| {
+                path.requires_entrance.as_deref() == Some(entrance)
+            })
+        };
+        // Animate route flow only while machines are actually in the field;
+        // idle routes with moving dots read as enemies that aren't there.
+        let route_live = self.wave_manager.alive_count() > 0
+            || !self.wave_manager.spawn_queue.is_empty();
+
         let max_x = self.map_state.max_visible_x();
         for path in &self.map_state.paths {
+            if !path.active && !previews_path(path) {
+                continue;
+            }
             let reveal_limit = if path.active {
                 max_x + 80.0
             } else {
@@ -347,11 +256,14 @@ impl GameplayState {
             {
                 continue;
             }
-            draw_enemy_route(path, reveal_limit);
+            draw_enemy_route(path, reveal_limit, route_live);
         }
 
         // 4. Entrance markers
         for path in &self.map_state.paths {
+            if !path.active && !previews_path(path) {
+                continue;
+            }
             let reveal_limit = if path.active {
                 max_x + 80.0
             } else {
@@ -374,18 +286,20 @@ impl GameplayState {
                     Color::new(1.0, 0.62, 0.24, 0.82),
                 );
             } else {
-                draw_circle(e.x, e.y, 10.0, Color::new(0.45, 0.08, 0.08, 0.34));
-                draw_circle_lines(e.x, e.y, 16.0, 2.0, Color::new(0.85, 0.24, 0.14, 0.28));
+                // Only drawn while the player is inspecting the pad/machine
+                // that would open this route — a warning preview.
+                draw_circle(e.x, e.y, 10.0, Color::new(0.45, 0.08, 0.08, 0.42));
+                draw_circle_lines(e.x, e.y, 16.0, 2.0, Color::new(0.85, 0.24, 0.14, 0.44));
                 // Entrances can sit on the map's edge (e.g. the northwest
                 // breach at the top border); clamp the tag inward so it isn't
                 // sliced off at the world boundary.
                 let label_y = (e.y + 4.0).max(26.0);
                 draw_ui_text(
-                    "LOCKED PATH",
+                    "OPENS THIS ROUTE",
                     e.x + 18.0,
                     label_y,
                     10.0,
-                    Color::new(0.82, 0.34, 0.22, 0.36),
+                    Color::new(0.95, 0.42, 0.26, 0.6),
                 );
             }
         }
@@ -752,7 +666,7 @@ impl GameplayState {
     }
 }
 
-fn draw_enemy_route(path: &MapPath, reveal_limit: f32) {
+fn draw_enemy_route(path: &MapPath, reveal_limit: f32, live: bool) {
     let active = path.active;
     let outer = if active {
         Color::new(0.52, 0.08, 0.03, 0.42)
@@ -777,7 +691,12 @@ fn draw_enemy_route(path: &MapPath, reveal_limit: f32) {
         draw_line(a.x, a.y, b.x, b.y, inner_width, inner);
 
         if active {
-            draw_route_flow(a, b, reveal_limit);
+            // Moving flow dots only while a wave is actually in the field —
+            // on an idle route they read as enemies that don't exist. Static
+            // chevrons always show the direction of attack.
+            if live {
+                draw_route_flow(a, b, reveal_limit);
+            }
             draw_route_arrows(a, b, reveal_limit);
         } else {
             let mid = (a + b) * 0.5;

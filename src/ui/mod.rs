@@ -540,7 +540,100 @@ pub fn draw_build_panel(
         btn_y += btn_h + padding;
     }
 
+    draw_map_key(x, btn_y, w);
+
     clicked_id
+}
+
+/// Legend for the map's glyph vocabulary, anchored to the bottom of the build
+/// panel's otherwise-empty space. New players had no way to know what the
+/// circles, crosses, and boxes on the circuit board meant.
+fn draw_map_key(x: f32, list_bottom: f32, w: f32) {
+    const ROW_H: f32 = 22.0;
+    const ROWS: usize = 6;
+    let key_h = 30.0 + ROWS as f32 * ROW_H;
+    let key_y = screen_height() - key_h - 10.0;
+    // Skip the legend entirely if the tower list already fills the panel
+    // (small windows) — never overlap real controls.
+    if key_y < list_bottom + 8.0 {
+        return;
+    }
+
+    draw_line(
+        x + 10.0,
+        key_y,
+        x + w - 10.0,
+        key_y,
+        1.0,
+        Color::new(0.25, 0.35, 0.38, 0.6),
+    );
+    draw_ui_text("MAP KEY", x + 10.0, key_y + 18.0, 12.0, dark::TEXT_DIM);
+
+    let glyph_x = x + 19.0;
+    let text_x = x + 36.0;
+    let mut row_y = key_y + 30.0;
+    let label = |text: &str, y: f32| {
+        draw_bounded_text(text, text_x, y + 5.0, w - (text_x - x) - 10.0, 11.0, dark::TEXT_DIM);
+    };
+
+    // Powered pad: green ring + plus (same glyph as the map).
+    let cy = row_y + ROW_H * 0.5 - 4.0;
+    draw_circle(glyph_x, cy, 7.0, Color::new(0.04, 0.2, 0.08, 0.9));
+    draw_circle_lines(glyph_x, cy, 9.0, 1.8, Color::new(0.25, 1.0, 0.45, 0.8));
+    draw_line(glyph_x - 3.5, cy, glyph_x + 3.5, cy, 1.6, Color::new(0.5, 1.0, 0.6, 0.8));
+    draw_line(glyph_x, cy - 3.5, glyph_x, cy + 3.5, 1.6, Color::new(0.5, 1.0, 0.6, 0.8));
+    label("Powered pad — build towers here", cy);
+    row_y += ROW_H;
+
+    // Unpowered pad: blue ring + dot.
+    let cy = row_y + ROW_H * 0.5 - 4.0;
+    draw_circle(glyph_x, cy, 7.0, Color::new(0.05, 0.12, 0.2, 0.75));
+    draw_circle_lines(glyph_x, cy, 9.0, 1.8, Color::new(0.32, 0.68, 1.0, 0.82));
+    draw_circle(glyph_x, cy, 2.4, Color::new(0.45, 0.82, 1.0, 0.7));
+    label("Unpowered pad — pay to power", cy);
+    row_y += ROW_H;
+
+    // Debris: brown circle + orange cross.
+    let cy = row_y + ROW_H * 0.5 - 4.0;
+    draw_circle(glyph_x, cy, 7.0, Color::new(0.28, 0.17, 0.08, 0.86));
+    draw_circle_lines(glyph_x, cy, 9.0, 1.6, Color::new(0.85, 0.52, 0.16, 0.78));
+    let s = 3.4;
+    draw_line(glyph_x - s, cy - s, glyph_x + s, cy + s, 1.6, Color::new(1.0, 0.66, 0.2, 0.68));
+    draw_line(glyph_x + s, cy - s, glyph_x - s, cy + s, 1.6, Color::new(1.0, 0.66, 0.2, 0.68));
+    label("Debris — clear for a new pad", cy);
+    row_y += ROW_H;
+
+    // Machine: small box.
+    let cy = row_y + ROW_H * 0.5 - 4.0;
+    draw_rectangle(glyph_x - 8.0, cy - 5.5, 16.0, 11.0, Color::new(0.28, 0.05, 0.05, 0.9));
+    draw_rectangle_lines(
+        glyph_x - 8.0,
+        cy - 5.5,
+        16.0,
+        11.0,
+        1.6,
+        Color::new(0.78, 0.18, 0.12, 0.86),
+    );
+    label("Machine — repair, then power", cy);
+    row_y += ROW_H;
+
+    // Enemy entrance: red pulse circle.
+    let cy = row_y + ROW_H * 0.5 - 4.0;
+    draw_circle(glyph_x, cy, 6.0, Color::new(0.92, 0.18, 0.08, 0.88));
+    draw_circle_lines(glyph_x, cy, 9.0, 1.8, Color::new(1.0, 0.46, 0.12, 0.7));
+    label("Enemy entrance", cy);
+    row_y += ROW_H;
+
+    // Route: orange line with a chevron.
+    let cy = row_y + ROW_H * 0.5 - 4.0;
+    draw_line(glyph_x - 9.0, cy, glyph_x + 9.0, cy, 4.0, Color::new(1.0, 0.56, 0.12, 0.9));
+    draw_triangle(
+        vec2(glyph_x + 9.0, cy),
+        vec2(glyph_x + 3.0, cy - 4.0),
+        vec2(glyph_x + 3.0, cy + 4.0),
+        Color::new(1.0, 0.78, 0.22, 0.95),
+    );
+    label("Attack route to your core", cy);
 }
 
 fn draw_bounded_text(text: &str, x: f32, y: f32, max_w: f32, font_size: f32, color: Color) {
