@@ -218,43 +218,41 @@ impl GameplayState {
         ui::draw_console_panel(rect, Color::new(0.48, 0.2, 0.16, 0.85));
         ui::draw_console_header(rect.x + 12.0, rect.y + 18.0, "THREAT", "", dark::WARNING);
 
-        let status = if self.between_waves {
-            format!(
-                "Wave {} in {:.0}s",
-                self.current_wave + 1,
-                self.wave_timer.max(0.0)
+        // Two lines only: wave status, then what the next/current wave is made
+        // of. The awareness tier already lives in the beacon panel — repeating
+        // it here was clutter (and the third line overlapped the second).
+        let (status, status_color) = if !self.beacon_active && !self.shutdown_triggered {
+            (
+                "Beacon offline — no waves".to_string(),
+                dark::TEXT_DIM,
+            )
+        } else if self.between_waves {
+            (
+                format!(
+                    "Wave {} in {:.0}s",
+                    self.current_wave + 1,
+                    self.wave_timer.max(0.0)
+                ),
+                dark::TEXT_BRIGHT,
             )
         } else {
-            format!(
-                "Wave {}: {} alive",
-                self.current_wave,
-                self.wave_manager.alive_count()
+            (
+                format!(
+                    "Wave {}: {} alive",
+                    self.current_wave,
+                    self.wave_manager.alive_count()
+                ),
+                dark::TEXT_BRIGHT,
             )
         };
+        draw_bounded_text(&status, rect.x + 12.0, rect.y + 45.0, rect.w - 24.0, 15.0, status_color);
+
+        let composition =
+            super::ui_advice::format_enemy_counts(&advice.wave_preview.counts);
         draw_bounded_text(
-            &status,
-            rect.x + 12.0,
-            rect.y + 45.0,
-            rect.w - 24.0,
-            15.0,
-            dark::TEXT_BRIGHT,
-        );
-        draw_bounded_text(
-            &format!(
-                "{} ({:.0}%)",
-                self.threat.reaction_tier().label(),
-                self.threat.awareness_level()
-            ),
+            &composition,
             rect.x + 12.0,
             rect.y + 64.0,
-            rect.w - 24.0,
-            12.0,
-            threat_color(&self.threat),
-        );
-        draw_bounded_text(
-            &advice.wave_preview.recommendation,
-            rect.x + 12.0,
-            rect.y + rect.h - 7.0,
             rect.w - 24.0,
             11.0,
             dark::TEXT_DIM,
@@ -281,7 +279,7 @@ impl GameplayState {
         draw_bounded_text(
             &format!("{}    {}", advice.suggested_action.cost, advice.risk),
             rect.x + 12.0,
-            rect.y + 50.0,
+            rect.y + 46.0,
             rect.w - 124.0,
             11.0,
             dark::TEXT_DIM,
@@ -303,21 +301,21 @@ impl GameplayState {
             let target = advice.suggested_action.target.clone();
             self.apply_advice_focus(&target, data);
         }
+
+        // Hovering the strip explains the suggestion (the old bottom panel's
+        // detail line, now on demand instead of always on screen).
+        draw_button_hint(
+            Rect::new(rect.x, rect.y, rect.w - 110.0, rect.h),
+            &advice.suggested_action.label,
+            &advice.suggested_action.detail,
+        );
     }
 
     fn draw_alert_banners(&self, x: f32, y: f32, w: f32, h: f32, alerts: &[AlertBanner]) {
         let max_visible = self.constants.ui.alert_max_visible.min(alerts.len());
         if max_visible == 0 {
-            let rect = Rect::new(x, y, w, h);
-            ui::draw_console_panel(rect, Color::new(0.2, 0.32, 0.34, 0.5));
-            draw_ui_text("ALL CLEAR", x + 12.0, y + 22.0, 13.0, dark::TEXT_DIM);
-            draw_ui_text(
-                "Hold resources or start a controlled draw",
-                x + 12.0,
-                y + 41.0,
-                11.0,
-                dark::TEXT_DIM,
-            );
+            // Nothing to report — draw nothing. An "ALL CLEAR" box was just
+            // one more panel competing for attention.
             return;
         }
 

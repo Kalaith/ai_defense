@@ -387,7 +387,44 @@ pub fn draw_build_panel(
 
     for (i, def) in tower_defs.iter().enumerate() {
         let unlocked = infos.get(i).map(|info| info.unlocked).unwrap_or(true);
-        let can_afford = unlocked && scrap >= def.cost_scrap && power >= def.cost_power;
+
+        // Locked towers render as slim reference rows — name + requirement —
+        // instead of full-size cards, so the panel doesn't shout about towers
+        // the player can't build yet.
+        if !unlocked {
+            let row_h = 34.0;
+            let row = Rect::new(x + 5.0, btn_y, w - 10.0, row_h);
+            draw_rectangle(row.x, row.y, row.w, row.h, Color::new(0.02, 0.03, 0.04, 0.5));
+            draw_rectangle(
+                row.x,
+                row.y,
+                3.0,
+                row.h,
+                Color::new(0.28, 0.32, 0.34, 0.4),
+            );
+            draw_bounded_text(&def.name, x + 15.0, btn_y + 14.0, w - 30.0, 12.0, dark::TEXT_DIM);
+            let requirement = infos
+                .get(i)
+                .map(|info| info.requirement.as_str())
+                .unwrap_or("");
+            let req_line = if requirement.is_empty() {
+                "Locked".to_string()
+            } else {
+                format!("Needs {}", requirement)
+            };
+            draw_bounded_text(
+                &req_line,
+                x + 15.0,
+                btn_y + 27.0,
+                w - 30.0,
+                10.0,
+                Color::new(0.42, 0.5, 0.52, 0.8),
+            );
+            btn_y += row_h + padding;
+            continue;
+        }
+
+        let can_afford = scrap >= def.cost_scrap && power >= def.cost_power;
         let label = format!(
             "{} ({}s/{}p)",
             def.name, def.cost_scrap as i32, def.cost_power as i32
@@ -401,8 +438,7 @@ pub fn draw_build_panel(
 
         let button_rect = Rect::new(x + 5.0, btn_y, w - 10.0, btn_h);
         let (mx, my) = mouse_position();
-        let hovered = unlocked
-            && mx >= button_rect.x
+        let hovered = mx >= button_rect.x
             && mx <= button_rect.x + button_rect.w
             && my >= btn_y
             && my <= btn_y + btn_h;
@@ -469,18 +505,7 @@ pub fn draw_build_panel(
         }
         draw_button_corners(button_rect, accent);
         draw_bounded_text(&label, x + 15.0, btn_y + 23.0, w - 50.0, 15.0, color);
-        let locked = !unlocked;
-        let requirement = infos
-            .get(i)
-            .map(|info| info.requirement.as_str())
-            .unwrap_or("");
-        let afford_line = if locked {
-            if requirement.is_empty() {
-                "Locked".to_string()
-            } else {
-                format!("Locked — needs {}", requirement)
-            }
-        } else if can_afford {
+        let afford_line = if can_afford {
             "Affordable".to_string()
         } else if scrap < def.cost_scrap {
             format!("Need {:.0} more scrap", def.cost_scrap - scrap)
@@ -495,8 +520,6 @@ pub fn draw_build_panel(
             11.0,
             if can_afford {
                 dark::POSITIVE
-            } else if locked {
-                dark::TEXT_DIM
             } else {
                 dark::WARNING
             },

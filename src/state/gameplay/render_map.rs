@@ -42,9 +42,26 @@ impl GameplayState {
         }
 
         // 1b. Section backplates + corridor connectors
+        //
+        // Hidden sections used to draw their name + "UNPOWERED" tag, spoiling
+        // the layout and cluttering the map with wings the player can't touch
+        // yet. Now only the *next* locked section renders — as an anonymous
+        // teaser — and everything further out is simply absent until revealed.
         let sections = self.map_state.section_render_info();
+        let next_hidden = sections
+            .iter()
+            .filter(|s| !s.visible)
+            .map(|s| s.index)
+            .min();
+        // Section name tags are orientation aids for the zoomed-out view; when
+        // the player zooms in to work on pads they become oversized text lying
+        // across the play area, so fade them out with zoom.
+        let label_fade = ((1.35 - self.camera.zoom) / 0.5).clamp(0.0, 1.0);
         let mut section_centers: Vec<(Vec2, bool)> = Vec::new();
         for section in &sections {
+            if !section.visible && Some(section.index) != next_hidden {
+                continue;
+            }
             let pad_x = 80.0 + (section.index as f32 * 6.0);
             let pad_y = 70.0 + (section.index as f32 * 4.0);
             let min = vec2(section.min.x - pad_x, section.min.y - pad_y);
@@ -178,35 +195,42 @@ impl GameplayState {
                 draw_rectangle_lines(min.x, min.y, w, h, 2.0, border);
             }
 
-            let label_color = if section.visible {
-                Color::new(0.48, 0.68, 0.62, 0.36)
-            } else {
-                Color::new(0.30, 0.42, 0.46, 0.28)
-            };
-            draw_ui_text(
-                &section.label,
-                min.x + 14.0,
-                min.y + 20.0,
-                13.0,
-                label_color,
-            );
-
-            if !section.visible {
-                draw_ui_text(
-                    "UNPOWERED",
-                    min.x + 14.0,
-                    min.y + 38.0,
-                    11.0,
-                    Color::new(0.35, 0.52, 0.58, 0.55),
-                );
-            } else if let Some(ref entrance) = section.unlock_entrance {
-                draw_ui_text(
-                    &format!("Can open {}", entrance_label(entrance)),
-                    min.x + 14.0,
-                    min.y + 38.0,
-                    11.0,
-                    Color::new(0.95, 0.7, 0.24, 0.72),
-                );
+            if label_fade > 0.01 {
+                if section.visible {
+                    draw_ui_text(
+                        &section.label,
+                        min.x + 14.0,
+                        min.y + 20.0,
+                        13.0,
+                        Color::new(0.48, 0.68, 0.62, 0.36 * label_fade),
+                    );
+                    if let Some(ref entrance) = section.unlock_entrance {
+                        draw_ui_text(
+                            &format!("Can open {}", entrance_label(entrance)),
+                            min.x + 14.0,
+                            min.y + 38.0,
+                            11.0,
+                            Color::new(0.95, 0.7, 0.24, 0.72 * label_fade),
+                        );
+                    }
+                } else {
+                    // The single next-locked teaser: no name spoiler, just a
+                    // hint that powering the frontier reveals it.
+                    draw_ui_text(
+                        "LOCKED SECTION",
+                        min.x + 14.0,
+                        min.y + 20.0,
+                        12.0,
+                        Color::new(0.30, 0.42, 0.46, 0.34 * label_fade),
+                    );
+                    draw_ui_text(
+                        "Power the frontier to reveal",
+                        min.x + 14.0,
+                        min.y + 38.0,
+                        10.0,
+                        Color::new(0.35, 0.52, 0.58, 0.4 * label_fade),
+                    );
+                }
             }
 
             let center = vec2((min.x + max.x) * 0.5, (min.y + max.y) * 0.5);
@@ -352,10 +376,14 @@ impl GameplayState {
             } else {
                 draw_circle(e.x, e.y, 10.0, Color::new(0.45, 0.08, 0.08, 0.34));
                 draw_circle_lines(e.x, e.y, 16.0, 2.0, Color::new(0.85, 0.24, 0.14, 0.28));
+                // Entrances can sit on the map's edge (e.g. the northwest
+                // breach at the top border); clamp the tag inward so it isn't
+                // sliced off at the world boundary.
+                let label_y = (e.y + 4.0).max(26.0);
                 draw_ui_text(
                     "LOCKED PATH",
                     e.x + 18.0,
-                    e.y + 4.0,
+                    label_y,
                     10.0,
                     Color::new(0.82, 0.34, 0.22, 0.36),
                 );

@@ -12,7 +12,6 @@ use super::GameplayState;
 
 #[derive(Clone, Debug)]
 pub struct UiAdvice {
-    pub objective: String,
     pub suggested_action: SuggestedAction,
     pub risk: String,
     pub alerts: Vec<AlertBanner>,
@@ -116,11 +115,9 @@ impl GameplayState {
         });
 
         let suggested_action = self.suggest_next_action(data, &power);
-        let objective = objective_for_action(&suggested_action);
         let risk = suggested_action.risk.clone();
 
         UiAdvice {
-            objective,
             suggested_action,
             risk,
             alerts,
@@ -682,12 +679,21 @@ impl GameplayState {
             .map(|(idx, _, _, _)| idx)
     }
 
+    /// A building the advisor may recommend: visible AND within the revealed
+    /// frontier. Buildings that belong to no section (e.g. the power turbine)
+    /// pass `is_building_visible` unconditionally, so without the x-gate the
+    /// advisor would suggest machinery the player can't even scroll to.
+    fn building_reachable(&self, building: &MapBuilding) -> bool {
+        self.map_state.is_building_visible(building)
+            && building.position.x <= self.map_state.max_visible_x() + 120.0
+    }
+
     fn best_power_system(&self) -> Option<usize> {
         self.map_state
             .buildings
             .iter()
             .enumerate()
-            .filter(|(_, b)| self.map_state.is_building_visible(b) && b.boon.power_per_sec > 0.0)
+            .filter(|(_, b)| self.building_reachable(b) && b.boon.power_per_sec > 0.0)
             .filter(|(_, b)| {
                 matches!(b.state, BuildingState::Broken | BuildingState::Repaired)
                     && self.can_progress_building(b)
@@ -706,7 +712,7 @@ impl GameplayState {
             .buildings
             .iter()
             .enumerate()
-            .filter(|(_, b)| self.map_state.is_building_visible(b))
+            .filter(|(_, b)| self.building_reachable(b))
             .filter(|(_, b)| b.boon.food_per_sec > 0.0 || b.boon.water_per_sec > 0.0)
             .filter(|(_, b)| {
                 matches!(b.state, BuildingState::Broken | BuildingState::Repaired)
@@ -725,7 +731,7 @@ impl GameplayState {
             .buildings
             .iter()
             .enumerate()
-            .filter(|(_, b)| self.map_state.is_building_visible(b))
+            .filter(|(_, b)| self.building_reachable(b))
             .filter(|(_, b)| b.state == BuildingState::Broken)
             .filter(|(_, b)| !affordable_only || self.resources.scrap >= b.repair_cost)
             .max_by(|(_, a), (_, b)| {
@@ -741,7 +747,7 @@ impl GameplayState {
             .buildings
             .iter()
             .enumerate()
-            .filter(|(_, b)| self.map_state.is_building_visible(b))
+            .filter(|(_, b)| self.building_reachable(b))
             .filter(|(_, b)| b.state == BuildingState::Repaired)
             .filter(|(_, b)| self.resources.scrap >= b.power_cost)
             .max_by(|(_, a), (_, b)| {
@@ -845,18 +851,6 @@ impl GameplayState {
         } else {
             best
         }
-    }
-}
-
-fn objective_for_action(action: &SuggestedAction) -> String {
-    match action.target {
-        AdviceTarget::Building(_) => "Bring the next machine online".to_string(),
-        AdviceTarget::Slot(_) => "Prepare a stronger firing position".to_string(),
-        AdviceTarget::TowerDef(_) => "Establish first lane coverage".to_string(),
-        AdviceTarget::BeaconStart => "Start a controlled resource draw".to_string(),
-        AdviceTarget::BeaconShutdown => "End the beacon before risk spikes".to_string(),
-        AdviceTarget::ScavengerRecall => "Recover field teams safely".to_string(),
-        AdviceTarget::None => "Stabilize the command deck".to_string(),
     }
 }
 

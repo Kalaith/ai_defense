@@ -5,12 +5,24 @@ use macroquad::prelude::*;
 use macroquad_toolkit::colors::dark;
 
 use super::helpers::entrance_label;
-use super::ui_advice::{format_enemy_counts, AdviceTarget, WavePreviewCard};
+use super::ui_advice::{format_enemy_counts, WavePreviewCard};
 use super::GameplayState;
 use macroquad_toolkit::ui::{draw_ui_text, measure_ui_text};
 
 impl GameplayState {
     pub(super) fn draw_slot_panel(&mut self, data: &GameData) {
+        // Only show the context panel when something is actually selected.
+        // With nothing selected it used to repeat the NEXT STEP strip's advice
+        // (with a second FOCUS button) — pure duplication that also hid ~130px
+        // of map.
+        let has_selection = self.selected_core
+            || self.selected_tower.is_some()
+            || self.selected_slot.is_some()
+            || self.selected_building.is_some();
+        if !has_selection {
+            return;
+        }
+
         let play_x = self.constants.ui.build_panel_w + 8.0;
         let play_w =
             (screen_width() - self.constants.ui.build_panel_w - self.constants.ui.sector_panel_w)
@@ -32,91 +44,6 @@ impl GameplayState {
             self.draw_slot_context(rect, idx, data);
         } else if let Some(idx) = self.selected_building {
             self.draw_building_context(rect, idx);
-        } else {
-            self.draw_default_context(rect, data);
-        }
-    }
-
-    fn draw_default_context(&mut self, rect: Rect, data: &GameData) {
-        let advice = self.build_ui_advice(data);
-        let action_w = rect.w - 210.0;
-        ui::draw_console_header(
-            rect.x + 16.0,
-            rect.y + 27.0,
-            "COMMAND CONTEXT",
-            &advice.objective,
-            dark::ACCENT,
-        );
-        draw_bounded_text(
-            &advice.suggested_action.label,
-            rect.x + 16.0,
-            rect.y + 61.0,
-            action_w,
-            20.0,
-            dark::TEXT_BRIGHT,
-        );
-        draw_bounded_text(
-            &advice.suggested_action.detail,
-            rect.x + 16.0,
-            rect.y + 83.0,
-            action_w,
-            13.0,
-            dark::TEXT_DIM,
-        );
-
-        let chip_y = rect.y + rect.h - 34.0;
-        let chip_w = ((action_w - 18.0) / 3.0).max(112.0);
-        draw_info_chip(
-            "COST",
-            &advice.suggested_action.cost.replace("Cost: ", ""),
-            rect.x + 16.0,
-            chip_y,
-            chip_w,
-            dark::TEXT_BRIGHT,
-        );
-        draw_info_chip(
-            "RISK",
-            &advice.risk.replace("Risk: ", ""),
-            rect.x + 16.0 + chip_w + 9.0,
-            chip_y,
-            chip_w,
-            dark::WARNING,
-        );
-        draw_info_chip(
-            "THREAT READ",
-            &format_enemy_counts(&advice.wave_preview.counts),
-            rect.x + 16.0 + (chip_w + 9.0) * 2.0,
-            chip_y,
-            chip_w,
-            dark::ACCENT,
-        );
-
-        let btn_state = if matches!(advice.suggested_action.target, AdviceTarget::None) {
-            ConsoleButtonState::Disabled
-        } else {
-            ConsoleButtonState::Recommended
-        };
-        draw_bounded_text(
-            &format!(
-                "Scrap {:.0} | Battery {:.0}",
-                self.resources.scrap, self.resources.power
-            ),
-            rect.x + rect.w - 188.0,
-            rect.y + 33.0,
-            174.0,
-            12.0,
-            dark::TEXT_DIM,
-        );
-        if ui::draw_console_button(
-            rect.x + rect.w - 188.0,
-            rect.y + 45.0,
-            172.0,
-            50.0,
-            "FOCUS ACTION",
-            btn_state,
-        ) {
-            let target = advice.suggested_action.target.clone();
-            self.apply_advice_focus(&target, data);
         }
     }
 
@@ -887,14 +814,6 @@ fn building_icon(boon: &crate::data::BuildingBoon, risk: f32) -> ConsoleIcon {
     } else {
         ConsoleIcon::Locked
     }
-}
-
-fn draw_info_chip(label: &str, value: &str, x: f32, y: f32, w: f32, color: Color) {
-    let h = 28.0;
-    draw_rectangle(x, y, w, h, Color::new(0.055, 0.07, 0.078, 0.92));
-    draw_rectangle_lines(x, y, w, h, 1.5, Color::new(color.r, color.g, color.b, 0.62));
-    draw_bounded_text(label, x + 8.0, y + 10.0, w - 16.0, 9.0, dark::TEXT_DIM);
-    draw_bounded_text(value, x + 8.0, y + 23.0, w - 16.0, 12.0, color);
 }
 
 fn draw_tooltip_box(mx: f32, my: f32, w: f32, lines: &[String]) {
