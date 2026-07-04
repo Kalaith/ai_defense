@@ -57,6 +57,23 @@ impl Game {
         }
     }
 
+    /// Seed a specific scene for the screenshot harness (see
+    /// `docs/screenshot_capture_harness_guide.md`). Unrecognized scene names
+    /// fall through to whatever the normal boot flow lands on.
+    pub fn begin_capture_scene(&mut self, scene: &str) {
+        match scene {
+            "menu" => self.state = GameState::Menu(MenuState::new()),
+            "gameplay" => {
+                let mut gameplay = GameplayState::new(&self.data);
+                // Skip the first-run premise card so the capture shows the
+                // actual factory floor instead of a modal.
+                gameplay.show_intro = false;
+                self.state = GameState::Gameplay(gameplay);
+            }
+            _ => {}
+        }
+    }
+
     fn transition(&mut self, transition: StateTransition) {
         self.state = match transition {
             StateTransition::ToMenu => GameState::Menu(MenuState::new()),

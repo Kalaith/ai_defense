@@ -7,13 +7,18 @@ mod ui;
 
 use game::Game;
 use macroquad::prelude::*;
+use macroquad_toolkit::capture;
 use macroquad_toolkit::colors::dark;
 
 fn window_conf() -> Conf {
+    // Built by hand (not capture::capture_window_conf) to keep the
+    // sample_count: 0 / high_dpi: false fields this game already relies on;
+    // window_width/height still honor the AI_DEFENSE_WINDOW_* overrides so the
+    // capture harness can pick a deterministic framebuffer size.
     Conf {
         window_title: "Last Assembly".to_owned(),
-        window_width: 1280,
-        window_height: 720,
+        window_width: capture::env_i32("AI_DEFENSE_WINDOW_WIDTH", 1280),
+        window_height: capture::env_i32("AI_DEFENSE_WINDOW_HEIGHT", 720),
         window_resizable: true,
         sample_count: 0,
         high_dpi: false,
@@ -24,6 +29,20 @@ fn window_conf() -> Conf {
 #[macroquad::main(window_conf)]
 async fn main() {
     let mut game = Game::new().await;
+
+    // Screenshot harness: when AI_DEFENSE_CAPTURE_PATH is set, seed a scene,
+    // render deterministic frames, write a PNG, and exit. See
+    // docs/screenshot_capture_harness_guide.md.
+    if let Some(config) = capture::CaptureConfig::from_env("AI_DEFENSE") {
+        game.begin_capture_scene(&config.scene);
+        capture::run_capture(&config, |_dt| {
+            clear_background(dark::BACKGROUND);
+            game.update();
+            game.draw();
+        })
+        .await;
+        return;
+    }
 
     loop {
         clear_background(dark::BACKGROUND);
