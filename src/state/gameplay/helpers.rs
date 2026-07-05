@@ -17,6 +17,8 @@ pub fn entrance_label(id: &str) -> &str {
         "south_gate" => "South Gate",
         "east_breach" => "East Breach",
         "northwest_breach" => "Northwest Breach",
+        // Route ids double as entrance labels on the map.
+        "main_west" => "West Approach",
         _ => id,
     }
 }

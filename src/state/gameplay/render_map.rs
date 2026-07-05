@@ -72,12 +72,14 @@ impl GameplayState {
             let fill = if section.visible {
                 Color::new(0.025 + base, 0.08 + base * 0.5, 0.06 + base * 0.25, 0.68)
             } else {
-                Color::new(0.025, 0.045, 0.055, 0.28)
+                // The locked teaser must sit *below* revealed content in
+                // visual weight — barely-there outline, not a bright slab.
+                Color::new(0.02, 0.035, 0.045, 0.14)
             };
             let border = if section.visible {
                 Color::new(0.12 + base, 0.32 + base, 0.22 + base * 0.45, 0.82)
             } else {
-                Color::new(0.17, 0.28, 0.32, 0.34)
+                Color::new(0.17, 0.28, 0.32, 0.22)
             };
 
             // Uniform, quiet backplate for every section. The old per-theme
@@ -132,19 +134,14 @@ impl GameplayState {
         for i in 0..section_centers.len().saturating_sub(1) {
             let (a, a_visible) = section_centers[i];
             let (b, b_visible) = section_centers[i + 1];
-            let active_link = a_visible && b_visible;
-            let outer = if active_link {
-                Color::new(0.02, 0.28, 0.18, 0.44)
-            } else {
-                Color::new(0.08, 0.12, 0.14, 0.24)
-            };
-            let inner = if active_link {
-                Color::new(0.18, 0.58, 0.36, 0.72)
-            } else {
-                Color::new(0.2, 0.32, 0.36, 0.26)
-            };
-            draw_line(a.x, a.y, b.x, b.y, 10.0, outer);
-            draw_line(a.x, a.y, b.x, b.y, 4.0, inner);
+            // Only link sections the player has actually revealed. A corridor
+            // stroke to the locked teaser cut a meaningless diagonal across
+            // the play area.
+            if !a_visible || !b_visible {
+                continue;
+            }
+            draw_line(a.x, a.y, b.x, b.y, 10.0, Color::new(0.02, 0.28, 0.18, 0.44));
+            draw_line(a.x, a.y, b.x, b.y, 4.0, Color::new(0.18, 0.58, 0.36, 0.72));
         }
 
         // 2. Traces
@@ -306,7 +303,10 @@ impl GameplayState {
 
         // 5. Tower slots
         for (idx, slot) in self.map_state.slots.iter().enumerate() {
-            if !self.map_state.is_slot_visible(slot) {
+            // Slots outside any section (map.json gaps) pass is_slot_visible
+            // unconditionally, so also gate on the revealed frontier — same
+            // rule the buildings below already use.
+            if !self.map_state.is_slot_visible(slot) || slot.position.x > max_x + 120.0 {
                 continue;
             }
             let selected = self.selected_slot == Some(idx);

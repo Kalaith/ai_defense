@@ -1606,7 +1606,11 @@
         "slot_05",
         "slot_06",
         "slot_07",
-        "slot_08"
+        "slot_08",
+        "slot_45",
+        "slot_46",
+        "slot_47",
+        "slot_48"
       ],
       "unlock_entrance": null,
       "visible_at_start": true
@@ -1662,7 +1666,10 @@
         "slot_25",
         "slot_26",
         "slot_27",
-        "slot_28"
+        "slot_28",
+        "slot_29",
+        "slot_30",
+        "slot_31"
       ],
       "unlock_entrance": "north_gate",
       "visible_at_start": false

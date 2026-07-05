@@ -137,6 +137,9 @@ pub struct MapState {
     sections: Vec<MapSection>,
     slot_sections: HashMap<String, usize>,
     building_sections: HashMap<String, usize>,
+    /// Force every section visible (survival-proof/testing) — progressive
+    /// disclosure would otherwise truncate enemy paths at the frontier.
+    reveal_all: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -217,9 +220,18 @@ impl MapState {
             sections,
             slot_sections,
             building_sections,
+            reveal_all: false,
         };
         state.update_section_visibility();
         state
+    }
+
+    /// Reveal every section permanently (survival-proof/testing).
+    pub fn reveal_all_sections(&mut self) {
+        self.reveal_all = true;
+        for section in &mut self.sections {
+            section.visible = true;
+        }
     }
 
     fn build_sections(
@@ -255,7 +267,7 @@ impl MapState {
     }
 
     pub fn update_section_visibility(&mut self) {
-        if self.sections.is_empty() {
+        if self.reveal_all || self.sections.is_empty() {
             return;
         }
         let mut base_visible_max = 0usize;

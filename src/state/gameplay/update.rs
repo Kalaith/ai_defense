@@ -18,6 +18,9 @@ impl GameplayState {
         self.survival_proof_active = true;
         self.wave_manager.enemy_tuning.scout_dodge_chance = 0.0;
         self.wave_manager.enemy_tuning.saboteur_skip_chance = 0.0;
+        // The proof exercises combat math over the full route; progressive
+        // disclosure would truncate enemy paths at the revealed frontier.
+        self.map_state.reveal_all_sections();
     }
 
     pub(crate) fn update_survival_proof(&mut self, data: &GameData) -> Option<StateTransition> {
