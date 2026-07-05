@@ -376,7 +376,8 @@ impl MapState {
             }
         }
         for building in &self.buildings {
-            if self.building_sections.contains_key(&building.id) && self.is_building_visible(building)
+            if self.building_sections.contains_key(&building.id)
+                && self.is_building_visible(building)
             {
                 min = min.min(building.position);
                 max = max.max(building.position);

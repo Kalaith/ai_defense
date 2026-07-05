@@ -202,9 +202,7 @@ impl GameplayState {
         let view_center = (vmin + vmax) * 0.5;
         let content_w = (vmax.x - vmin.x).max(1.0) + 360.0;
         let content_h = (vmax.y - vmin.y).max(1.0) + 320.0;
-        let init_zoom = (900.0 / content_w)
-            .min(560.0 / content_h)
-            .clamp(0.6, 1.7);
+        let init_zoom = (900.0 / content_w).min(560.0 / content_h).clamp(0.6, 1.7);
         let cam_pad = 240.0;
         let cam_min = vec2((vmin.x - cam_pad).max(0.0), (vmin.y - cam_pad).max(0.0));
         let cam_max = vec2(

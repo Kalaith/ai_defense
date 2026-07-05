@@ -394,15 +394,22 @@ pub fn draw_build_panel(
         if !unlocked {
             let row_h = 34.0;
             let row = Rect::new(x + 5.0, btn_y, w - 10.0, row_h);
-            draw_rectangle(row.x, row.y, row.w, row.h, Color::new(0.02, 0.03, 0.04, 0.5));
             draw_rectangle(
                 row.x,
                 row.y,
-                3.0,
+                row.w,
                 row.h,
-                Color::new(0.28, 0.32, 0.34, 0.4),
+                Color::new(0.02, 0.03, 0.04, 0.5),
             );
-            draw_bounded_text(&def.name, x + 15.0, btn_y + 14.0, w - 30.0, 12.0, dark::TEXT_DIM);
+            draw_rectangle(row.x, row.y, 3.0, row.h, Color::new(0.28, 0.32, 0.34, 0.4));
+            draw_bounded_text(
+                &def.name,
+                x + 15.0,
+                btn_y + 14.0,
+                w - 30.0,
+                12.0,
+                dark::TEXT_DIM,
+            );
             let requirement = infos
                 .get(i)
                 .map(|info| info.requirement.as_str())
@@ -573,15 +580,36 @@ fn draw_map_key(x: f32, list_bottom: f32, w: f32) {
     let text_x = x + 36.0;
     let mut row_y = key_y + 30.0;
     let label = |text: &str, y: f32| {
-        draw_bounded_text(text, text_x, y + 5.0, w - (text_x - x) - 10.0, 11.0, dark::TEXT_DIM);
+        draw_bounded_text(
+            text,
+            text_x,
+            y + 5.0,
+            w - (text_x - x) - 10.0,
+            11.0,
+            dark::TEXT_DIM,
+        );
     };
 
     // Powered pad: green ring + plus (same glyph as the map).
     let cy = row_y + ROW_H * 0.5 - 4.0;
     draw_circle(glyph_x, cy, 7.0, Color::new(0.04, 0.2, 0.08, 0.9));
     draw_circle_lines(glyph_x, cy, 9.0, 1.8, Color::new(0.25, 1.0, 0.45, 0.8));
-    draw_line(glyph_x - 3.5, cy, glyph_x + 3.5, cy, 1.6, Color::new(0.5, 1.0, 0.6, 0.8));
-    draw_line(glyph_x, cy - 3.5, glyph_x, cy + 3.5, 1.6, Color::new(0.5, 1.0, 0.6, 0.8));
+    draw_line(
+        glyph_x - 3.5,
+        cy,
+        glyph_x + 3.5,
+        cy,
+        1.6,
+        Color::new(0.5, 1.0, 0.6, 0.8),
+    );
+    draw_line(
+        glyph_x,
+        cy - 3.5,
+        glyph_x,
+        cy + 3.5,
+        1.6,
+        Color::new(0.5, 1.0, 0.6, 0.8),
+    );
     label("Powered pad — build towers here", cy);
     row_y += ROW_H;
 
@@ -598,14 +626,34 @@ fn draw_map_key(x: f32, list_bottom: f32, w: f32) {
     draw_circle(glyph_x, cy, 7.0, Color::new(0.28, 0.17, 0.08, 0.86));
     draw_circle_lines(glyph_x, cy, 9.0, 1.6, Color::new(0.85, 0.52, 0.16, 0.78));
     let s = 3.4;
-    draw_line(glyph_x - s, cy - s, glyph_x + s, cy + s, 1.6, Color::new(1.0, 0.66, 0.2, 0.68));
-    draw_line(glyph_x + s, cy - s, glyph_x - s, cy + s, 1.6, Color::new(1.0, 0.66, 0.2, 0.68));
+    draw_line(
+        glyph_x - s,
+        cy - s,
+        glyph_x + s,
+        cy + s,
+        1.6,
+        Color::new(1.0, 0.66, 0.2, 0.68),
+    );
+    draw_line(
+        glyph_x + s,
+        cy - s,
+        glyph_x - s,
+        cy + s,
+        1.6,
+        Color::new(1.0, 0.66, 0.2, 0.68),
+    );
     label("Debris — clear for a new pad", cy);
     row_y += ROW_H;
 
     // Machine: small box.
     let cy = row_y + ROW_H * 0.5 - 4.0;
-    draw_rectangle(glyph_x - 8.0, cy - 5.5, 16.0, 11.0, Color::new(0.28, 0.05, 0.05, 0.9));
+    draw_rectangle(
+        glyph_x - 8.0,
+        cy - 5.5,
+        16.0,
+        11.0,
+        Color::new(0.28, 0.05, 0.05, 0.9),
+    );
     draw_rectangle_lines(
         glyph_x - 8.0,
         cy - 5.5,
@@ -626,7 +674,14 @@ fn draw_map_key(x: f32, list_bottom: f32, w: f32) {
 
     // Route: orange line with a chevron.
     let cy = row_y + ROW_H * 0.5 - 4.0;
-    draw_line(glyph_x - 9.0, cy, glyph_x + 9.0, cy, 4.0, Color::new(1.0, 0.56, 0.12, 0.9));
+    draw_line(
+        glyph_x - 9.0,
+        cy,
+        glyph_x + 9.0,
+        cy,
+        4.0,
+        Color::new(1.0, 0.56, 0.12, 0.9),
+    );
     draw_triangle(
         vec2(glyph_x + 9.0, cy),
         vec2(glyph_x + 3.0, cy - 4.0),
@@ -765,12 +820,26 @@ pub fn draw_settings_overlay(settings: &mut crate::save::Settings) -> SettingsAc
         changed = true;
     }
     y += row_h + gap;
-    if toggle_row(row_x, y, row_w, row_h, "Start runs at 2x speed", settings.default_fast_speed) {
+    if toggle_row(
+        row_x,
+        y,
+        row_w,
+        row_h,
+        "Start runs at 2x speed",
+        settings.default_fast_speed,
+    ) {
         settings.default_fast_speed = !settings.default_fast_speed;
         changed = true;
     }
     y += row_h + gap;
-    if let Some(v) = slider_row(row_x, y, row_w, row_h, "Master volume", settings.master_volume) {
+    if let Some(v) = slider_row(
+        row_x,
+        y,
+        row_w,
+        row_h,
+        "Master volume",
+        settings.master_volume,
+    ) {
         settings.master_volume = v;
         changed = true;
     }

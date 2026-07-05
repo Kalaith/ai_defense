@@ -171,7 +171,9 @@ impl GameplayState {
             scavengers_lost: self.scavengers_lost.saturating_sub(b.lost),
             scrap: (self.scavenger_scrap_gained - b.scrap).max(0.0),
             food: (self.scavenger_food_gained - b.food).max(0.0),
-            population: self.scavenger_population_gained.saturating_sub(b.population),
+            population: self
+                .scavenger_population_gained
+                .saturating_sub(b.population),
             beacon_phase: self.beacon_phase.clone(),
         }
     }

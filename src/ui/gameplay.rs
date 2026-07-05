@@ -574,7 +574,13 @@ impl GameplayState {
 
         let bw = 220.0;
         let bh = 42.0;
-        if button(cx - bw * 0.5, py + ph - bh - 22.0, bw, bh, "Hold the Beacon") {
+        if button(
+            cx - bw * 0.5,
+            py + ph - bh - 22.0,
+            bw,
+            bh,
+            "Hold the Beacon",
+        ) {
             self.show_intro = false;
         }
     }
@@ -775,13 +781,7 @@ impl GameplayState {
         ) {
             self.dismiss_salvage_report();
         }
-        if button(
-            panel_x + 40.0 + btn_w,
-            btn_y,
-            btn_w,
-            btn_h,
-            "End Campaign",
-        ) {
+        if button(panel_x + 40.0 + btn_w, btn_y, btn_w, btn_h, "End Campaign") {
             self.end_campaign_requested = true;
         }
     }

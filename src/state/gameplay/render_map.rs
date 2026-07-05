@@ -226,14 +226,14 @@ impl GameplayState {
                     .and_then(|b| b.opens_entrance.clone())
             });
         let previews_path = |path: &crate::engine::map::MapPath| {
-            previewed_entrance.as_deref().is_some_and(|entrance| {
-                path.requires_entrance.as_deref() == Some(entrance)
-            })
+            previewed_entrance
+                .as_deref()
+                .is_some_and(|entrance| path.requires_entrance.as_deref() == Some(entrance))
         };
         // Animate route flow only while machines are actually in the field;
         // idle routes with moving dots read as enemies that aren't there.
-        let route_live = self.wave_manager.alive_count() > 0
-            || !self.wave_manager.spawn_queue.is_empty();
+        let route_live =
+            self.wave_manager.alive_count() > 0 || !self.wave_manager.spawn_queue.is_empty();
 
         let max_x = self.map_state.max_visible_x();
         for path in &self.map_state.paths {

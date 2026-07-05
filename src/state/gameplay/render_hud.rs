@@ -222,10 +222,7 @@ impl GameplayState {
         // of. The awareness tier already lives in the beacon panel — repeating
         // it here was clutter (and the third line overlapped the second).
         let (status, status_color) = if !self.beacon_active && !self.shutdown_triggered {
-            (
-                "Beacon offline — no waves".to_string(),
-                dark::TEXT_DIM,
-            )
+            ("Beacon offline — no waves".to_string(), dark::TEXT_DIM)
         } else if self.between_waves {
             (
                 format!(
@@ -245,10 +242,16 @@ impl GameplayState {
                 dark::TEXT_BRIGHT,
             )
         };
-        draw_bounded_text(&status, rect.x + 12.0, rect.y + 45.0, rect.w - 24.0, 15.0, status_color);
+        draw_bounded_text(
+            &status,
+            rect.x + 12.0,
+            rect.y + 45.0,
+            rect.w - 24.0,
+            15.0,
+            status_color,
+        );
 
-        let composition =
-            super::ui_advice::format_enemy_counts(&advice.wave_preview.counts);
+        let composition = super::ui_advice::format_enemy_counts(&advice.wave_preview.counts);
         draw_bounded_text(
             &composition,
             rect.x + 12.0,
@@ -718,10 +721,8 @@ fn truncate_to_width(text: &str, max_w: f32, font_size: u16) -> String {
 /// it. Used to spell out what the beacon-control buttons actually do.
 fn draw_button_hint(anchor: Rect, title: &str, body: &str) {
     let (mx, my) = mouse_position();
-    let hovered = mx >= anchor.x
-        && mx <= anchor.x + anchor.w
-        && my >= anchor.y
-        && my <= anchor.y + anchor.h;
+    let hovered =
+        mx >= anchor.x && mx <= anchor.x + anchor.w && my >= anchor.y && my <= anchor.y + anchor.h;
     if !hovered {
         return;
     }
