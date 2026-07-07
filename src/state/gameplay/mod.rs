@@ -89,6 +89,19 @@ pub struct GameplayState {
     pub shutdown_triggered: bool,
     pub beacon_active: bool,
 
+    // The sacrifice ledger: while the beacon screams it draws machines away from
+    // other survivors, letting them evacuate. `pending_evacuees` accrues during
+    // the current beacon window and only banks into the persistent
+    // `survivors_evacuated` total on a clean shutdown — a defeat loses it. This
+    // is the campaign's real score and the reason to hold a loud beacon longer.
+    pub survivors_evacuated: u32,
+    pub pending_evacuees: f32,
+    pub next_evac_milestone: u32,
+
+    // Permanent, per-cycle wave-budget escalation. The machines learn you are
+    // the bait, so this never resets — it makes the free low-phase farm decay.
+    pub machine_escalation: f32,
+
     // Beacon cycle loop: shutdown yields a salvage report, then the player
     // rebuilds and can raise the beacon again instead of the run ending.
     pub salvage_report: Option<SalvageReport>,
@@ -143,6 +156,12 @@ pub struct SalvageReport {
     pub food: f32,
     pub population: u32,
     pub beacon_phase: BeaconPhase,
+    /// Survivors the beacon let escape during this cycle, and the running total.
+    pub survivors_evacuated_cycle: u32,
+    pub survivors_evacuated_total: u32,
+    /// Permanent assault escalation now in effect, as a percentage, so the
+    /// player sees the farm getting harder each cycle.
+    pub escalation_pct: f32,
 }
 
 pub struct Notification {
@@ -305,6 +324,11 @@ impl GameplayState {
             shutdown_triggered: false,
             beacon_active: false,
 
+            survivors_evacuated: 0,
+            pending_evacuees: 0.0,
+            next_evac_milestone: data.constants.evacuation.milestone_interval,
+            machine_escalation: 0.0,
+
             salvage_report: None,
             beacon_cycles_completed: 0,
             cycle_baseline: CycleBaseline::default(),
@@ -461,6 +485,12 @@ impl GameplayState {
         self.selected_upgrade = None;
         self.coach.active = false;
         self.show_intro = false;
+
+        self.survivors_evacuated = save.survivors_evacuated;
+        self.machine_escalation = save.machine_escalation;
+        let interval = self.constants.evacuation.milestone_interval.max(1);
+        self.next_evac_milestone = (self.survivors_evacuated / interval + 1) * interval;
+
         self.update_beacon();
     }
 
@@ -527,6 +557,8 @@ impl GameplayState {
                     state: b.state.as_str().to_string(),
                 })
                 .collect(),
+            survivors_evacuated: self.survivors_evacuated,
+            machine_escalation: self.machine_escalation,
         }
     }
 

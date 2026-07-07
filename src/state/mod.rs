@@ -30,6 +30,11 @@ pub struct RunSummary {
     pub factory_online: usize,
     pub population_surviving: u32,
     pub shutdown_triggered: bool,
+    /// Total survivors the beacon evacuated across the whole campaign — the
+    /// headline score. `evacuees_lost` counts those still pending when the
+    /// factory fell (a defeat loses the current beacon window's progress).
+    pub survivors_evacuated: u32,
+    pub evacuees_lost: u32,
 }
 
 #[allow(clippy::enum_variant_names)]

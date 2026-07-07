@@ -14,7 +14,8 @@
   },
   "population": {
     "food_consumption_per_person": 1.0,
-    "food_per_person_per_sec": 0.02,
+    "food_per_person_per_sec": 0.03,
+    "beacon_food_multiplier": 1.2,
     "starve_morale_loss_per_sec": 2.0,
     "starve_health_loss_per_sec": 1.0,
     "recover_morale_per_sec": 1.0,
@@ -37,7 +38,15 @@
     "budget_multiplier": 1.0,
     "budget_base": 8,
     "budget_per_wave": 4,
-    "commander_every": 5
+    "commander_every": 5,
+    "escalation_per_cycle": 0.18
+  },
+  "evacuation": {
+    "warm_rate": 0.15,
+    "sustained_rate": 0.45,
+    "screaming_rate": 1.0,
+    "terminal_rate": 1.8,
+    "milestone_interval": 25
   },
   "threat": {
     "budget_divisor": 10.0,

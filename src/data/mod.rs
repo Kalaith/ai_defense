@@ -50,6 +50,7 @@ pub struct GameConstants {
     pub economy: EconomyConstants,
     pub population: PopulationConstants,
     pub waves: WaveConstants,
+    pub evacuation: EvacuationConstants,
     pub threat: ThreatConstants,
     pub enemy: EnemyConstants,
     pub tower: TowerConstants,
@@ -83,6 +84,9 @@ pub struct EconomyConstants {
 pub struct PopulationConstants {
     pub food_consumption_per_person: f32,
     pub food_per_person_per_sec: f32,
+    /// Consumption multiplier applied while the beacon is active — the holdout
+    /// shelters and the factory runs hot, so holding the beacon strains food.
+    pub beacon_food_multiplier: f32,
     pub starve_morale_loss_per_sec: f32,
     pub starve_health_loss_per_sec: f32,
     pub recover_morale_per_sec: f32,
@@ -108,6 +112,23 @@ pub struct WaveConstants {
     pub budget_base: u32,
     pub budget_per_wave: u32,
     pub commander_every: u32,
+    /// Permanent wave-budget increase banked each time a beacon cycle completes.
+    /// The machines learn you are the bait, so every cycle starts harder and the
+    /// safe low-phase farm erodes.
+    pub escalation_per_cycle: f32,
+}
+
+/// Rate (survivors/sec) at which the active beacon draws machine attention away
+/// from other human groups, letting them evacuate to safety elsewhere. Higher
+/// beacon phases scream louder and evacuate faster — the core reward for greed.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct EvacuationConstants {
+    pub warm_rate: f32,
+    pub sustained_rate: f32,
+    pub screaming_rate: f32,
+    pub terminal_rate: f32,
+    /// Every N banked survivors triggers a milestone notification.
+    pub milestone_interval: u32,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

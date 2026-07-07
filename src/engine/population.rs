@@ -31,8 +31,13 @@ impl Population {
         self.count as f32 * morale_factor * health_factor
     }
 
-    pub fn tick(&mut self, dt: f32, constants: &GameConstants) {
-        let consumption = self.count as f32 * constants.population.food_per_person_per_sec * dt;
+    /// `consumption_mult` scales food draw for the current situation (e.g. the
+    /// holdout eats faster while the beacon is active and under assault).
+    pub fn tick(&mut self, dt: f32, constants: &GameConstants, consumption_mult: f32) {
+        let consumption = self.count as f32
+            * constants.population.food_per_person_per_sec
+            * consumption_mult
+            * dt;
         if consumption > 0.0 {
             self.food_supply = (self.food_supply - consumption).max(0.0);
         }

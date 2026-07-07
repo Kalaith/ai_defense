@@ -68,6 +68,18 @@ impl ResultsState {
 
 fn build_report_lines(summary: &RunSummary) -> Vec<String> {
     let mut lines = Vec::new();
+    // Headline: the campaign's real score — people the beacon let escape.
+    lines.push(format!(
+        "SURVIVORS EVACUATED: {}",
+        summary.survivors_evacuated
+    ));
+    if summary.evacuees_lost > 0 {
+        lines.push(format!(
+            "Lost when the factory fell: {}",
+            summary.evacuees_lost
+        ));
+    }
+    lines.push(String::new());
     lines.push(format!("Waves Survived: {}", summary.waves_survived));
     lines.push(format!("Beacon Phase: {}", summary.beacon_phase.label()));
     lines.push(format!(

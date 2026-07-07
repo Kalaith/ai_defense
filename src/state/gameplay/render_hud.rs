@@ -376,6 +376,25 @@ impl GameplayState {
             11.0,
             dark::NEGATIVE,
         );
+        // Sacrifice ledger, always visible: total survivors evacuated so far,
+        // plus the un-banked count the current beacon window is earning (lost if
+        // the factory falls before shutdown).
+        let evac_text = if self.beacon_active {
+            format!(
+                "EVAC {} (+{:.0})",
+                self.survivors_evacuated, self.pending_evacuees
+            )
+        } else {
+            format!("EVAC {}", self.survivors_evacuated)
+        };
+        let evac_w = measure_ui_text(&evac_text, None, 11, 1.0).width;
+        draw_ui_text(
+            &evac_text,
+            rect.x + rect.w - 14.0 - evac_w,
+            rect.y + 18.0,
+            11.0,
+            dark::POSITIVE,
+        );
         draw_bounded_text(
             &self.beacon_phase.label().to_uppercase(),
             rect.x + 14.0,

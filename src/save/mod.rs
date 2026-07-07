@@ -70,6 +70,12 @@ pub struct SaveData {
     pub slots: Vec<SavedSlot>,
     #[serde(default)]
     pub buildings: Vec<SavedBuilding>,
+    /// Persistent sacrifice ledger and per-cycle assault escalation. Defaulted
+    /// so saves written before these systems existed still load.
+    #[serde(default)]
+    pub survivors_evacuated: u32,
+    #[serde(default)]
+    pub machine_escalation: f32,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

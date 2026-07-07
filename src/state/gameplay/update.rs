@@ -99,6 +99,7 @@ impl GameplayState {
 
         if self.beacon_active {
             self.update_beacon();
+            self.update_evacuation(dt);
         }
 
         self.update_wave_timers(dt);
@@ -130,15 +131,60 @@ impl GameplayState {
         None
     }
 
+    /// Survivors/sec the beacon is currently evacuating, scaling with phase: a
+    /// louder beacon draws more machines away, so more people escape elsewhere.
+    fn evacuation_rate(&self) -> f32 {
+        let evac = &self.constants.evacuation;
+        match self.beacon_phase {
+            BeaconPhase::WarmSignal => evac.warm_rate,
+            BeaconPhase::SustainedCall => evac.sustained_rate,
+            BeaconPhase::ScreamingBeacon => evac.screaming_rate,
+            BeaconPhase::TerminalHowl => evac.terminal_rate,
+        }
+    }
+
+    /// Accrue evacuees into the pending pool while the beacon is up. Nothing is
+    /// banked until a clean shutdown — hold too long and lose it all to defeat.
+    fn update_evacuation(&mut self, dt: f32) {
+        self.pending_evacuees += self.evacuation_rate() * dt;
+    }
+
     /// Beacon shut down and the field is clear: bank any remaining scavengers,
-    /// produce this cycle's salvage report, and drop back to base-build mode so
-    /// the player can rebuild and raise the beacon again.
+    /// commit this cycle's evacuees to the persistent ledger, ratchet up the
+    /// permanent assault escalation, produce the salvage report, and drop back
+    /// to base-build mode so the player can rebuild and raise the beacon again.
     fn finish_beacon_cycle(&mut self) {
         self.resolve_remaining_scavengers();
+
+        // Bank pending evacuees; carry the fractional remainder to the next
+        // cycle so slow low-phase accrual is never silently lost to rounding.
+        let banked = self.pending_evacuees.floor();
+        let banked_u = banked as u32;
+        self.survivors_evacuated += banked_u;
+        self.pending_evacuees -= banked;
+        self.announce_evac_milestones();
+
+        // The machines learn the beacon is bait: every completed cycle makes the
+        // next assault permanently heavier, decaying the safe low-phase farm.
+        self.machine_escalation += self.constants.waves.escalation_per_cycle;
+
         self.beacon_cycles_completed += 1;
-        self.salvage_report = Some(self.build_salvage_report());
+        self.salvage_report = Some(self.build_salvage_report(banked_u));
         self.beacon_start_difficulty_bonus = 0.0;
         self.autosave();
+    }
+
+    /// Push a milestone line each time the banked total crosses a new interval,
+    /// giving the open-ended campaign a felt sense of a rising goal.
+    fn announce_evac_milestones(&mut self) {
+        let interval = self.constants.evacuation.milestone_interval.max(1);
+        while self.survivors_evacuated >= self.next_evac_milestone {
+            let reached = self.next_evac_milestone;
+            self.push_notification(format!(
+                "{reached} survivors have reached safe territory because you held the line."
+            ));
+            self.next_evac_milestone += interval;
+        }
     }
 
     /// Force any field teams still out to return home when the beacon goes dark,
@@ -161,7 +207,7 @@ impl GameplayState {
         self.scavenger_recall_active = false;
     }
 
-    fn build_salvage_report(&self) -> super::SalvageReport {
+    fn build_salvage_report(&self, evacuated_cycle: u32) -> super::SalvageReport {
         let b = &self.cycle_baseline;
         super::SalvageReport {
             cycle: self.beacon_cycles_completed,
@@ -175,6 +221,9 @@ impl GameplayState {
                 .scavenger_population_gained
                 .saturating_sub(b.population),
             beacon_phase: self.beacon_phase.clone(),
+            survivors_evacuated_cycle: evacuated_cycle,
+            survivors_evacuated_total: self.survivors_evacuated,
+            escalation_pct: self.machine_escalation * 100.0,
         }
     }
 
@@ -423,7 +472,15 @@ impl GameplayState {
     }
 
     fn update_population(&mut self, dt: f32) {
-        self.population.tick(dt, &self.constants);
+        // Holding the beacon strains food: the holdout shelters and the factory
+        // runs hot. This is the pressure that forces the player up the risk
+        // curve — low beacon phases can't feed a growing holdout for long.
+        let consumption_mult = if self.beacon_active {
+            self.constants.population.beacon_food_multiplier
+        } else {
+            1.0
+        };
+        self.population.tick(dt, &self.constants, consumption_mult);
         self.resources.scrap += self.population.productivity(&self.constants)
             * self.constants.economy.productivity_scrap_rate
             * dt;
@@ -629,6 +686,13 @@ impl GameplayState {
             factory_online: self.factory_online_count(),
             population_surviving: self.population.count,
             shutdown_triggered: survived,
+            survivors_evacuated: self.survivors_evacuated,
+            // A defeat forfeits the current beacon window's un-banked evacuees.
+            evacuees_lost: if survived {
+                0
+            } else {
+                self.pending_evacuees.floor() as u32
+            },
         }
     }
 
@@ -727,8 +791,15 @@ mod tests {
         for _ in 0..180 {
             if let Some(StateTransition::ToResults { summary }) = state.update_survival_proof(&data)
             {
+                assert!(
+                    summary.shutdown_triggered,
+                    "defeat instead of shutdown: wave {}, pop {}, integrity {:.1}, food {:.1}",
+                    summary.waves_survived,
+                    summary.population_surviving,
+                    state.factory_integrity,
+                    state.population.food_supply
+                );
                 assert_eq!(summary.waves_survived, 10);
-                assert!(summary.shutdown_triggered);
                 assert!(summary.population_surviving > 0);
                 return;
             }

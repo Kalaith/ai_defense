@@ -729,7 +729,7 @@ impl GameplayState {
         draw_rectangle(0.0, 0.0, sw, sh, Color::new(0.0, 0.0, 0.0, 0.62));
 
         let panel_w = 540.0_f32.min(sw - 40.0);
-        let panel_h = 380.0_f32.min(sh - 40.0);
+        let panel_h = 452.0_f32.min(sh - 40.0);
         let panel_x = (sw - panel_w) * 0.5;
         let panel_y = (sh - panel_h) * 0.5;
 
@@ -751,6 +751,26 @@ impl GameplayState {
             dark::TEXT_DIM,
         );
 
+        // Headline: the sacrifice ledger. This is the campaign's real score —
+        // how many people the beacon's scream let escape elsewhere this cycle.
+        draw_centered_ui_text(
+            &format!("+{} SURVIVORS EVACUATED", report.survivors_evacuated_cycle),
+            cx,
+            panel_y + 100.0,
+            22.0,
+            dark::POSITIVE,
+        );
+        draw_centered_ui_text(
+            &format!(
+                "{} have now reached safe territory",
+                report.survivors_evacuated_total
+            ),
+            cx,
+            panel_y + 122.0,
+            13.0,
+            dark::TEXT_DIM,
+        );
+
         let lost_pop = report.scavengers_lost;
         let lines = [
             format!("Waves held this cycle: {}", report.waves),
@@ -763,11 +783,23 @@ impl GameplayState {
             format!("Rations banked: +{:.0} food", report.food),
             format!("Survivors found: +{}", report.population),
         ];
-        let mut y = panel_y + 104.0;
+        let mut y = panel_y + 154.0;
         for line in &lines {
             draw_ui_text(line, panel_x + 40.0, y, 16.0, dark::TEXT);
-            y += 30.0;
+            y += 26.0;
         }
+
+        // The machines are wiser: warn that the next cycle starts harder.
+        draw_ui_text(
+            &format!(
+                "Machine assault escalation: +{:.0}% — the next cycle starts harder.",
+                report.escalation_pct
+            ),
+            panel_x + 40.0,
+            y + 4.0,
+            13.0,
+            dark::WARNING,
+        );
 
         let btn_w = (panel_w - 60.0) * 0.5;
         let btn_h = 40.0;
@@ -1181,7 +1213,10 @@ impl GameplayState {
         self.shutdown_triggered = false;
         self.between_waves = true;
         self.wave_timer = self.constants.gameplay.beacon_start_delay;
-        self.beacon_start_difficulty_bonus = self.compute_beacon_start_difficulty_bonus();
+        // Base draw from how much factory is lit up, plus the permanent per-cycle
+        // escalation the machines have banked from previous beacon windows.
+        self.beacon_start_difficulty_bonus =
+            self.compute_beacon_start_difficulty_bonus() + self.machine_escalation;
 
         // Snapshot cumulative totals so this cycle's salvage report shows only
         // the gains earned during this beacon window.
