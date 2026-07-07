@@ -136,6 +136,20 @@ pub struct ThreatConstants {
     pub budget_divisor: f32,
     pub health_mult_per_awareness: f32,
     pub noise_scout_breach: f32,
+    /// Per-second signature generation from how the factory is run. Each keys a
+    /// distinct machine-awareness signal so the loudest one reflects the
+    /// player's style (see ThreatKind). The flat decay in ThreatSignature means
+    /// small footprints stay quiet and only sustained activity accumulates.
+    pub energy_per_power_per_sec: f32,
+    pub territory_per_sector_per_sec: f32,
+    pub territory_per_tower_per_sec: f32,
+    pub data_per_upgrade_per_sec: f32,
+    pub corruption_per_sec: f32,
+    /// Minimum dominant-signature value before the machines visibly adapt their
+    /// wave composition, and the (higher) value at which they pull the favoured
+    /// archetype in ahead of the tier schedule.
+    pub adaptation_threshold: f32,
+    pub adaptation_unlock_threshold: f32,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

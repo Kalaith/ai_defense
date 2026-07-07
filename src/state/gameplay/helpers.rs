@@ -4,7 +4,6 @@ use crate::engine::enemy::EnemyType;
 use crate::engine::map::{BuildingState, MapBuilding};
 use crate::engine::threat::{ReactionTier, ThreatSignature};
 use crate::engine::tower::Tower;
-use crate::engine::wave::preview_wave;
 use macroquad::prelude::*;
 use macroquad_toolkit::colors::dark;
 use macroquad_toolkit::rng;
@@ -157,6 +156,43 @@ impl GameplayState {
         upgrades
     }
 
+    /// Qualitative wave adaptation derived from the loudest machine-awareness
+    /// signature. Below the adaptation threshold the machines send a
+    /// schedule-standard wave; above it they weight the roster toward the
+    /// signal's favoured archetype, and above the unlock threshold they pull
+    /// that archetype in early.
+    pub fn wave_adaptation(&self) -> crate::engine::wave::WaveAdaptation {
+        let (kind, value) = self.threat.dominant();
+        if value < self.constants.threat.adaptation_threshold {
+            return crate::engine::wave::WaveAdaptation::default();
+        }
+        crate::engine::wave::WaveAdaptation {
+            preferred: Some(kind.preferred_enemy()),
+            early_unlock: kind.allows_early_unlock()
+                && value >= self.constants.threat.adaptation_unlock_threshold,
+        }
+    }
+
+    /// The loudest signature's name, once it is loud enough to matter — what is
+    /// currently drawing the most machine attention. `None` while quiet.
+    pub fn loudest_threat_label(&self) -> Option<&'static str> {
+        let (kind, value) = self.threat.dominant();
+        (value >= 1.0).then(|| kind.label())
+    }
+
+    /// Short "the machines are adapting" line for the wave readout, when a
+    /// dominant signature is actively reshaping the roster.
+    pub fn adaptation_incoming_label(&self) -> Option<&'static str> {
+        let adaptation = self.wave_adaptation();
+        adaptation.preferred.map(|enemy| match enemy {
+            EnemyType::Scout => "Adapting: scout swarm",
+            EnemyType::Drone => "Adapting: drone rush",
+            EnemyType::HeavyUnit => "Adapting: heavy armor",
+            EnemyType::Saboteur => "Adapting: saboteurs",
+            EnemyType::Commander => "Adapting: command strike",
+        })
+    }
+
     pub fn compute_beacon_start_difficulty_bonus(&self) -> f32 {
         let unlocked_sectors = self.factory.sectors.iter().filter(|s| s.unlocked).count() as f32;
         let unlocked_towers = self
@@ -185,41 +221,6 @@ impl GameplayState {
             + (unlocked_building_types * weights.per_building_type)
             + (repaired_buildings * weights.per_repaired_building)
             + (purchased_upgrades * weights.per_upgrade)
-    }
-
-    #[allow(dead_code)]
-    pub fn build_wave_preview(&self) -> Vec<(EnemyType, usize)> {
-        let next_wave = self.current_wave + 1;
-        let force_commander = self.beacon_phase == BeaconPhase::TerminalHowl;
-        let budget_bonus = if self.beacon_active {
-            self.beacon_start_difficulty_bonus
-        } else {
-            0.0
-        };
-        let preview = preview_wave(
-            next_wave,
-            &self.enemy_defs,
-            self.base_health_scale_per_wave,
-            self.threat.awareness_level(),
-            self.beacon_phase.tier_floor(),
-            1.0 + budget_bonus,
-            force_commander,
-            self.constants.waves.budget_base,
-            self.constants.waves.budget_per_wave,
-            self.constants.waves.commander_every,
-            self.constants.threat.budget_divisor,
-            self.constants.threat.health_mult_per_awareness,
-        );
-
-        let mut counts: Vec<(EnemyType, usize)> = Vec::new();
-        for enemy_type in preview {
-            if let Some(entry) = counts.iter_mut().find(|(t, _)| *t == enemy_type) {
-                entry.1 += 1;
-            } else {
-                counts.push((enemy_type, 1));
-            }
-        }
-        counts
     }
 
     pub fn spawn_death_particles(&mut self, positions: &[Vec2]) {

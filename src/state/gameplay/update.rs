@@ -330,6 +330,7 @@ impl GameplayState {
         let force_commander = self.beacon_phase == BeaconPhase::TerminalHowl;
         let budget_multiplier =
             self.constants.waves.budget_multiplier + self.beacon_start_difficulty_bonus;
+        let adaptation = self.wave_adaptation();
         self.wave_manager.generate_wave(
             self.current_wave,
             &self.enemy_defs,
@@ -339,6 +340,7 @@ impl GameplayState {
             budget_multiplier,
             force_commander,
             &spawn_points,
+            &adaptation,
         );
         self.tower_stats
             .resize_with(self.towers.len(), Default::default);
@@ -493,10 +495,36 @@ impl GameplayState {
     }
 
     fn update_threat(&mut self, dt: f32) {
-        // Building threat contribution
+        // Gather everything the whole-self helpers need up front, before taking
+        // the mutable borrow of self.threat below.
         let building_threat = self.unlocked_building_threat_per_sec();
+        let power_gen =
+            self.factory.power_generation() + self.unlocked_building_boon().power_per_sec;
+        let sectors = self.factory.unlocked_count() as f32;
+        let towers = self.towers.len() as f32;
+        let research_active = self.factory.is_sector_active("research_lab");
+        let ai_vault_active = self.factory.is_sector_active("ai_vault");
+        let upgrades = self.factory.purchased_upgrades.len() as f32;
+
+        let c = &self.constants.threat;
+        let energy_rate = c.energy_per_power_per_sec;
+        let territory_rate =
+            sectors * c.territory_per_sector_per_sec + towers * c.territory_per_tower_per_sec;
+        let data_rate = upgrades * c.data_per_upgrade_per_sec;
+        let corruption_rate = c.corruption_per_sec;
+
+        // Each distinct signature reflects *how* the factory is run, so the
+        // loudest one (surfaced in the HUD) drives what the machines send.
         if building_threat > 0.0 {
             self.threat.add_noise(building_threat * dt);
+        }
+        self.threat.add_energy(power_gen * energy_rate * dt);
+        self.threat.add_territory(territory_rate * dt);
+        if research_active {
+            self.threat.add_data(data_rate * dt);
+        }
+        if ai_vault_active {
+            self.threat.add_corruption(corruption_rate * dt);
         }
 
         self.threat.tick_decay(dt);
@@ -791,13 +819,17 @@ mod tests {
         for _ in 0..180 {
             if let Some(StateTransition::ToResults { summary }) = state.update_survival_proof(&data)
             {
+                let (dom, dom_val) = state.threat.dominant();
                 assert!(
                     summary.shutdown_triggered,
-                    "defeat instead of shutdown: wave {}, pop {}, integrity {:.1}, food {:.1}",
+                    "defeat instead of shutdown: wave {}, pop {}, integrity {:.1}, food {:.1}, awareness {:.1}, loudest {} {:.1}",
                     summary.waves_survived,
                     summary.population_surviving,
                     state.factory_integrity,
-                    state.population.food_supply
+                    state.population.food_supply,
+                    state.threat.awareness_level(),
+                    dom.label(),
+                    dom_val,
                 );
                 assert_eq!(summary.waves_survived, 10);
                 assert!(summary.population_surviving > 0);

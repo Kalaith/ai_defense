@@ -51,7 +51,14 @@
   "threat": {
     "budget_divisor": 10.0,
     "health_mult_per_awareness": 0.005,
-    "noise_scout_breach": 3.0
+    "noise_scout_breach": 3.0,
+    "energy_per_power_per_sec": 0.005,
+    "territory_per_sector_per_sec": 0.02,
+    "territory_per_tower_per_sec": 0.003,
+    "data_per_upgrade_per_sec": 0.05,
+    "corruption_per_sec": 0.7,
+    "adaptation_threshold": 12.0,
+    "adaptation_unlock_threshold": 30.0
   },
   "enemy": {
     "scout_dodge_chance": 0.2,

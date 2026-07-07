@@ -56,6 +56,18 @@ pub struct PreviewSpawnEntry {
     pub path_id: String,
 }
 
+/// Qualitative adaptation applied to a wave's composition, derived from the
+/// loudest machine-awareness signature. The machines answer *how* the player
+/// plays, not just how hard.
+#[derive(Clone, Debug, Default)]
+pub struct WaveAdaptation {
+    /// Archetype the roster is weighted toward this wave, if any.
+    pub preferred: Option<EnemyType>,
+    /// Pull the preferred archetype into the eligible pool even if the wave
+    /// schedule would not have unlocked its tier yet.
+    pub early_unlock: bool,
+}
+
 impl WaveManager {
     pub fn new(tuning: WaveTuning) -> Self {
         Self {
@@ -87,6 +99,7 @@ impl WaveManager {
         budget_multiplier: f32,
         force_commander: bool,
         spawn_points: &[(String, Vec2)],
+        adaptation: &WaveAdaptation,
     ) {
         self.current_wave = wave_number;
         self.wave_active = true;
@@ -107,6 +120,7 @@ impl WaveManager {
             self.wave_commander_every,
             self.threat_budget_divisor,
             self.threat_health_mult_per_awareness,
+            adaptation,
         );
     }
 
@@ -203,6 +217,7 @@ pub fn preview_wave(
     wave_commander_every: u32,
     threat_budget_divisor: f32,
     threat_health_mult_per_awareness: f32,
+    adaptation: &WaveAdaptation,
 ) -> Vec<EnemyType> {
     let dummy_spawn = vec![("preview".to_string(), Vec2::new(0.0, 0.0))];
     let entries = preview_wave_entries(
@@ -219,6 +234,7 @@ pub fn preview_wave(
         threat_budget_divisor,
         threat_health_mult_per_awareness,
         &dummy_spawn,
+        adaptation,
     );
     entries.into_iter().map(|e| e.enemy_type).collect()
 }
@@ -238,6 +254,7 @@ pub fn preview_wave_entries(
     threat_budget_divisor: f32,
     threat_health_mult_per_awareness: f32,
     spawn_points: &[(String, Vec2)],
+    adaptation: &WaveAdaptation,
 ) -> Vec<PreviewSpawnEntry> {
     let queue = build_spawn_queue(
         wave_number,
@@ -253,6 +270,7 @@ pub fn preview_wave_entries(
         wave_commander_every,
         threat_budget_divisor,
         threat_health_mult_per_awareness,
+        adaptation,
     );
     queue
         .into_iter()
@@ -295,6 +313,7 @@ fn build_spawn_queue(
     wave_commander_every: u32,
     threat_budget_divisor: f32,
     threat_health_mult_per_awareness: f32,
+    adaptation: &WaveAdaptation,
 ) -> Vec<SpawnEntry> {
     if spawn_points.is_empty() {
         return Vec::new();
@@ -323,6 +342,17 @@ fn build_spawn_queue(
 
     max_tier = max_tier.max(tier_floor);
 
+    // Qualitative adaptation: a dominant signature can pull its favoured
+    // archetype into the roster ahead of the normal tier schedule (e.g. high
+    // corruption summons saboteurs early).
+    if adaptation.early_unlock {
+        if let Some(pref) = &adaptation.preferred {
+            if let Some(def) = enemy_defs.iter().find(|d| &d.enemy_type == pref) {
+                max_tier = max_tier.max(def.tier);
+            }
+        }
+    }
+
     let mut eligible: Vec<&EnemyDef> = enemy_defs.iter().filter(|d| d.tier <= max_tier).collect();
     eligible.sort_by_key(|enemy| std::cmp::Reverse(enemy.threat_value));
 
@@ -345,17 +375,35 @@ fn build_spawn_queue(
         }
     }
 
+    // The adapted archetype, if it made it into the eligible pool. Budget-based
+    // filling means biasing toward it shifts *which* enemies arrive, not how
+    // much total threat — the wave's character changes, not its weight.
+    let preferred_def: Option<&EnemyDef> = adaptation
+        .preferred
+        .as_ref()
+        .and_then(|pref| eligible.iter().copied().find(|d| &d.enemy_type == pref));
+
     let mut safety = 200;
     while budget > 0 && safety > 0 {
         safety -= 1;
-        let pick = if queue.len() % 3 == 0 {
-            eligible
-                .iter()
-                .rev()
-                .find(|d| (d.threat_value as i32) <= budget)
-        } else {
-            eligible.iter().find(|d| (d.threat_value as i32) <= budget)
-        };
+        // Bias every other fill toward the adapted archetype when it fits;
+        // otherwise keep the original high/low variety cadence.
+        let biased =
+            preferred_def.filter(|d| queue.len() % 2 == 1 && (d.threat_value as i32) <= budget);
+        let pick = biased.or_else(|| {
+            if queue.len() % 3 == 0 {
+                eligible
+                    .iter()
+                    .copied()
+                    .rev()
+                    .find(|d| (d.threat_value as i32) <= budget)
+            } else {
+                eligible
+                    .iter()
+                    .copied()
+                    .find(|d| (d.threat_value as i32) <= budget)
+            }
+        });
 
         match pick {
             Some(def) => {
@@ -414,6 +462,7 @@ mod tests {
             data.constants.waves.commander_every,
             data.constants.threat.budget_divisor,
             data.constants.threat.health_mult_per_awareness,
+            &WaveAdaptation::default(),
         );
 
         assert!(!preview.is_empty(), "wave preview should spawn enemies");
@@ -448,6 +497,7 @@ mod tests {
             data.constants.waves.budget_multiplier,
             false,
             &spawn_points,
+            &WaveAdaptation::default(),
         );
 
         assert!(manager.wave_active);
@@ -464,6 +514,49 @@ mod tests {
             .spawn_queue
             .iter()
             .any(|entry| entry.path_id == "north"));
+    }
+
+    #[test]
+    fn adaptation_unlocks_and_biases_preferred_archetype() {
+        let data = GameData::load();
+        let spawn_points = vec![("west".to_string(), vec2(0.0, 0.0))];
+
+        let entries = |adaptation: &WaveAdaptation| {
+            preview_wave_entries(
+                1, // wave 1 normally only unlocks tier-1 (Scout/Drone)
+                &data.enemy_defs,
+                data.constants.waves.health_scale_per_wave,
+                0.0,
+                1,
+                data.constants.waves.budget_multiplier,
+                false,
+                data.constants.waves.budget_base,
+                data.constants.waves.budget_per_wave,
+                data.constants.waves.commander_every,
+                data.constants.threat.budget_divisor,
+                data.constants.threat.health_mult_per_awareness,
+                &spawn_points,
+                adaptation,
+            )
+        };
+
+        // Baseline: a schedule-standard wave 1 has no tier-2 saboteurs.
+        let baseline = entries(&WaveAdaptation::default());
+        assert!(
+            !baseline.iter().any(|e| e.enemy_type == EnemyType::Saboteur),
+            "wave 1 should not contain saboteurs without adaptation"
+        );
+
+        // High corruption pulls saboteurs in ahead of schedule and weights the
+        // roster toward them.
+        let adapted = entries(&WaveAdaptation {
+            preferred: Some(EnemyType::Saboteur),
+            early_unlock: true,
+        });
+        assert!(
+            adapted.iter().any(|e| e.enemy_type == EnemyType::Saboteur),
+            "early-unlock adaptation should summon the preferred archetype"
+        );
     }
 
     #[test]
@@ -488,6 +581,7 @@ mod tests {
             data.constants.threat.budget_divisor,
             data.constants.threat.health_mult_per_awareness,
             &spawn_points,
+            &WaveAdaptation::default(),
         );
 
         assert!(!preview.is_empty(), "expected preview entries");

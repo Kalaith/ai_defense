@@ -218,6 +218,20 @@ impl GameplayState {
         ui::draw_console_panel(rect, Color::new(0.48, 0.2, 0.16, 0.85));
         ui::draw_console_header(rect.x + 12.0, rect.y + 18.0, "THREAT", "", dark::WARNING);
 
+        // What is drawing the most machine attention right now — the signal the
+        // player can act on to go quieter. Right-aligned in the header row.
+        if let Some(loudest) = self.loudest_threat_label() {
+            let text = format!("\u{25B2} {loudest}");
+            let w = measure_ui_text(&text, None, 10, 1.0).width;
+            draw_ui_text(
+                &text,
+                rect.x + rect.w - 12.0 - w,
+                rect.y + 16.0,
+                10.0,
+                threat_color(&self.threat),
+            );
+        }
+
         // Two lines only: wave status, then what the next/current wave is made
         // of. The awareness tier already lives in the beacon panel — repeating
         // it here was clutter (and the third line overlapped the second).
@@ -251,14 +265,21 @@ impl GameplayState {
             status_color,
         );
 
+        // Lead the composition with the machines' current adaptation so the
+        // player reads the qualitative shift ("saboteurs incoming") alongside
+        // the raw counts.
         let composition = super::ui_advice::format_enemy_counts(&advice.wave_preview.counts);
+        let (line, line_color) = match self.adaptation_incoming_label() {
+            Some(note) => (format!("{note} \u{00B7} {composition}"), dark::WARNING),
+            None => (composition, dark::TEXT_DIM),
+        };
         draw_bounded_text(
-            &composition,
+            &line,
             rect.x + 12.0,
             rect.y + 64.0,
             rect.w - 24.0,
             11.0,
-            dark::TEXT_DIM,
+            line_color,
         );
     }
 

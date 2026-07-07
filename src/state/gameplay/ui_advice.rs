@@ -625,6 +625,7 @@ impl GameplayState {
             self.constants.threat.budget_divisor,
             self.constants.threat.health_mult_per_awareness,
             &spawn_points,
+            &self.wave_adaptation(),
         )
     }
 
