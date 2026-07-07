@@ -4,6 +4,8 @@
 
 > **Headline:** This is a real, working game with one genuinely original idea (the beacon-as-bait sacrifice loop) buried inside a competent-but-conventional tower defense. The recent work has fixed the *legibility* crisis the owner flagged. The next crisis is **motivation**: the unique fantasy is mostly flavor text, and the one novel decision the game owns is currently too low-stakes to carry it. Continue development, but redesign the meta-loop so the sacrifice actually costs something.
 
+> **Addendum (2026-07-07), on owner insight — survival infrastructure:** The original review framed the factory as a rack of *combat* upgrades and treated the population/food system as a minor idle subsystem. That under-weights the sharpest expression of the game's core pillar: **enabling factory subsystems should be a survival necessity that costs beacon volume and adds no combat strength.** The owner's example — light up Water Filtration and the scream grows, but skip it and your people die of thirst — is the "grow louder to keep your *own* people breathing" tension, and it is *stronger* theme-per-mechanic than the combat-buff framing the rest of this review leans on. Crucially, the skeleton already exists in the build (see the new **Survival Infrastructure** system section below), and one piece of it — **water** — is currently a dead stake: it is produced and it costs beacon volume, but nothing ever consumes it. This addendum threads that concept through the sections that follow.
+
 ---
 
 # 1. Project Overview
@@ -21,6 +23,8 @@ Tower Defense + light base/resource management, with a survival/attrition framin
 **The fantasy on paper:** *"You are not building a fortress to survive. You are building a scream so others don't have to."* The factory is a deliberate decoy — you make yourself impossible to ignore so humanity can breathe elsewhere. Every upgrade makes you stronger **and** louder, so growth is the source of danger.
 
 **What actually makes it different (as built):** One decision — *how long do I keep the beacon up before I lose the teams I sent out?* Everything else (turrets, routes, upgrades, power budget) is well-executed but familiar. That single risk/greed dial is the intellectual property.
+
+**The second, under-realized axis (see Addendum):** *how much of the factory do I dare bring online just to keep my own people alive?* Every life-support system you enable (water, food) makes the beacon louder and gives no combat benefit — but neglect it and the holdout dies. This "survival-vs-volume" decision is a distinct, equally-ownable hook, currently only ~20% wired.
 
 **Target player:** TD players who like a management/economy layer (Mindustry, They Are Billions, Rusted Warfare crowd). Not the pure-optimizer Bloons audience; someone who enjoys tension and theme.
 
@@ -128,9 +132,10 @@ Six sectors with power costs and passive bonuses (assembly=+dmg, robotics=+fire 
 
 ### Improvement Ideas
 - Tie each sector's power draw and threat contribution together so unlocking is a real trade (louder beacon, bigger target) rather than pure upside — this also directly feeds the risk-curve fix in §Beacon.
+- **Split the factory into two categories: military/economy (towers, damage, scrap) vs life-support (water, food, medical).** Today every sector is a combat/economy buff, so "enable = strictly good." Life-support subsystems should give *zero* combat value — you enable them only to keep people alive, and each one raises beacon volume. That converts "which buff next" into the far better "can I afford to be this loud just to survive?" (see §Survival Infrastructure).
 - Small: let sector *integrity* matter more visibly (a damaged Power Core should brown out your grid, creating a defend-the-core priority).
 
-**Impact: Medium. Cost: Small–Medium.**
+**Impact: Medium (High if it carries the life-support split). Cost: Small–Medium.**
 
 ---
 
@@ -175,9 +180,38 @@ Population with morale/health/food; starvation drains morale/health and eventual
 - Morale/health are tracked but their gameplay consequence (productivity) is subtle enough to ignore.
 
 ### Improvement Ideas
-- **Make food the ratchet that forces beacon greed** (see §Beacon): if the holdout out-eats low-phase yields, the player *must* push to riskier phases to feed them. This retasks an idle system into the engine of the core tension — high value, near-zero cost.
+- **Make food the ratchet that forces beacon greed** (see §Beacon): if the holdout out-eats low-phase yields, the player *must* push to riskier phases to feed them. This retasks an idle system into the engine of the core tension — high value, near-zero cost. *(Implemented 2026-07-07: food drain now scales while the beacon is up.)*
+- Food is only the first of several life-support demands — water is already produced but unused. Treat this system as one half of **Survival Infrastructure** below, not just a food counter.
 
 **Impact: High (as the greed-forcing lever). Cost: Small.**
+
+---
+
+## Survival Infrastructure (Life Support) — *the under-weighted axis*
+
+### Purpose
+The factory is not only a weapon rack; it is **life support** for the human holdout. Enabling a subsystem should keep people alive *and* make the beacon louder, with **no combat value** — a survival-vs-volume decision that runs parallel to, and independent of, the defense. This is the sharpest, most on-theme expression of the core pillar ("grow louder, draw more danger"), and the review's original framing missed it.
+
+### Current Implementation
+The **skeleton is already built.** The map is divided into named sections you repair→power (`Intake & Scrap`, **`Water Filtration`**, `Power Spine`, `Assembly`, …). Every building carries a **`threat_per_sec`** (0.12–0.35 — it makes the beacon louder) *and* a `boon` (scrap/food/water/power). So the *cost* side of "enable a subsystem → louder beacon" is fully wired. The **demand** side is almost entirely missing:
+- **Food** is the only realized life-support demand — the population starves without it (and only became a binding constraint after the 2026-07-07 food-ratchet change).
+- **Water is a dead stake.** `water_reclaimer` buildings produce `water_per_sec` and cost `threat_per_sec`, water is tracked, iconified, and factored into building "value" — but **nothing ever consumes it.** Enabling Water Filtration today adds beacon volume for *zero* payoff and there is *no penalty* for skipping it. It is a trap with no reason to spring it and no cost to ignore.
+
+### Strengths
+- The structure is present and cheap to complete: sections, repair→power, per-building threat cost, a water resource and its production. Realizing the concept is mostly *connecting existing pieces*, not building new systems.
+- Theme-per-mechanic is the highest in the game: "you scream louder to keep your *own* people breathing" is tighter than any combat buff, and it reinforces the beacon fantasy instead of competing with it.
+
+### Weaknesses
+- **The one life-support subsystem that exists as pure survival-cost (Water Filtration) does nothing**, so the intended dilemma ("louder, but my people live") is not playable today.
+- Because sectors/buildings are otherwise framed as combat/economy upside, "enable = strictly good"; there is no category whose only reason to exist is survival-at-the-cost-of-volume.
+- **Population is an idle number that only goes up.** There is no reason to run a *lean* holdout, so the real decision — *how many people can I afford to keep alive and hidden?* — never gets asked.
+
+### Improvement Ideas (the concept, made mechanical)
+- **Make water a real demand.** The population consumes water like food; no water → dehydration → morale/health loss → deaths. Now Water Filtration is *required* to sustain (let alone grow) the holdout, and every reclaimer you light up is more beacon volume. This is the smallest change that turns the dead stake into the exact tension the owner described.
+- **Make population a lever, not a counter.** More survivors = more workforce (scrap/research) + more scavenger teams (more evacuation) **but** more mouths → more life-support buildings → louder beacon → bigger waves. This *is* the "don't bite off more than you can handle" pitch from the owner's own `feedback.md`, finally mechanical.
+- **Interlock with the meta-loop already built.** The survivor-evacuated ledger (reward for a big, loud holdout) and life-support demand (cost of a big, loud holdout) become the two ends of one population dial — grow it to save more people elsewhere, but only if you can feed, water, and hide them.
+
+**Impact: Game-changing (this is plausibly the missing spine of the whole design). Cost: Small (water demand) → Medium (full life-support/military split + population-as-lever).**
 
 ---
 
@@ -206,6 +240,26 @@ The difference between "someone who knows the systems" and "anyone else" being a
 ---
 
 # 4. Similar Games & Lessons
+
+## Frostpunk *(the closest analogue — especially for the survival axis)*
+**Similar:** a survival game built around **one central system that everything depends on**. Frostpunk's Generator is Last Assembly's beacon: you crank it harder to keep people alive against an escalating external threat, and every notch up carries a mounting cost. The Generator's heat range ≈ the beacon's volume; "the city must not die" ≈ "the holdout must not die"; the incoming storm ≈ the beacon phases climbing to Terminal Howl. The whole game is the tension Last Assembly is *reaching* for: **growth and survival are the same lever, and pulling it is what endangers you.**
+
+**Does better (and these are exactly Last Assembly's current gaps):**
+- **Survival infrastructure *is* the game.** Every building is life-support — heat, food, medical, shelter — each a real trade-off, none a dead stake. This is precisely the axis Last Assembly is missing (its Water Filtration is currently inert). Frostpunk is the proof that life-support-as-tension can carry an entire game.
+- **Population is a two-sided, breakable resource,** not a number that only rises. Hope and Discontent can tip into revolt or exile if you push people too hard — so "how large a holdout can I sustain, and at what social cost?" is a live decision every hour. This is the exact "population as a lever" fix this review recommends.
+- **Escalation is telegraphed and dramatic.** The storm is coming on a known curve; the temperature drops on schedule. That inevitability creates dread and forces hard pre-commitment — more than Last Assembly's smoothly-rising (and until recently invisible) awareness does.
+- **Morality is emergent from mechanics,** not a meter — the law book (child labor, forced overtime, the "inhuman solutions") makes you *feel* the compromises. This is exactly the "soft, emergent morality" the design doc wants and hasn't built (its corruption/AI-Vault path is the natural home for it).
+
+**Adapt:**
+- Make life-support the **spine**, per §Survival Infrastructure: the water/food demand, and a clean life-support-vs-military split, so enabling a subsystem is a survival-vs-volume decision.
+- Give the already-tracked **morale/health teeth** (Frostpunk's Hope/Discontent) so a mistreated or over-large holdout can *break*, not just slowly starve.
+- **Telegraph the escalation** — a visible "the storm/terminal howl is coming" curve turns the beacon phases into dread instead of a stat.
+- Route the design doc's "increasingly inhuman solutions" through the AI Vault as **mechanics, not a morality slider**.
+
+**Don't copy:**
+- **Its UI density and management overload.** Last Assembly *just* won its legibility fight; do not rebuild it into a Frostpunk-scale spreadsheet of laws, factions, and per-citizen sims. Take the *tensions*, keep the abstraction light.
+- **The society-sim breadth** (individual named citizens, faction politics, the full law tree) — wrong scale for a TD-paced game.
+- **Grimness for its own sake / no-win despair** if it fights the moment-to-moment satisfaction of holding a line. Last Assembly has a **combat layer Frostpunk lacks** — that's its own differentiator, so borrow Frostpunk's survival *spine* and bolt it onto the tower defense, rather than becoming a colder Frostpunk.
 
 ## They Are Billions
 **Similar:** hold a base against escalating waves with a fragile economy behind the wall; one breach can cascade.
@@ -325,16 +379,18 @@ Emergent gameplay potential is real (power budget × threat × beacon phase × s
 
 ## Phase 1: Make It Matter (the fun is in the stakes)
 **Goal:** turn the beacon from a farmable sandbox into a tense gamble. **This is the whole ballgame — do it before anything else.**
-- Persistent sacrifice ledger (survivors evacuated carries across cycles; it's the goal).
-- Permanent per-cycle escalation (awareness or sector damage sticks).
-- Food ratchet forcing the risk curve.
+- Persistent sacrifice ledger (survivors evacuated carries across cycles; it's the goal). *(done)*
+- Permanent per-cycle escalation (awareness or sector damage sticks). *(done)*
+- Food ratchet forcing the risk curve. *(done)*
+- **Make water a real demand** — kill the dead stake. The population consumes water; no water → dehydration → deaths. This alone makes Water Filtration the owner's exact example (louder to survive) and costs almost nothing to wire.
 - One line of beacon-context framing.
 **Why first:** every other improvement is wasted effort if the core loop is still a safe farm. This phase is mostly re-pointing reward flows through systems that already exist — cheap, and it validates whether the game is fun *before* you invest in content.
 
 ## Phase 2: Add Depth
 **Goal:** make the moment-to-moment decisions as interesting as the meta-decision.
-- Surface machine awareness; make it steerable.
-- Qualitative enemy adaptation tiers + 2–3 counter-build enemies.
+- Surface machine awareness; make it steerable. *(done)*
+- Qualitative enemy adaptation tiers + 2–3 counter-build enemies. *(adaptation done; counter-build enemies pending)*
+- **Split the factory into life-support vs military/economy, and make population a managed lever** — grow the holdout for workforce + evacuation, but every mouth needs food/water buildings that raise beacon volume. This is the survival-vs-volume axis; it turns "which buff next" into "how loud can I afford to be just to keep people alive."
 - Branching max-level tower upgrades.
 - Tie sector unlocks to threat trade-offs.
 **Why second:** depth only pays off once players have a reason to keep playing (Phase 1). Adding enemies to a loop no one repeats is premature.
@@ -364,10 +420,10 @@ Emergent gameplay potential is real (power budget × threat × beacon phase × s
 **That the sacrifice never becomes mechanical.** Right now the game's unique fantasy is entirely flavor text wrapped around a competent but conventional TD, and the one novel decision is neutered by a repeatable, consequence-free cycle. If development pours into more towers/enemies/maps (content) while the meta-loop stays a safe sandbox, the project becomes "a decent TD with an unusual theme" — forgettable — rather than "the game where growth is the trap." The risk is polishing the wrong layer.
 
 ## Missing Ingredient
-**Persistent consequence.** A single meter — survivors evacuated — that only the beacon feeds, that carries across cycles, and that a bad recall permanently dents. Add that and the theme, the tension, the long-term goal, and the reason to push into Screaming Beacon *all* switch on at once. It's the smallest change with the largest identity payoff.
+**A felt cost to growth — on two sides.** (1) *Reward side — persistent consequence:* a survivors-evacuated meter that only the beacon feeds and that a bad recall permanently dents. *(Since implemented.)* (2) *Cost side — survival infrastructure:* keeping your own holdout alive must require lighting up subsystems that make you louder and give no combat value — starting with the trivial fix of **making water actually consumed** so Water Filtration stops being a dead stake. Together these make growth a genuine dilemma: you expand to save more people, and expanding is exactly what gets you found. The reward side is now in; the cost side is the cheapest remaining high-impact move.
 
 ## Unique Selling Point
-*"A tower defense where the smart move is to make yourself a bigger target — because you're bait, and every second you scream keeps someone else alive."* No mainstream TD sells that. It's a real hook **if the game makes you feel the trade**.
+*"A tower defense where the smart move is to make yourself a bigger target — because you're bait, and every second you scream keeps someone else alive — and you have to scream just to keep your own people breathing."* No mainstream TD sells that. It's a real hook **if the game makes you feel the trade**, on both the reward (evacuation) and the cost (life-support-as-volume) side.
 
 ## Recommendation
 **Continue development, but redesign the meta-loop first (Phase 1) before adding any content.**
