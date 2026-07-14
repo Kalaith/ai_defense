@@ -4,6 +4,7 @@ use crate::save::{SaveData, Settings};
 use crate::state::StateTransition;
 use crate::ui;
 use macroquad::prelude::*;
+use macroquad_toolkit::math::pulse_range;
 use macroquad_toolkit::ui::{draw_ui_text, measure_ui_text};
 
 pub struct MenuState {
@@ -174,7 +175,7 @@ fn draw_title_button(rect: Rect, label: &str, detail: &str, enabled: bool, prima
     let (mx, my) = mouse_position();
     let hovered =
         enabled && mx >= rect.x && mx <= rect.x + rect.w && my >= rect.y && my <= rect.y + rect.h;
-    let pulse = 0.55 + 0.22 * (get_time() as f32 * 3.2).sin().abs();
+    let pulse = pulse_range(3.2, 0.55, 0.77);
     let accent = if !enabled {
         Color::new(0.28, 0.32, 0.34, 0.55)
     } else if primary {

@@ -2,6 +2,7 @@ use crate::engine::enemy::EnemyType;
 use crate::engine::map::{BuildingState, MapPath, SlotState, TraceNode};
 use macroquad::prelude::*;
 use macroquad_toolkit::colors::dark;
+use macroquad_toolkit::math::pulse_range;
 
 use super::helpers::entrance_label;
 use super::GameplayState;
@@ -272,7 +273,7 @@ impl GameplayState {
 
             let e = path.entrance;
             if path.active {
-                let pulse = 0.55 + 0.3 * (get_time() as f32 * 4.0).sin().abs();
+                let pulse = pulse_range(4.0, 0.55, 0.85);
                 draw_circle(e.x, e.y, 17.0, Color::new(0.92, 0.18, 0.08, 0.88));
                 draw_circle_lines(e.x, e.y, 24.0, 3.0, Color::new(1.0, 0.46, 0.12, pulse));
                 draw_ui_text(
@@ -359,7 +360,7 @@ impl GameplayState {
                             Color::new(0.24, 0.92, 0.45, 0.55),
                         );
                     } else {
-                        let pulse = 0.5 + 0.3 * (get_time() as f32 * 2.0).sin().abs();
+                        let pulse = pulse_range(2.0, 0.5, 0.8);
                         draw_circle(pad.x, pad.y, 14.0, Color::new(0.04, 0.2, 0.08, 0.9));
                         draw_circle_lines(
                             pad.x,
@@ -525,7 +526,7 @@ impl GameplayState {
 
         // 7. Factory core
         let core = self.map_state.factory_core;
-        let pulse = 0.6 + 0.4 * (get_time() as f32 * 3.0).sin().abs();
+        let pulse = pulse_range(3.0, 0.6, 1.0);
         draw_circle(core.x, core.y, 20.0, Color::new(0.1, 0.5, 0.2, pulse));
         draw_circle_lines(core.x, core.y, 22.0, 2.0, Color::new(0.3, 0.9, 0.4, 0.8));
         draw_ui_text(

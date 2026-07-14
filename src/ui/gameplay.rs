@@ -3,6 +3,7 @@ use crate::engine::map::{BuildingState, SlotState};
 use crate::ui;
 use macroquad::prelude::*;
 use macroquad_toolkit::colors::dark;
+use macroquad_toolkit::math::pulse_range;
 use macroquad_toolkit::ui::button;
 
 use super::helpers::{beacon_color, threat_color};
@@ -347,7 +348,7 @@ impl GameplayState {
 
         for idx in preview.valid_slots {
             if let Some(slot) = self.map_state.slots.get(idx) {
-                let pulse = 0.55 + 0.28 * (get_time() as f32 * 5.0).sin().abs();
+                let pulse = pulse_range(5.0, 0.55, 0.83);
                 draw_circle(
                     slot.position.x,
                     slot.position.y,

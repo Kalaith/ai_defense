@@ -2,6 +2,7 @@
 
 use crate::engine::enemy::{Enemy, EnemyType};
 use macroquad::prelude::{Color, Vec2};
+use macroquad_toolkit::timing::Cooldown;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -43,21 +44,23 @@ pub struct TowerTuning {
     pub ballistic_vs_heavy_mult: f32,
 }
 
+/// A world-space shot trail (line or ring) that fades out over its
+/// lifetime. Geometry stays local; the countdown/fade fraction is delegated
+/// to the shared [`Cooldown`] timer (it counts down from its duration to
+/// zero, exactly matching the old `ttl`/`max_ttl` pair).
 #[derive(Clone, Debug)]
 pub enum ShotEffect {
     Line {
         from: Vec2,
         to: Vec2,
         color: Color,
-        ttl: f32,
-        max_ttl: f32,
+        life: Cooldown,
     },
     Pulse {
         center: Vec2,
         radius: f32,
         color: Color,
-        ttl: f32,
-        max_ttl: f32,
+        life: Cooldown,
     },
 }
 
@@ -67,8 +70,7 @@ impl ShotEffect {
             from,
             to,
             color,
-            ttl,
-            max_ttl: ttl,
+            life: Cooldown::new_armed(ttl),
         }
     }
 
@@ -77,29 +79,26 @@ impl ShotEffect {
             center,
             radius,
             color,
-            ttl,
-            max_ttl: ttl,
+            life: Cooldown::new_armed(ttl),
         }
     }
 
     pub fn tick(&mut self, dt: f32) {
         match self {
-            ShotEffect::Line { ttl, .. } | ShotEffect::Pulse { ttl, .. } => {
-                *ttl -= dt;
-            }
+            ShotEffect::Line { life, .. } | ShotEffect::Pulse { life, .. } => life.tick(dt),
         }
     }
 
     pub fn is_alive(&self) -> bool {
         match self {
-            ShotEffect::Line { ttl, .. } | ShotEffect::Pulse { ttl, .. } => *ttl > 0.0,
+            ShotEffect::Line { life, .. } | ShotEffect::Pulse { life, .. } => !life.is_ready(),
         }
     }
 
     pub fn alpha(&self) -> f32 {
         match self {
-            ShotEffect::Line { ttl, max_ttl, .. } | ShotEffect::Pulse { ttl, max_ttl, .. } => {
-                (*ttl / *max_ttl).clamp(0.0, 1.0)
+            ShotEffect::Line { life, .. } | ShotEffect::Pulse { life, .. } => {
+                life.fraction_remaining()
             }
         }
     }

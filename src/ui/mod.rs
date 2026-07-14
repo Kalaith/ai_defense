@@ -3,6 +3,7 @@
 use crate::data::TowerDef;
 use macroquad::prelude::*;
 use macroquad_toolkit::colors::dark;
+use macroquad_toolkit::math::pulse_range;
 use macroquad_toolkit::ui::{draw_ui_text, measure_ui_text};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -79,7 +80,7 @@ pub fn draw_console_button(
     label: &str,
     state: ConsoleButtonState,
 ) -> bool {
-    let pulse = 0.55 + 0.22 * (get_time() as f32 * 3.2).sin().abs();
+    let pulse = pulse_range(3.2, 0.55, 0.77);
     let (base_fill, accent, text) = match state {
         ConsoleButtonState::Disabled => (
             Color::new(0.03, 0.035, 0.04, 0.62),
@@ -449,7 +450,7 @@ pub fn draw_build_panel(
             && mx <= button_rect.x + button_rect.w
             && my >= btn_y
             && my <= btn_y + btn_h;
-        let pulse = 0.55 + 0.22 * (get_time() as f32 * 3.2).sin().abs();
+        let pulse = pulse_range(3.2, 0.55, 0.77);
         let accent = if can_afford {
             Color::new(0.28, 0.74, 1.0, 0.78 + pulse * 0.08)
         } else {
@@ -815,37 +816,39 @@ pub fn draw_settings_overlay(settings: &mut crate::save::Settings) -> SettingsAc
     let mut y = py + 74.0;
     let mut changed = false;
 
-    if toggle_row(row_x, y, row_w, row_h, "Autosave", settings.autosave) {
-        settings.autosave = !settings.autosave;
+    if macroquad_toolkit::ui::toggle_row(
+        Rect::new(row_x, y, row_w, row_h),
+        "Autosave",
+        &mut settings.autosave,
+    ) {
         changed = true;
     }
     y += row_h + gap;
-    if toggle_row(
-        row_x,
-        y,
-        row_w,
-        row_h,
+    if macroquad_toolkit::ui::toggle_row(
+        Rect::new(row_x, y, row_w, row_h),
         "Start runs at 2x speed",
-        settings.default_fast_speed,
+        &mut settings.default_fast_speed,
     ) {
-        settings.default_fast_speed = !settings.default_fast_speed;
         changed = true;
     }
     y += row_h + gap;
-    if let Some(v) = slider_row(
-        row_x,
-        y,
-        row_w,
-        row_h,
+    if macroquad_toolkit::ui::slider_row(
+        Rect::new(row_x, y, row_w, row_h),
         "Master volume",
-        settings.master_volume,
+        &mut settings.game.master_volume,
+        0.0,
+        1.0,
     ) {
-        settings.master_volume = v;
         changed = true;
     }
     y += row_h + gap;
-    if let Some(v) = slider_row(row_x, y, row_w, row_h, "SFX volume", settings.sfx_volume) {
-        settings.sfx_volume = v;
+    if macroquad_toolkit::ui::slider_row(
+        Rect::new(row_x, y, row_w, row_h),
+        "SFX volume",
+        &mut settings.game.sfx_volume,
+        0.0,
+        1.0,
+    ) {
         changed = true;
     }
     y += row_h + gap;
@@ -874,35 +877,4 @@ pub fn draw_settings_overlay(settings: &mut crate::save::Settings) -> SettingsAc
         return SettingsAction::Close;
     }
     SettingsAction::None
-}
-
-fn toggle_row(x: f32, y: f32, w: f32, h: f32, label: &str, on: bool) -> bool {
-    draw_ui_text(label, x + 4.0, y + h * 0.5 + 5.0, 15.0, dark::TEXT);
-    let bw = 92.0;
-    macroquad_toolkit::ui::button(x + w - bw, y, bw, h, if on { "On" } else { "Off" })
-}
-
-fn slider_row(x: f32, y: f32, w: f32, h: f32, label: &str, value: f32) -> Option<f32> {
-    draw_ui_text(label, x + 4.0, y + h * 0.5 + 5.0, 15.0, dark::TEXT);
-    let bw = 34.0;
-    let val_w = 60.0;
-    let mut out = None;
-    let minus_x = x + w - bw * 2.0 - val_w;
-    if macroquad_toolkit::ui::button(minus_x, y, bw, h, "-") {
-        out = Some((value - 0.1).clamp(0.0, 1.0));
-    }
-    let pct = format!("{:.0}%", value * 100.0);
-    let dims = measure_ui_text(&pct, None, 15, 1.0);
-    draw_ui_text(
-        &pct,
-        minus_x + bw + (val_w - dims.width) * 0.5,
-        y + h * 0.5 + 5.0,
-        15.0,
-        dark::TEXT_BRIGHT,
-    );
-    let plus_x = x + w - bw;
-    if macroquad_toolkit::ui::button(plus_x, y, bw, h, "+") {
-        out = Some((value + 0.1).clamp(0.0, 1.0));
-    }
-    out
 }

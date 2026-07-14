@@ -2,6 +2,7 @@ use crate::data::GameData;
 use crate::ui::{self, ConsoleButtonState, ConsoleIcon};
 use macroquad::prelude::*;
 use macroquad_toolkit::colors::dark;
+use macroquad_toolkit::math::pulse_range;
 use macroquad_toolkit::notifications::{
     draw_notification, Notification, NotificationRenderConfig, NotificationType,
 };
@@ -353,7 +354,7 @@ impl GameplayState {
                 AlertSeverity::Info => dark::ACCENT,
             };
             let pulse = if alert.severity == AlertSeverity::Critical {
-                0.72 + 0.2 * (get_time() as f32 * 7.0).sin().abs()
+                pulse_range(7.0, 0.72, 0.92)
             } else {
                 0.82
             };
@@ -388,7 +389,7 @@ impl GameplayState {
             crate::engine::beacon::BeaconPhase::ScreamingBeacon => 0.72,
             crate::engine::beacon::BeaconPhase::TerminalHowl => 1.0,
         };
-        let pulse = 0.68 + 0.18 * (get_time() as f32 * (4.0 + danger * 4.0)).sin().abs();
+        let pulse = pulse_range(4.0 + danger * 4.0, 0.68, 0.86);
         ui::draw_console_panel(rect, Color::new(0.78, 0.16, 0.12, pulse));
         draw_ui_text(
             "BEACON CONTROL",
