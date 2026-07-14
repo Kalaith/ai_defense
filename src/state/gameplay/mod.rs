@@ -5,7 +5,6 @@ mod render;
 mod render_hud;
 mod render_map;
 mod render_panels;
-#[path = "../../ui/gameplay.rs"]
 mod ui;
 mod ui_advice;
 mod update;
