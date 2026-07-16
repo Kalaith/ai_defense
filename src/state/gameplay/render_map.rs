@@ -1,3 +1,4 @@
+use crate::data::strings::text;
 use crate::engine::enemy::EnemyType;
 use crate::engine::map::{BuildingState, MapPath, SlotState, TraceNode};
 use macroquad::prelude::*;
@@ -101,7 +102,10 @@ impl GameplayState {
                     );
                     if let Some(ref entrance) = section.unlock_entrance {
                         draw_ui_text(
-                            &format!("Can open {}", entrance_label(entrance)),
+                            &crate::data::strings::fill(
+                                &text().map.can_open,
+                                &[("path", entrance_label(entrance))],
+                            ),
                             min.x + 14.0,
                             min.y + 38.0,
                             11.0,
@@ -112,14 +116,14 @@ impl GameplayState {
                     // The single next-locked teaser: no name spoiler, just a
                     // hint that powering the frontier reveals it.
                     draw_ui_text(
-                        "LOCKED SECTION",
+                        &text().map.locked_section,
                         min.x + 14.0,
                         min.y + 20.0,
                         12.0,
                         Color::new(0.30, 0.42, 0.46, 0.34 * label_fade),
                     );
                     draw_ui_text(
-                        "Power the frontier to reveal",
+                        &text().map.power_frontier,
                         min.x + 14.0,
                         min.y + 38.0,
                         10.0,
@@ -293,7 +297,7 @@ impl GameplayState {
                 // sliced off at the world boundary.
                 let label_y = (e.y + 4.0).max(26.0);
                 draw_ui_text(
-                    "OPENS THIS ROUTE",
+                    &text().map.opens_this_route,
                     e.x + 18.0,
                     label_y,
                     10.0,
@@ -415,7 +419,7 @@ impl GameplayState {
                 (
                     Color::new(0.06, 0.07, 0.08, 0.7),
                     Color::new(0.24, 0.28, 0.3, 0.55),
-                    "LOCKED",
+                    text().status.locked.as_str(),
                     Color::new(0.45, 0.5, 0.52, 0.72),
                 )
             } else {
@@ -423,25 +427,25 @@ impl GameplayState {
                     BuildingState::Broken => (
                         Color::new(0.28, 0.05, 0.05, 0.9),
                         Color::new(0.78, 0.18, 0.12, 0.86),
-                        "REPAIR",
+                        text().status.repair.as_str(),
                         Color::new(1.0, 0.42, 0.28, 0.88),
                     ),
                     BuildingState::Repaired => (
                         Color::new(0.25, 0.22, 0.04, 0.9),
                         Color::new(0.86, 0.74, 0.16, 0.9),
-                        "POWER",
+                        text().status.power.as_str(),
                         Color::new(1.0, 0.78, 0.18, 0.9),
                     ),
                     BuildingState::Powered => (
                         Color::new(0.03, 0.22, 0.2, 0.94),
                         Color::new(0.22, 0.92, 0.78, 0.95),
-                        "ONLINE",
+                        text().status.online.as_str(),
                         Color::new(0.32, 1.0, 0.72, 0.95),
                     ),
                     BuildingState::Disabled => (
                         Color::new(0.15, 0.15, 0.15, 0.6),
                         Color::new(0.3, 0.3, 0.3, 0.6),
-                        "OFFLINE",
+                        text().status.offline.as_str(),
                         dark::TEXT_DIM,
                     ),
                 }
@@ -530,7 +534,7 @@ impl GameplayState {
         draw_circle(core.x, core.y, 20.0, Color::new(0.1, 0.5, 0.2, pulse));
         draw_circle_lines(core.x, core.y, 22.0, 2.0, Color::new(0.3, 0.9, 0.4, 0.8));
         draw_ui_text(
-            "FACTORY",
+            &text().map.factory,
             core.x - 25.0,
             core.y + 30.0,
             12.0,
@@ -589,7 +593,7 @@ impl GameplayState {
                     Color::new(col.r, col.g, col.b, range_alpha),
                 );
                 draw_label_tag(
-                    "SELECTED TOWER",
+                    &text().map.selected_tower,
                     tower.position + vec2(20.0, -24.0),
                     Color::new(0.45, 0.9, 1.0, 1.0),
                 );
@@ -750,19 +754,14 @@ fn draw_route_arrows(a: Vec2, b: Vec2, reveal_limit: f32) {
     }
 }
 
+/// Short glyph text for a machine node. Unknown building types fall back to the
+/// generic label rather than going blank on the map.
 fn building_node_label(kind: &str) -> &str {
-    match kind {
-        "scrap_converter" => "SCRAP",
-        "water_reclaimer" => "WATER",
-        "nutrient_vats" => "FOOD",
-        "power_turbine" => "POWER",
-        "power_distribution_spine" => "SPINE",
-        "assembly_hall_core" => "ASSY",
-        "logistics_hub_core" => "LOGI",
-        "robotics_bay_core" => "ROBOT",
-        "research_core" => "TECH",
-        _ => "SYSTEM",
-    }
+    let map = &text().map;
+    map.node_labels
+        .get(kind)
+        .map(|label| label.as_str())
+        .unwrap_or(map.node_fallback.as_str())
 }
 
 fn draw_centered_text(text: &str, center_x: f32, baseline_y: f32, font_size: f32, color: Color) {

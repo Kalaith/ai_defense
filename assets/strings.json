@@ -1,0 +1,422 @@
+{
+  "menu": {
+    "continue_label": "CONTINUE SIGNAL",
+    "continue_detail": "Pick the work back up where you left it",
+    "continue_empty_label": "NO SAVED SIGNAL",
+    "continue_empty_detail": "Nothing here yet. The machine is still cold.",
+    "new_label": "NEW CAMPAIGN",
+    "new_detail": "Go back in. Start waking it, section by section.",
+    "settings_label": "SETTINGS",
+    "settings_detail": "Audio, autosave, speed, and tutorial options",
+    "exit_label": "EXIT GAME",
+    "exit_detail": "Power down the console and quit"
+  },
+
+  "intro": {
+    "title": "LAST ASSEMBLY",
+    "subtitle": "You know what's sleeping in the vault. You always did.",
+    "body": [
+      "The complex went cold the night the machines turned. What is",
+      "left of the town shelters in its depths, down near the core.",
+      "",
+      "You are working inward to wake it. Section by section, because",
+      "the vault at the centre only answers a machine that is whole,",
+      "and the thing asleep in there is what let the swarm off its",
+      "leash. Take it back and the swarm stops.",
+      "",
+      "There was never enough scrap for all of it. Send teams out for",
+      "the rest. Wake only what the grid can carry — and every machine",
+      "you leave cold, the town pays for in people."
+    ],
+    "button": "Begin the Work"
+  },
+
+  "coach": {
+    "header": "GETTING STARTED  ·  Step {step} of {total}",
+    "skip": "Skip",
+    "steps": [
+      {
+        "title": "Start with what's nearest",
+        "body": "The Scrap Converter by the core still turns. Repair it — the way inward runs through every machine between here and the vault."
+      },
+      {
+        "title": "Give it power",
+        "body": "A repaired machine is still a dead one until it draws. Power it, and the section behind it wakes with it."
+      },
+      {
+        "title": "Cover the route",
+        "body": "They come the same way every time. Pick a turret and put it on a lit pad where they'll walk."
+      },
+      {
+        "title": "Raise the beacon",
+        "body": "The scrap is out there, not in here. START BEACON sends the teams — and tells the swarm exactly where you are."
+      }
+    ]
+  },
+
+  "pause": {
+    "title": "PAUSED",
+    "resume": "Resume",
+    "settings": "Settings",
+    "abandon": "Abandon Run (see report)",
+    "quit": "Quit to Desktop"
+  },
+
+  "hud": {
+    "survival": "SURVIVAL",
+    "pop": "POP",
+    "pop_value": "{count}/{max}",
+    "food": "FOOD",
+    "morale": "MORALE",
+    "health": "HEALTH",
+    "power_grid": "POWER GRID",
+    "gen": "GEN",
+    "used": "USED",
+    "net": "NET",
+    "battery": "BATTERY",
+    "offline": "{n} OFFLINE",
+    "threat": "THREAT",
+    "loudest": "▲ {label}",
+    "beacon_offline": "Beacon is down. Nothing is coming.",
+    "wave_incoming": "Wave {wave} in {secs}s",
+    "wave_active": "Wave {wave}: {alive} alive",
+    "adaptation_composition": "{note} · {composition}",
+    "next_step": "NEXT STEP",
+    "focus": "FOCUS",
+    "cost_risk": "{cost}    {risk}",
+    "beacon_control": "BEACON CONTROL",
+    "evac": "EVAC {n}",
+    "evac_pending": "EVAC {n} (+{pending})",
+    "next_phase": "Next phase: +{draw} draw",
+    "threat_readout": "{tier} {pct}",
+    "teams_ready": "Teams ready: {n}",
+    "start_beacon": "START BEACON",
+    "start_beacon_tip": "Raise the beacon",
+    "start_beacon_tip_detail": "Sends the teams out for scrap. Tells the swarm where you are.",
+    "recall": "RECALL",
+    "recall_tip": "Recall scavengers",
+    "recall_tip_detail": "Calls the teams home while they can still carry it in.",
+    "shutdown": "SHUTDOWN",
+    "shutdown_locked": "SHUTDOWN LOCKED",
+    "shutdown_tip": "Shut down the beacon",
+    "shutdown_tip_detail": "No more of them come. See off what is already inside, then patch the line.",
+    "card_ready": "Ready {n}",
+    "card_standby": "Standby",
+    "card_return": "Return {secs}s",
+    "card_awaiting": "Awaiting",
+    "card_at_risk": "At Risk",
+    "card_out": "Out",
+    "card_home": "Home",
+    "speed_tag": "2x",
+    "incoming": "INCOMING",
+    "wave_flash": "WAVE {n}",
+    "beacon_shutdown_flash": "BEACON SHUTDOWN"
+  },
+
+  "status": {
+    "locked": "LOCKED",
+    "damaged": "DAMAGED",
+    "repaired": "REPAIRED",
+    "online": "ONLINE",
+    "offline": "OFFLINE",
+    "repair": "REPAIR",
+    "power": "POWER",
+    "need_scrap": "NEED {n} SCRAP"
+  },
+
+  "beacon": {
+    "phases": {
+      "warm_signal": "Warm Signal",
+      "sustained_call": "Sustained Call",
+      "screaming_beacon": "Screaming Beacon",
+      "terminal_howl": "Terminal Howl"
+    },
+    "flavor": {
+      "sustained_call": "The signal has steadied. Whatever is out there has your scent now.",
+      "screaming_beacon": "It is screaming. Everything with a receiver is turning this way.",
+      "terminal_howl": "You have asked for more than it can carry. Take what you can and go dark."
+    }
+  },
+
+  "factory_phases": {
+    "dormant_ruin": "Dormant Ruin",
+    "stirring_machine": "Stirring Machine",
+    "functional_system": "Functional System",
+    "sentient_structure": "Sentient Structure",
+    "transcendent_entity": "Transcendent Entity"
+  },
+
+  "threat": {
+    "tiers": {
+      "observation": "Observation",
+      "adaptation": "Adaptation",
+      "suppression": "Suppression",
+      "extermination": "Extermination"
+    },
+    "signatures": {
+      "energy": "Energy",
+      "heat": "Heat",
+      "data": "Data",
+      "corruption": "Corruption",
+      "noise": "Noise",
+      "territory": "Territory"
+    },
+    "adapting": {
+      "scout": "Adapting: scout swarm",
+      "drone": "Adapting: drone rush",
+      "heavy": "Adapting: heavy armor",
+      "saboteur": "Adapting: saboteurs",
+      "commander": "Adapting: command strike"
+    }
+  },
+
+  "enemies": {
+    "scout": "Scout",
+    "drone": "Drone",
+    "heavy": "Heavy",
+    "saboteur": "Saboteur",
+    "commander": "Commander"
+  },
+
+  "wave_preview": {
+    "no_preview": "No preview",
+    "entry": "{count} {name}",
+    "separator": " / "
+  },
+
+  "invalid_pad": {
+    "needs_power": "Needs power",
+    "occupied": "Occupied",
+    "too_expensive": "Too expensive"
+  },
+
+  "entrances": {
+    "north_gate": "North Gate",
+    "south_gate": "South Gate",
+    "east_breach": "East Breach",
+    "northwest_breach": "Northwest Breach",
+    "main_west": "West Approach"
+  },
+
+  "report": {
+    "title": "THE TALLY — Cycle {cycle}",
+    "subtitle": "The beacon is dark. Nothing is moving out there.",
+    "headline": "{n} GOT OUT",
+    "total": "{total} have made it clear of this place so far",
+    "waves": "Waves the line held: {n}",
+    "peak": "Loudest it got: {phase}",
+    "teams": "Teams out {out} / home {home} / never came back {lost}",
+    "scrap": "Scrap they carried in: +{n}",
+    "food": "Food they carried in: +{n}",
+    "population": "People they found out there: +{n}",
+    "escalation": "They have learned +{pct}% since you started. They come back sooner.",
+    "button": "Back to the Work"
+  },
+
+  "results": {
+    "title_survived": "THE WORK STOPS HERE",
+    "title_lost": "THE MACHINE WENT COLD",
+    "headline": "{n} GOT OUT",
+    "lost_inside": "{n} were still inside when it fell",
+    "waves": "Waves the line held: {n}",
+    "peak": "Loudest it got: {phase}",
+    "teams": "Teams out / home / lost: {out}/{home}/{lost}",
+    "carried": "They carried in: +{scrap} scrap, +{food} food, +{pop} people",
+    "machines": "Machines woken: {n}",
+    "surviving": "Still breathing: {n}",
+    "outcome_survived": "You went dark with the vault still sleeping. It waits.",
+    "outcome_lost": "The machine went cold with you inside it. The vault sleeps on.",
+    "button": "Return to Menu"
+  },
+
+  "notifications": {
+    "repairs_locked": "Not while the beacon is up. Nobody is out there working.",
+    "path_opened": "{path} is open now. They know it too.",
+    "needs_power_from": "{name} has to be drawing first.",
+    "repaired": "{name} is whole again. It still needs power.",
+    "powered": "{name} is drawing. That much closer to the vault.",
+    "beacon_up": "The beacon is up. Teams are moving. So are they.",
+    "beacon_down": "Beacon down. Nothing new is coming — see off what already is.",
+    "field_secured": "Quiet again. Patch the line and get further in.",
+    "evac_milestone": "{n} clear of this place. None of them know what you did.",
+    "team_lost": "A team is not answering. Do not wait on them.",
+    "team_returned": "A team made it back: +{scrap} scrap, +{food} food, +{pop} people",
+    "scout_breach": "A scout got past. It has seen enough to report."
+  },
+
+  "alerts": {
+    "power_failure": "POWER FAILURE",
+    "power_failure_detail": "{n} towers offline",
+    "power_deficit": "POWER DEFICIT",
+    "power_deficit_detail": "{secs}s battery reserve",
+    "food_shortage": "FOOD SHORTAGE",
+    "food_low": "FOOD LOW",
+    "food_detail": "{secs}s supply left",
+    "infiltrator": "INFILTRATOR",
+    "infiltrator_detail": "Saboteur on route",
+    "team_at_risk": "TEAM AT RISK",
+    "team_at_risk_detail": "{n} teams outside",
+    "beacon_escalating": "BEACON ESCALATING",
+    "beacon_escalating_detail": "+{draw} draw to next phase",
+    "machine_aware": "MACHINE AWARE",
+    "machine_watching": "MACHINE WATCHING",
+    "awareness_detail": "{pct}% threat",
+    "factory_damage": "FACTORY DAMAGE",
+    "factory_damage_detail": "{pct}% integrity"
+  },
+
+  "advice": {
+    "restore_power": "Restore power before building more towers",
+    "restore_power_detail": "{n} towers are offline",
+    "restore_power_cost": "Cost: repair power systems",
+    "restore_power_risk": "Risk: defenses inactive",
+    "build_tower": "Build Ballistic Turret",
+    "build_tower_detail": "Place it on a powered pad covering the main route",
+    "build_tower_cost": "Cost: {scrap} scrap, {power} power",
+    "build_tower_risk": "Risk: +0.50 noise",
+    "power_pad": "Power {id}",
+    "power_pad_detail": "Use this pad for stronger lane coverage",
+    "risk_opens": "Risk: opens {path}",
+    "risk_none": "Risk: none",
+    "start_beacon": "Start Beacon",
+    "start_beacon_detail": "Draw enemies while scavengers gather resources",
+    "start_beacon_cost": "Cost: starts Wave 1 timer",
+    "start_beacon_risk": "Risk: {phase}",
+    "recall": "Recall Scavengers",
+    "recall_detail": "Bank resources before the signal gets worse",
+    "recall_cost": "Cost: stops field gains",
+    "recall_risk": "Risk: teams outside",
+    "shutdown": "Shutdown Beacon",
+    "shutdown_detail": "Stop new waves once the lane is stable",
+    "shutdown_cost": "Cost: ends scavenging",
+    "shutdown_risk": "Risk: active enemies remain",
+    "console": "Inspect Factory Console",
+    "console_detail": "Review available upgrades and unlocked machinery",
+    "cost_none": "Cost: none",
+    "repair": "Repair {name}",
+    "power": "Power {name}",
+    "inspect": "Inspect {name}",
+    "cost_scrap": "Cost: {n} scrap",
+    "cost_online": "Cost: online",
+    "cost_locked": "Cost: locked",
+    "risk_noise": "Risk: +{n} noise/s",
+    "risk_offline": "Risk: offline",
+    "disabled_detail": "System disabled",
+    "purpose_grid": "Restore grid headroom",
+    "purpose_food": "Stabilize food production",
+    "purpose_income": "Increase resource income",
+    "purpose_turn_online": "Turn repaired machinery online",
+    "purpose_next_damaged": "Repair the next damaged system"
+  },
+
+  "boon": {
+    "scrap": "+{n} scrap/s",
+    "food": "+{n} food/s",
+    "water": "+{n} water/s",
+    "power": "+{n} power/s",
+    "separator": ", ",
+    "stability": "Factory stability"
+  },
+
+  "panels": {
+    "systems": "SYSTEMS",
+    "systems_subtitle": "repair / power / upgrade",
+    "repair_cost": "Repair Cost: {n} scrap",
+    "power_cost": "Power Cost: {n} scrap",
+    "online": "Online",
+    "locked": "Locked",
+    "benefit": "Benefit: {text}",
+    "risk_noise": "Risk: +{n} noise/s",
+    "factory_console": "FACTORY CONSOLE",
+    "factory_console_subtitle": "research and machine unlocks",
+    "unlock": "UNLOCK {n}",
+    "unlocked": "UNLOCKED",
+    "upgrade_row": "{name} - {n} scrap",
+    "factory_console_fallback": "Factory Console",
+    "unlocks_entrance": "Unlocks {path}",
+    "pad": "PAD {id}",
+    "pad_subtitle": "tower pad command surface",
+    "clearing_opens": "Clearing can open {path}",
+    "clears_position": "Clears a build position",
+    "status_debris": "Status: Debris",
+    "status_cleared": "Status: Cleared",
+    "status_occupied": "Status: Occupied",
+    "status_powered": "Status: Powered",
+    "clear": "CLEAR",
+    "power_pad": "POWER PAD",
+    "select_tower": "SELECT TOWER",
+    "build": "BUILD {n}",
+    "cost_action": "{verb} {n}",
+    "recommended": "Recommended: {name}",
+    "no_tower_unlocked": "Coverage potential: no tower unlocked",
+    "covers_no_route": "{name} covers no active route",
+    "covers_routes": "{name} covers {paths}",
+    "requires_research": "REQUIRES RESEARCH",
+    "max_level": "MAX LEVEL",
+    "upgrade": "UPGRADE {n}",
+    "tower_title": "{name} LVL {level}",
+    "tower_subtitle": "tower command",
+    "tower_fallback_name": "Tower",
+    "tower_stats": "Damage {damage} | Range {range} | Fire {fire}/s | Power {power}",
+    "tower_wave_stats": "This wave: {shots} shots, {hits} hits, {kills} kills",
+    "coverage_none": "Coverage: none",
+    "coverage": "Coverage: {paths}",
+    "building_subtitle": "factory system",
+    "covers": "Covers: {text}",
+    "expected": "Expected: {text}",
+    "cost": "Cost: {text}",
+    "need_scrap_line": "Need {n} scrap",
+    "cost_line": "{scrap} scrap / {power} power",
+    "none": "none"
+  },
+
+  "build_panel": {
+    "title": "TOWERS",
+    "subtitle": "Select, then place on powered pads",
+    "tower_label": "{name} ({scrap}s/{power}p)",
+    "affordable": "Affordable",
+    "need_scrap": "Need {n} more scrap",
+    "need_power": "Need {n} power buffer",
+    "needs": "Needs {name}",
+    "locked": "Locked",
+    "map_key": "MAP KEY",
+    "key_powered_pad": "Powered pad — build towers here",
+    "key_unpowered_pad": "Unpowered pad — pay to power",
+    "key_debris": "Debris — clear for a new pad",
+    "key_machine": "Machine — repair, then power",
+    "key_entrance": "Enemy entrance",
+    "key_route": "Attack route to your core"
+  },
+
+  "map": {
+    "can_open": "Can open {path}",
+    "locked_section": "LOCKED SECTION",
+    "power_frontier": "Power the frontier to reveal",
+    "opens_this_route": "OPENS THIS ROUTE",
+    "selected_tower": "SELECTED TOWER",
+    "factory": "FACTORY",
+    "node_labels": {
+      "scrap_converter": "SCRAP",
+      "water_reclaimer": "WATER",
+      "nutrient_vats": "FOOD",
+      "power_turbine": "POWER",
+      "power_distribution_spine": "SPINE",
+      "assembly_hall_core": "ASSY",
+      "logistics_hub_core": "LOGI",
+      "robotics_bay_core": "ROBOT",
+      "research_core": "TECH"
+    },
+    "node_fallback": "SYSTEM"
+  },
+
+  "settings": {
+    "title": "SETTINGS",
+    "autosave": "Autosave",
+    "fast_start": "Start runs at 2x speed",
+    "master_volume": "Master volume",
+    "sfx_volume": "SFX volume",
+    "tutorial_replay": "Replay tutorial on next new run",
+    "tutorial_will_show": "Tutorial will show on next new run",
+    "close": "Close"
+  }
+}

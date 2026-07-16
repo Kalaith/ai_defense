@@ -1,5 +1,6 @@
 //! Main menu state.
 
+use crate::data::strings::text;
 use crate::save::{SaveData, Settings};
 use crate::state::StateTransition;
 use crate::ui;
@@ -62,15 +63,11 @@ impl MenuState {
         let panel_w = (w * 0.34).clamp(300.0, 430.0);
         let panel_y = (h * 0.52).clamp(280.0, h - (btn_h * 4.0 + gap * 3.0) - 40.0);
 
-        let continue_label = if self.has_save {
-            "CONTINUE SIGNAL"
+        let t = &text().menu;
+        let (continue_label, continue_detail) = if self.has_save {
+            (&t.continue_label, &t.continue_detail)
         } else {
-            "NO SAVED SIGNAL"
-        };
-        let continue_detail = if self.has_save {
-            "Resume the last factory command state"
-        } else {
-            "A save will appear here after a run begins"
+            (&t.continue_empty_label, &t.continue_empty_detail)
         };
 
         if draw_title_button(
@@ -85,8 +82,8 @@ impl MenuState {
 
         if draw_title_button(
             Rect::new(panel_x, panel_y + btn_h + gap, panel_w, btn_h),
-            "NEW CAMPAIGN",
-            "Wake the assembly line from cold storage",
+            &t.new_label,
+            &t.new_detail,
             true,
             !self.has_save,
         ) {
@@ -95,8 +92,8 @@ impl MenuState {
 
         if draw_title_button(
             Rect::new(panel_x, panel_y + (btn_h + gap) * 2.0, panel_w, btn_h),
-            "SETTINGS",
-            "Audio, autosave, speed, and tutorial options",
+            &t.settings_label,
+            &t.settings_detail,
             true,
             false,
         ) {
@@ -105,8 +102,8 @@ impl MenuState {
 
         if draw_title_button(
             Rect::new(panel_x, panel_y + (btn_h + gap) * 3.0, panel_w, btn_h),
-            "EXIT GAME",
-            "Power down the console and quit",
+            &t.exit_label,
+            &t.exit_detail,
             true,
             false,
         ) {

@@ -1,5 +1,7 @@
 //! Beacon strength, phases, and scavenging tiers.
 
+use crate::data::strings::text;
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum BeaconPhase {
     WarmSignal,
@@ -10,11 +12,12 @@ pub enum BeaconPhase {
 
 impl BeaconPhase {
     pub fn label(&self) -> &'static str {
+        let phases = &text().beacon.phases;
         match self {
-            Self::WarmSignal => "Warm Signal",
-            Self::SustainedCall => "Sustained Call",
-            Self::ScreamingBeacon => "Screaming Beacon",
-            Self::TerminalHowl => "Terminal Howl",
+            Self::WarmSignal => phases.warm_signal.as_str(),
+            Self::SustainedCall => phases.sustained_call.as_str(),
+            Self::ScreamingBeacon => phases.screaming_beacon.as_str(),
+            Self::TerminalHowl => phases.terminal_howl.as_str(),
         }
     }
 

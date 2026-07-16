@@ -104,10 +104,11 @@ pub enum InvalidPadReason {
 
 impl InvalidPadReason {
     pub fn label(self) -> &'static str {
+        let t = &crate::data::strings::text().invalid_pad;
         match self {
-            InvalidPadReason::NeedsPower => "Needs power",
-            InvalidPadReason::Occupied => "Occupied",
-            InvalidPadReason::TooExpensive => "Too expensive",
+            InvalidPadReason::NeedsPower => t.needs_power.as_str(),
+            InvalidPadReason::Occupied => t.occupied.as_str(),
+            InvalidPadReason::TooExpensive => t.too_expensive.as_str(),
         }
     }
 }

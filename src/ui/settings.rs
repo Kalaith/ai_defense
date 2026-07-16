@@ -1,5 +1,6 @@
 //! Shared modal settings overlay.
 
+use crate::data::strings::text;
 use macroquad::prelude::*;
 use macroquad_toolkit::colors::dark;
 use macroquad_toolkit::ui::draw_ui_text;
@@ -27,7 +28,8 @@ pub fn draw_settings_overlay(settings: &mut crate::save::Settings) -> SettingsAc
         .with_border(1.6, Color::new(0.24, 0.58, 0.62, 0.9));
     macroquad_toolkit::ui::draw_surface(Rect::new(px, py, pw, ph), &surface);
 
-    draw_ui_text("SETTINGS", px + 24.0, py + 42.0, 26.0, dark::ACCENT);
+    let t = &text().settings;
+    draw_ui_text(&t.title, px + 24.0, py + 42.0, 26.0, dark::ACCENT);
 
     let row_x = px + 24.0;
     let row_w = pw - 48.0;
@@ -38,7 +40,7 @@ pub fn draw_settings_overlay(settings: &mut crate::save::Settings) -> SettingsAc
 
     if macroquad_toolkit::ui::toggle_row(
         Rect::new(row_x, y, row_w, row_h),
-        "Autosave",
+        &t.autosave,
         &mut settings.autosave,
     ) {
         changed = true;
@@ -46,7 +48,7 @@ pub fn draw_settings_overlay(settings: &mut crate::save::Settings) -> SettingsAc
     y += row_h + gap;
     if macroquad_toolkit::ui::toggle_row(
         Rect::new(row_x, y, row_w, row_h),
-        "Start runs at 2x speed",
+        &t.fast_start,
         &mut settings.default_fast_speed,
     ) {
         changed = true;
@@ -54,7 +56,7 @@ pub fn draw_settings_overlay(settings: &mut crate::save::Settings) -> SettingsAc
     y += row_h + gap;
     if macroquad_toolkit::ui::slider_row(
         Rect::new(row_x, y, row_w, row_h),
-        "Master volume",
+        &t.master_volume,
         &mut settings.game.master_volume,
         0.0,
         1.0,
@@ -64,7 +66,7 @@ pub fn draw_settings_overlay(settings: &mut crate::save::Settings) -> SettingsAc
     y += row_h + gap;
     if macroquad_toolkit::ui::slider_row(
         Rect::new(row_x, y, row_w, row_h),
-        "SFX volume",
+        &t.sfx_volume,
         &mut settings.game.sfx_volume,
         0.0,
         1.0,
@@ -73,9 +75,9 @@ pub fn draw_settings_overlay(settings: &mut crate::save::Settings) -> SettingsAc
     }
     y += row_h + gap;
     let tut_label = if settings.tutorial_seen {
-        "Replay tutorial on next new run"
+        &t.tutorial_replay
     } else {
-        "Tutorial will show on next new run"
+        &t.tutorial_will_show
     };
     if macroquad_toolkit::ui::button(row_x, y, row_w, row_h, tut_label) && settings.tutorial_seen {
         settings.tutorial_seen = false;
@@ -92,7 +94,7 @@ pub fn draw_settings_overlay(settings: &mut crate::save::Settings) -> SettingsAc
         py + ph - 48.0,
         close_w,
         34.0,
-        "Close",
+        &t.close,
     ) {
         return SettingsAction::Close;
     }

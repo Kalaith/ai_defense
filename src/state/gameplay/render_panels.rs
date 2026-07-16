@@ -8,6 +8,7 @@ mod context_factory;
 mod context_slot;
 mod context_tower;
 
+use crate::data::strings::{fill, text};
 use crate::data::GameData;
 use crate::ui;
 use macroquad::prelude::*;
@@ -62,19 +63,32 @@ impl GameplayState {
         if let Some(ref tower_id) = self.placing_tower {
             if let Some(def) = data.tower_def_by_id(tower_id) {
                 let preview = self.placement_preview(data, world_mouse);
+                let t = &text().panels;
                 let covers = preview
                     .as_ref()
                     .filter(|p| !p.covered_paths.is_empty())
                     .map(|p| self.join_path_names(&p.covered_paths))
-                    .unwrap_or_else(|| "none".to_string());
+                    .unwrap_or_else(|| t.none.clone());
                 let expected = preview
                     .as_ref()
                     .map(|p| format_enemy_counts(&p.expected_targets))
-                    .unwrap_or_else(|| "No preview".to_string());
+                    .unwrap_or_else(|| text().wave_preview.no_preview.clone());
                 let afford = if self.resources.scrap < def.cost_scrap {
-                    format!("Need {:.0} scrap", def.cost_scrap - self.resources.scrap)
+                    fill(
+                        &t.need_scrap_line,
+                        &[(
+                            "n",
+                            &format!("{:.0}", def.cost_scrap - self.resources.scrap),
+                        )],
+                    )
                 } else {
-                    format!("{:.0} scrap / {:.0} power", def.cost_scrap, def.cost_power)
+                    fill(
+                        &t.cost_line,
+                        &[
+                            ("scrap", &format!("{:.0}", def.cost_scrap)),
+                            ("power", &format!("{:.0}", def.cost_power)),
+                        ],
+                    )
                 };
                 draw_tooltip_box(
                     mx,
@@ -82,19 +96,19 @@ impl GameplayState {
                     300.0,
                     &[
                         def.name.clone(),
-                        format!("Covers: {}", covers),
-                        format!("Expected: {}", expected),
-                        format!("Cost: {}", afford),
+                        fill(&t.covers, &[("text", &covers)]),
+                        fill(&t.expected, &[("text", &expected)]),
+                        fill(&t.cost, &[("text", &afford)]),
                     ],
                 );
                 return;
             }
         }
 
-        let Some(text) = self.hover_tooltip_text(world_mouse) else {
+        let Some(line) = self.hover_tooltip_text(world_mouse) else {
             return;
         };
-        draw_tooltip_box(mx, my, self.constants.ui.tooltip_w, &[text]);
+        draw_tooltip_box(mx, my, self.constants.ui.tooltip_w, &[line]);
     }
 
     /// One-liner for whatever the cursor is over: the core's next upgrade, or a
@@ -106,20 +120,33 @@ impl GameplayState {
                 .available_upgrades()
                 .into_iter()
                 .find(|u| !self.factory.has_upgrade(&u.id));
+            let t = &text().panels;
             return Some(match next_upg {
-                Some(upg) => format!("{} - {} scrap", upg.name, upg.cost_scrap as i32),
-                None => "Factory Console".to_string(),
+                Some(upg) => fill(
+                    &t.upgrade_row,
+                    &[
+                        ("name", &upg.name),
+                        ("n", &(upg.cost_scrap as i32).to_string()),
+                    ],
+                ),
+                None => t.factory_console_fallback.clone(),
             });
         }
 
         if let Some((slot_idx, _)) = self.map_state.nearest_slot(world_mouse) {
             let entrance = self.map_state.slots[slot_idx].opens_entrance.as_ref()?;
-            return Some(format!("Unlocks {}", entrance_label(entrance)));
+            return Some(fill(
+                &text().panels.unlocks_entrance,
+                &[("path", entrance_label(entrance))],
+            ));
         }
 
         let (b_idx, _) = self.nearest_unlocked_building(world_mouse)?;
         let entrance = self.map_state.buildings[b_idx].opens_entrance.as_ref()?;
-        Some(format!("Unlocks {}", entrance_label(entrance)))
+        Some(fill(
+            &text().panels.unlocks_entrance,
+            &[("path", entrance_label(entrance))],
+        ))
     }
 }
 

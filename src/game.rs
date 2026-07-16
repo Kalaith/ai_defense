@@ -1,10 +1,11 @@
 //! Top-level game struct: owns state, handles transitions, delegates update/draw.
 
 use crate::data::GameData;
-use crate::state::gameplay::GameplayState;
+use crate::engine::beacon::BeaconPhase;
+use crate::state::gameplay::{GameplayState, SalvageReport};
 use crate::state::menu::MenuState;
 use crate::state::results::ResultsState;
-use crate::state::{GameState, StateTransition};
+use crate::state::{GameState, RunSummary, StateTransition};
 
 pub struct Game {
     pub state: GameState,
@@ -70,6 +71,27 @@ impl Game {
                 gameplay.show_intro = false;
                 self.state = GameState::Gameplay(gameplay);
             }
+            "intro" => {
+                let mut gameplay = GameplayState::new(&self.data);
+                gameplay.show_intro = true;
+                self.state = GameState::Gameplay(gameplay);
+            }
+            // The coach only arms itself for players who have not seen the
+            // tutorial, so force it on rather than depending on local settings.
+            "coach" => {
+                let mut gameplay = GameplayState::new(&self.data);
+                gameplay.show_intro = false;
+                gameplay.coach.active = true;
+                gameplay.coach.step = 0;
+                self.state = GameState::Gameplay(gameplay);
+            }
+            "report" => {
+                let mut gameplay = GameplayState::new(&self.data);
+                gameplay.show_intro = false;
+                gameplay.salvage_report = Some(sample_salvage_report());
+                self.state = GameState::Gameplay(gameplay);
+            }
+            "results" => self.state = GameState::Results(ResultsState::new(sample_run_summary())),
             _ => {}
         }
     }
@@ -85,6 +107,44 @@ impl Game {
                 GameState::Results(ResultsState::new(summary))
             }
         };
+    }
+}
+
+/// Representative end-of-cycle numbers for the `report` capture scene, so the
+/// modal's copy and layout can be checked without playing a cycle out.
+fn sample_salvage_report() -> SalvageReport {
+    SalvageReport {
+        cycle: 3,
+        waves: 7,
+        scavengers_sent: 4,
+        scavengers_returned: 3,
+        scavengers_lost: 1,
+        scrap: 240.0,
+        food: 95.0,
+        population: 2,
+        beacon_phase: BeaconPhase::ScreamingBeacon,
+        survivors_evacuated_cycle: 14,
+        survivors_evacuated_total: 41,
+        escalation_pct: 18.0,
+    }
+}
+
+/// Same idea for the `results` capture scene.
+fn sample_run_summary() -> RunSummary {
+    RunSummary {
+        waves_survived: 22,
+        beacon_phase: BeaconPhase::TerminalHowl,
+        scavengers_sent: 11,
+        scavengers_returned: 8,
+        scavengers_lost: 3,
+        scavenger_scrap: 760.0,
+        scavenger_food: 310.0,
+        scavenger_population: 5,
+        factory_online: 9,
+        population_surviving: 12,
+        shutdown_triggered: true,
+        survivors_evacuated: 41,
+        evacuees_lost: 0,
     }
 }
 

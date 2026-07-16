@@ -1,5 +1,6 @@
 //! Bottom-panel context for the factory core: the research/upgrade console.
 
+use crate::data::strings::{fill, text};
 use crate::data::{GameData, UpgradeDef};
 use crate::ui::{self, ConsoleButtonState, ConsoleIcon};
 use macroquad::prelude::*;
@@ -22,8 +23,8 @@ impl GameplayState {
         ui::draw_console_header(
             rect.x + 56.0,
             rect.y + 24.0,
-            "FACTORY CONSOLE",
-            "research and machine unlocks",
+            &text().panels.factory_console,
+            &text().panels.factory_console_subtitle,
             dark::ACCENT,
         );
 
@@ -129,13 +130,22 @@ impl GameplayState {
             .factory
             .can_purchase(selected, self.resources.scrap, self.resources.power);
         let label = if purchased {
-            "UNLOCKED".to_string()
+            text().panels.unlocked.clone()
         } else if can {
-            format!("UNLOCK {:.0}", selected.cost_scrap)
+            fill(
+                &text().panels.unlock,
+                &[("n", &format!("{:.0}", selected.cost_scrap))],
+            )
         } else {
-            format!(
-                "NEED {:.0} SCRAP",
-                (selected.cost_scrap - self.resources.scrap).max(0.0)
+            fill(
+                &text().status.need_scrap,
+                &[(
+                    "n",
+                    &format!(
+                        "{:.0}",
+                        (selected.cost_scrap - self.resources.scrap).max(0.0)
+                    ),
+                )],
             )
         };
         if ui::draw_console_button(

@@ -1,3 +1,4 @@
+use crate::data::strings::text;
 use crate::data::BuildingBoon;
 use crate::engine::beacon::BeaconPhase;
 use crate::engine::enemy::EnemyType;
@@ -10,16 +11,14 @@ use macroquad_toolkit::rng;
 
 use super::{GameplayState, Particle};
 
+/// Route ids double as entrance labels on the map. Unknown ids fall back to the
+/// raw id so a new path is still identifiable before it is given a name.
 pub fn entrance_label(id: &str) -> &str {
-    match id {
-        "north_gate" => "North Gate",
-        "south_gate" => "South Gate",
-        "east_breach" => "East Breach",
-        "northwest_breach" => "Northwest Breach",
-        // Route ids double as entrance labels on the map.
-        "main_west" => "West Approach",
-        _ => id,
-    }
+    text()
+        .entrances
+        .get(id)
+        .map(|label| label.as_str())
+        .unwrap_or(id)
 }
 
 pub fn reaction_tier_rank(tier: &ReactionTier) -> u32 {
@@ -52,12 +51,13 @@ pub fn beacon_color(phase: &BeaconPhase) -> Color {
 }
 
 pub fn enemy_label(enemy_type: &EnemyType) -> &'static str {
+    let names = &text().enemies;
     match enemy_type {
-        EnemyType::Scout => "Scout",
-        EnemyType::Drone => "Drone",
-        EnemyType::HeavyUnit => "Heavy",
-        EnemyType::Saboteur => "Saboteur",
-        EnemyType::Commander => "Commander",
+        EnemyType::Scout => names.scout.as_str(),
+        EnemyType::Drone => names.drone.as_str(),
+        EnemyType::HeavyUnit => names.heavy.as_str(),
+        EnemyType::Saboteur => names.saboteur.as_str(),
+        EnemyType::Commander => names.commander.as_str(),
     }
 }
 
@@ -184,12 +184,13 @@ impl GameplayState {
     /// dominant signature is actively reshaping the roster.
     pub fn adaptation_incoming_label(&self) -> Option<&'static str> {
         let adaptation = self.wave_adaptation();
+        let adapting = &text().threat.adapting;
         adaptation.preferred.map(|enemy| match enemy {
-            EnemyType::Scout => "Adapting: scout swarm",
-            EnemyType::Drone => "Adapting: drone rush",
-            EnemyType::HeavyUnit => "Adapting: heavy armor",
-            EnemyType::Saboteur => "Adapting: saboteurs",
-            EnemyType::Commander => "Adapting: command strike",
+            EnemyType::Scout => adapting.scout.as_str(),
+            EnemyType::Drone => adapting.drone.as_str(),
+            EnemyType::HeavyUnit => adapting.heavy.as_str(),
+            EnemyType::Saboteur => adapting.saboteur.as_str(),
+            EnemyType::Commander => adapting.commander.as_str(),
         })
     }
 

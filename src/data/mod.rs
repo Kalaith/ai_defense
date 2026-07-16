@@ -1,6 +1,7 @@
 //! Data types, JSON loading, and game constants.
 
 pub mod loader;
+pub mod strings;
 
 use crate::engine::enemy::EnemyType;
 use crate::engine::tower::TowerType;

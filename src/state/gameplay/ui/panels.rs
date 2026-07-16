@@ -1,5 +1,6 @@
 //! Docked side panels: the tower build list and the SYSTEMS console.
 
+use crate::data::strings::{fill, text};
 use crate::data::GameData;
 use crate::engine::map::BuildingState;
 use crate::state::gameplay::GameplayState;
@@ -76,11 +77,13 @@ impl GameplayState {
             Rect::new(sector_x, panel_y, panel_w, panel_h),
             Color::new(0.26, 0.42, 0.48, 0.82),
         );
+        let t = &text().panels;
+        let st = &text().status;
         ui::draw_console_header(
             sector_x + 12.0,
             panel_y + 26.0,
-            "SYSTEMS",
-            "repair / power / upgrade",
+            &t.systems,
+            &t.systems_subtitle,
             dark::ACCENT,
         );
 
@@ -102,13 +105,13 @@ impl GameplayState {
             let unlocked = self.is_building_unlocked(building);
             let selected = self.selected_building == Some(idx);
             let (status, status_color) = if !unlocked {
-                ("LOCKED", dark::TEXT_DIM)
+                (st.locked.as_str(), dark::TEXT_DIM)
             } else {
                 match building.state {
-                    BuildingState::Broken => ("DAMAGED", dark::NEGATIVE),
-                    BuildingState::Repaired => ("REPAIRED", dark::WARNING),
-                    BuildingState::Powered => ("ONLINE", dark::POSITIVE),
-                    BuildingState::Disabled => ("OFFLINE", dark::TEXT_DIM),
+                    BuildingState::Broken => (st.damaged.as_str(), dark::NEGATIVE),
+                    BuildingState::Repaired => (st.repaired.as_str(), dark::WARNING),
+                    BuildingState::Powered => (st.online.as_str(), dark::POSITIVE),
+                    BuildingState::Disabled => (st.offline.as_str(), dark::TEXT_DIM),
                 }
             };
             let row_rect = Rect::new(sector_x + 7.0, row_y, panel_w - 14.0, row_h);
@@ -137,10 +140,16 @@ impl GameplayState {
 
             let detail = self.boon_text(&building.boon);
             let cost_line = match building.state {
-                BuildingState::Broken => format!("Repair Cost: {:.0} scrap", building.repair_cost),
-                BuildingState::Repaired => format!("Power Cost: {:.0} scrap", building.power_cost),
-                BuildingState::Powered => "Online".to_string(),
-                BuildingState::Disabled => "Locked".to_string(),
+                BuildingState::Broken => fill(
+                    &t.repair_cost,
+                    &[("n", &format!("{:.0}", building.repair_cost))],
+                ),
+                BuildingState::Repaired => fill(
+                    &t.power_cost,
+                    &[("n", &format!("{:.0}", building.power_cost))],
+                ),
+                BuildingState::Powered => t.online.clone(),
+                BuildingState::Disabled => t.locked.clone(),
             };
             ui::draw_bounded_text(
                 &cost_line,
@@ -151,7 +160,7 @@ impl GameplayState {
                 dark::TEXT_DIM,
             );
             ui::draw_bounded_text(
-                &format!("Benefit: {}", detail),
+                &fill(&t.benefit, &[("text", &detail)]),
                 row_rect.x + 12.0,
                 row_y + 74.0,
                 row_rect.w - 126.0,
@@ -163,7 +172,10 @@ impl GameplayState {
                 },
             );
             ui::draw_bounded_text(
-                &format!("Risk: +{:.2} noise/s", building.threat_per_sec),
+                &fill(
+                    &t.risk_noise,
+                    &[("n", &format!("{:.2}", building.threat_per_sec))],
+                ),
                 row_rect.x + 12.0,
                 row_y + 89.0,
                 row_rect.w - 126.0,
@@ -223,9 +235,19 @@ impl GameplayState {
         unlocked: bool,
         building: &crate::engine::map::MapBuilding,
     ) -> (String, &'static str, ui::ConsoleButtonState) {
+        let st = &text().status;
+        let shortfall = |cost: f32| {
+            fill(
+                &st.need_scrap,
+                &[(
+                    "n",
+                    &format!("{:.0}", (cost - self.resources.scrap).max(0.0)),
+                )],
+            )
+        };
         if !unlocked {
             return (
-                "LOCKED".to_string(),
+                st.locked.clone(),
                 "locked",
                 ui::ConsoleButtonState::Disabled,
             );
@@ -234,16 +256,13 @@ impl GameplayState {
             BuildingState::Broken => {
                 if self.resources.scrap >= building.repair_cost {
                     (
-                        "REPAIR".to_string(),
+                        st.repair.clone(),
                         "repair",
                         ui::ConsoleButtonState::Affordable,
                     )
                 } else {
                     (
-                        format!(
-                            "NEED {:.0} SCRAP",
-                            (building.repair_cost - self.resources.scrap).max(0.0)
-                        ),
+                        shortfall(building.repair_cost),
                         "repair",
                         ui::ConsoleButtonState::Disabled,
                     )
@@ -252,28 +271,25 @@ impl GameplayState {
             BuildingState::Repaired => {
                 if self.resources.scrap >= building.power_cost {
                     (
-                        "POWER".to_string(),
+                        st.power.clone(),
                         "power",
                         ui::ConsoleButtonState::Recommended,
                     )
                 } else {
                     (
-                        format!(
-                            "NEED {:.0} SCRAP",
-                            (building.power_cost - self.resources.scrap).max(0.0)
-                        ),
+                        shortfall(building.power_cost),
                         "power",
                         ui::ConsoleButtonState::Disabled,
                     )
                 }
             }
             BuildingState::Powered => (
-                "ONLINE".to_string(),
+                st.online.clone(),
                 "online",
                 ui::ConsoleButtonState::Disabled,
             ),
             BuildingState::Disabled => (
-                "LOCKED".to_string(),
+                st.locked.clone(),
                 "locked",
                 ui::ConsoleButtonState::Disabled,
             ),

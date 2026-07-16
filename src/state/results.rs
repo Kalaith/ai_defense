@@ -1,5 +1,6 @@
 //! End-of-run results screen.
 
+use crate::data::strings::{fill, text};
 use crate::state::{RunSummary, StateTransition};
 use macroquad::prelude::*;
 use macroquad_toolkit::colors::dark;
@@ -28,14 +29,15 @@ impl ResultsState {
     }
 
     pub fn draw(&mut self) {
+        let t = &text().results;
         let center_x = screen_width() / 2.0;
         let center_y = screen_height() / 2.0;
         let report_top = (center_y - 70.0).max(150.0);
 
         let title = if self.summary.shutdown_triggered {
-            "MISSION COMPLETE"
+            &t.title_survived
         } else {
-            "FACTORY LOST"
+            &t.title_lost
         };
         let dims = measure_ui_text(title, None, 40, 1.0);
         draw_ui_text(
@@ -60,50 +62,61 @@ impl ResultsState {
 
         let btn_w = 200.0;
         let btn_x = center_x - btn_w / 2.0;
-        if button(btn_x, y + 20.0, btn_w, 45.0, "Return to Menu") {
+        if button(btn_x, y + 20.0, btn_w, 45.0, &t.button) {
             self.menu_clicked = true;
         }
     }
 }
 
 fn build_report_lines(summary: &RunSummary) -> Vec<String> {
+    let t = &text().results;
     let mut lines = Vec::new();
     // Headline: the campaign's real score — people the beacon let escape.
-    lines.push(format!(
-        "SURVIVORS EVACUATED: {}",
-        summary.survivors_evacuated
+    lines.push(fill(
+        &t.headline,
+        &[("n", &summary.survivors_evacuated.to_string())],
     ));
     if summary.evacuees_lost > 0 {
-        lines.push(format!(
-            "Lost when the factory fell: {}",
-            summary.evacuees_lost
+        lines.push(fill(
+            &t.lost_inside,
+            &[("n", &summary.evacuees_lost.to_string())],
         ));
     }
     lines.push(String::new());
-    lines.push(format!("Waves Survived: {}", summary.waves_survived));
-    lines.push(format!("Beacon Phase: {}", summary.beacon_phase.label()));
-    lines.push(format!(
-        "Scavengers Sent/Returned/Lost: {}/{}/{}",
-        summary.scavengers_sent, summary.scavengers_returned, summary.scavengers_lost
+    lines.push(fill(
+        &t.waves,
+        &[("n", &summary.waves_survived.to_string())],
     ));
-    lines.push(format!(
-        "Scavenger Gains: +{:.0} scrap, +{:.0} food, +{} pop",
-        summary.scavenger_scrap, summary.scavenger_food, summary.scavenger_population
+    lines.push(fill(&t.peak, &[("phase", summary.beacon_phase.label())]));
+    lines.push(fill(
+        &t.teams,
+        &[
+            ("out", &summary.scavengers_sent.to_string()),
+            ("home", &summary.scavengers_returned.to_string()),
+            ("lost", &summary.scavengers_lost.to_string()),
+        ],
     ));
-    lines.push(format!(
-        "Factory Systems Online: {}",
-        summary.factory_online
+    lines.push(fill(
+        &t.carried,
+        &[
+            ("scrap", &format!("{:.0}", summary.scavenger_scrap)),
+            ("food", &format!("{:.0}", summary.scavenger_food)),
+            ("pop", &summary.scavenger_population.to_string()),
+        ],
     ));
-    lines.push(format!(
-        "Population Surviving: {}",
-        summary.population_surviving
+    lines.push(fill(
+        &t.machines,
+        &[("n", &summary.factory_online.to_string())],
+    ));
+    lines.push(fill(
+        &t.surviving,
+        &[("n", &summary.population_surviving.to_string())],
     ));
 
-    let outcome = if summary.shutdown_triggered {
-        "Beacon shut down - survivors evacuated"
+    lines.push(if summary.shutdown_triggered {
+        t.outcome_survived.clone()
     } else {
-        "Beacon lost - survivors scattered"
-    };
-    lines.push(outcome.to_string());
+        t.outcome_lost.clone()
+    });
     lines
 }

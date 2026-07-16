@@ -176,26 +176,6 @@ pub struct Coach {
     pub step: usize,
 }
 
-/// (title, instruction) for each onboarding step, in order.
-pub const COACH_STEPS: &[(&str, &str)] = &[
-    (
-        "Repair a machine",
-        "Click the Scrap Converter near the core, then Repair it. Machines fund and power your defense.",
-    ),
-    (
-        "Power it on",
-        "Select the repaired machine and Power it. Powering machines brings new factory sections online.",
-    ),
-    (
-        "Build a turret",
-        "Pick a tower on the left, then click a glowing powered pad on the enemy route to place it.",
-    ),
-    (
-        "Raise the beacon",
-        "When the line is ready, press START BEACON (top right) to draw the machines and send scavengers out.",
-    ),
-];
-
 pub struct Particle {
     pub position: Vec2,
     pub velocity: Vec2,

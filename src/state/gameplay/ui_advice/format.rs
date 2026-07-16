@@ -1,5 +1,6 @@
 //! Player-facing names and blurbs derived from raw ids and data definitions.
 
+use crate::data::strings::{fill, text};
 use crate::data::BuildingBoon;
 use crate::engine::map::MapBuilding;
 
@@ -47,23 +48,25 @@ impl GameplayState {
     }
 
     pub fn boon_text(&self, boon: &BuildingBoon) -> String {
+        let t = &text().boon;
+        let rate = |template: &str, value: f32| fill(template, &[("n", &format!("{value:.1}"))]);
         let mut parts = Vec::new();
         if boon.scrap_per_sec > 0.0 {
-            parts.push(format!("+{:.1} scrap/s", boon.scrap_per_sec));
+            parts.push(rate(&t.scrap, boon.scrap_per_sec));
         }
         if boon.food_per_sec > 0.0 {
-            parts.push(format!("+{:.1} food/s", boon.food_per_sec));
+            parts.push(rate(&t.food, boon.food_per_sec));
         }
         if boon.water_per_sec > 0.0 {
-            parts.push(format!("+{:.1} water/s", boon.water_per_sec));
+            parts.push(rate(&t.water, boon.water_per_sec));
         }
         if boon.power_per_sec > 0.0 {
-            parts.push(format!("+{:.1} power/s", boon.power_per_sec));
+            parts.push(rate(&t.power, boon.power_per_sec));
         }
         if parts.is_empty() {
-            "Factory stability".to_string()
+            t.stability.clone()
         } else {
-            parts.join(", ")
+            parts.join(&t.separator)
         }
     }
 }

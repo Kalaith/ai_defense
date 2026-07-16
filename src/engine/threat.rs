@@ -1,5 +1,6 @@
 //! Threat signature tracking and machine awareness.
 
+use crate::data::strings::text;
 use crate::engine::enemy::EnemyType;
 
 #[derive(Clone, Debug)]
@@ -12,11 +13,12 @@ pub enum ReactionTier {
 
 impl ReactionTier {
     pub fn label(&self) -> &'static str {
+        let tiers = &text().threat.tiers;
         match self {
-            Self::Observation => "Observation",
-            Self::Adaptation => "Adaptation",
-            Self::Suppression => "Suppression",
-            Self::Extermination => "Extermination",
+            Self::Observation => tiers.observation.as_str(),
+            Self::Adaptation => tiers.adaptation.as_str(),
+            Self::Suppression => tiers.suppression.as_str(),
+            Self::Extermination => tiers.extermination.as_str(),
         }
     }
 }
@@ -36,13 +38,14 @@ pub enum ThreatKind {
 
 impl ThreatKind {
     pub fn label(self) -> &'static str {
+        let signatures = &text().threat.signatures;
         match self {
-            Self::Energy => "Energy",
-            Self::Heat => "Heat",
-            Self::Data => "Data",
-            Self::Corruption => "Corruption",
-            Self::Noise => "Noise",
-            Self::Territory => "Territory",
+            Self::Energy => signatures.energy.as_str(),
+            Self::Heat => signatures.heat.as_str(),
+            Self::Data => signatures.data.as_str(),
+            Self::Corruption => signatures.corruption.as_str(),
+            Self::Noise => signatures.noise.as_str(),
+            Self::Territory => signatures.territory.as_str(),
         }
     }
 

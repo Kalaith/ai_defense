@@ -1,5 +1,6 @@
 //! Bottom-panel context for a selected tower: live stats and the upgrade path.
 
+use crate::data::strings::{fill, text};
 use crate::data::GameData;
 use crate::ui::{self, ConsoleButtonState, ConsoleIcon};
 use macroquad::prelude::*;
@@ -27,13 +28,19 @@ impl GameplayState {
             has_research && tower.level < max_level && self.resources.scrap >= upgrade_cost;
 
         let label = if !has_research {
-            "REQUIRES RESEARCH".to_string()
+            text().panels.requires_research.clone()
         } else if tower.level >= max_level {
-            "MAX LEVEL".to_string()
+            text().panels.max_level.clone()
         } else if can_upgrade {
-            format!("UPGRADE {:.0}", upgrade_cost)
+            fill(
+                &text().panels.upgrade,
+                &[("n", &format!("{upgrade_cost:.0}"))],
+            )
         } else {
-            format!("NEED {:.0} SCRAP", upgrade_cost - self.resources.scrap)
+            fill(
+                &text().status.need_scrap,
+                &[("n", &format!("{:.0}", upgrade_cost - self.resources.scrap))],
+            )
         };
         if ui::draw_console_button(
             rect.x + rect.w - 182.0,
@@ -60,7 +67,7 @@ impl GameplayState {
         let name = data
             .tower_def_by_id(&tower.tower_id)
             .map(|d| d.name.as_str())
-            .unwrap_or("Tower");
+            .unwrap_or(&text().panels.tower_fallback_name);
         ui::draw_icon(
             ConsoleIcon::Tower,
             rect.x,
@@ -71,15 +78,26 @@ impl GameplayState {
         ui::draw_console_header(
             rect.x + 48.0,
             rect.y + 27.0,
-            &format!("{} LVL {}", name.to_uppercase(), tower.level),
-            "tower command",
+            &fill(
+                &text().panels.tower_title,
+                &[
+                    ("name", &name.to_uppercase()),
+                    ("level", &tower.level.to_string()),
+                ],
+            ),
+            &text().panels.tower_subtitle,
             tower.color(),
         );
         let stats = self.tower_stats.get(idx).cloned().unwrap_or_default();
         ui::draw_bounded_text(
-            &format!(
-                "Damage {:.1} | Range {:.0} | Fire {:.1}/s | Power {:.0}",
-                tower.damage, tower.range, tower.fire_rate, tower.power_drain
+            &fill(
+                &text().panels.tower_stats,
+                &[
+                    ("damage", &format!("{:.1}", tower.damage)),
+                    ("range", &format!("{:.0}", tower.range)),
+                    ("fire", &format!("{:.1}", tower.fire_rate)),
+                    ("power", &format!("{:.0}", tower.power_drain)),
+                ],
             ),
             rect.x + 48.0,
             rect.y + 62.0,
@@ -88,9 +106,13 @@ impl GameplayState {
             dark::TEXT_BRIGHT,
         );
         ui::draw_bounded_text(
-            &format!(
-                "This wave: {} shots, {} hits, {} kills",
-                stats.shots_this_wave, stats.hits_this_wave, stats.kills_this_wave
+            &fill(
+                &text().panels.tower_wave_stats,
+                &[
+                    ("shots", &stats.shots_this_wave.to_string()),
+                    ("hits", &stats.hits_this_wave.to_string()),
+                    ("kills", &stats.kills_this_wave.to_string()),
+                ],
             ),
             rect.x + 48.0,
             rect.y + 84.0,
@@ -101,9 +123,12 @@ impl GameplayState {
         let covered =
             self.covered_paths_for_range(tower.position, self.effective_tower_range(tower.range));
         let coverage = if covered.is_empty() {
-            "Coverage: none".to_string()
+            text().panels.coverage_none.clone()
         } else {
-            format!("Coverage: {}", self.join_path_names(&covered))
+            fill(
+                &text().panels.coverage,
+                &[("paths", &self.join_path_names(&covered))],
+            )
         };
         ui::draw_bounded_text(
             &coverage,

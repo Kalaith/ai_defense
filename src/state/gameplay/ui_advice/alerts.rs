@@ -1,5 +1,6 @@
 //! Threshold watchers that turn raw state into ranked HUD alert banners.
 
+use crate::data::strings::{fill, text};
 use crate::engine::beacon::BeaconPhase;
 use crate::engine::enemy::EnemyType;
 
@@ -30,21 +31,28 @@ impl GameplayState {
     }
 
     pub(super) fn build_alerts(&self, power: &PowerGridSnapshot) -> Vec<AlertBanner> {
+        let t = &text().alerts;
         let mut alerts = Vec::new();
         if power.offline_towers > 0 || (power.net < 0.0 && power.battery <= 0.0) {
             alerts.push(AlertBanner {
                 severity: AlertSeverity::Critical,
-                label: "POWER FAILURE".to_string(),
-                detail: format!("{} towers offline", power.offline_towers),
+                label: t.power_failure.clone(),
+                detail: fill(
+                    &t.power_failure_detail,
+                    &[("n", &power.offline_towers.to_string())],
+                ),
                 priority: 100,
             });
         } else if power.net < 0.0 {
             alerts.push(AlertBanner {
                 severity: AlertSeverity::Warning,
-                label: "POWER DEFICIT".to_string(),
-                detail: format!(
-                    "{:.0}s battery reserve",
-                    power.seconds_to_empty.unwrap_or(0.0)
+                label: t.power_deficit.clone(),
+                detail: fill(
+                    &t.power_deficit_detail,
+                    &[(
+                        "secs",
+                        &format!("{:.0}", power.seconds_to_empty.unwrap_or(0.0)),
+                    )],
                 ),
                 priority: 90,
             });
@@ -54,15 +62,15 @@ impl GameplayState {
         if food_seconds <= 40.0 {
             alerts.push(AlertBanner {
                 severity: AlertSeverity::Critical,
-                label: "FOOD SHORTAGE".to_string(),
-                detail: format!("{:.0}s supply left", food_seconds),
+                label: t.food_shortage.clone(),
+                detail: fill(&t.food_detail, &[("secs", &format!("{food_seconds:.0}"))]),
                 priority: 88,
             });
         } else if food_seconds <= 90.0 {
             alerts.push(AlertBanner {
                 severity: AlertSeverity::Warning,
-                label: "FOOD LOW".to_string(),
-                detail: format!("{:.0}s supply left", food_seconds),
+                label: t.food_low.clone(),
+                detail: fill(&t.food_detail, &[("secs", &format!("{food_seconds:.0}"))]),
                 priority: 72,
             });
         }
@@ -70,8 +78,8 @@ impl GameplayState {
         if self.saboteur_inbound() {
             alerts.push(AlertBanner {
                 severity: AlertSeverity::Critical,
-                label: "INFILTRATOR".to_string(),
-                detail: "Saboteur on route".to_string(),
+                label: t.infiltrator.clone(),
+                detail: t.infiltrator_detail.clone(),
                 priority: 82,
             });
         }
@@ -81,8 +89,11 @@ impl GameplayState {
         {
             alerts.push(AlertBanner {
                 severity: AlertSeverity::Warning,
-                label: "TEAM AT RISK".to_string(),
-                detail: format!("{} teams outside", self.scavengers_out),
+                label: t.team_at_risk.clone(),
+                detail: fill(
+                    &t.team_at_risk_detail,
+                    &[("n", &self.scavengers_out.to_string())],
+                ),
                 priority: 76,
             });
         }
@@ -91,8 +102,11 @@ impl GameplayState {
         if self.beacon_active && phase_remaining <= 8.0 {
             alerts.push(AlertBanner {
                 severity: AlertSeverity::Warning,
-                label: "BEACON ESCALATING".to_string(),
-                detail: format!("+{:.0} draw to next phase", phase_remaining),
+                label: t.beacon_escalating.clone(),
+                detail: fill(
+                    &t.beacon_escalating_detail,
+                    &[("draw", &format!("{phase_remaining:.0}"))],
+                ),
                 priority: 70,
             });
         }
@@ -101,15 +115,15 @@ impl GameplayState {
         if awareness >= 60.0 {
             alerts.push(AlertBanner {
                 severity: AlertSeverity::Critical,
-                label: "MACHINE AWARE".to_string(),
-                detail: format!("{:.0}% threat", awareness),
+                label: t.machine_aware.clone(),
+                detail: fill(&t.awareness_detail, &[("pct", &format!("{awareness:.0}"))]),
                 priority: 68,
             });
         } else if awareness >= 25.0 {
             alerts.push(AlertBanner {
                 severity: AlertSeverity::Warning,
-                label: "MACHINE WATCHING".to_string(),
-                detail: format!("{:.0}% threat", awareness),
+                label: t.machine_watching.clone(),
+                detail: fill(&t.awareness_detail, &[("pct", &format!("{awareness:.0}"))]),
                 priority: 58,
             });
         }
@@ -117,8 +131,11 @@ impl GameplayState {
         if self.factory_integrity < 35.0 {
             alerts.push(AlertBanner {
                 severity: AlertSeverity::Critical,
-                label: "FACTORY DAMAGE".to_string(),
-                detail: format!("{:.0}% integrity", self.factory_integrity),
+                label: t.factory_damage.clone(),
+                detail: fill(
+                    &t.factory_damage_detail,
+                    &[("pct", &format!("{:.0}", self.factory_integrity))],
+                ),
                 priority: 64,
             });
         }

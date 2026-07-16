@@ -1,3 +1,6 @@
+mod beacon_panel;
+
+use crate::data::strings::{fill, text};
 use crate::data::GameData;
 use crate::ui::{self, ConsoleButtonState, ConsoleIcon};
 use macroquad::prelude::*;
@@ -7,7 +10,7 @@ use macroquad_toolkit::notifications::{
     draw_notification, Notification, NotificationRenderConfig, NotificationType,
 };
 
-use super::helpers::{beacon_color, threat_color};
+use super::helpers::threat_color;
 use super::ui_advice::{AdviceTarget, AlertBanner, AlertSeverity, PowerGridSnapshot, UiAdvice};
 use super::GameplayState;
 use macroquad_toolkit::ui::{draw_ui_text, measure_ui_text};
@@ -86,7 +89,14 @@ impl GameplayState {
 
     fn draw_survival_zone(&self, rect: Rect) {
         ui::draw_console_panel(rect, Color::new(0.18, 0.38, 0.36, 0.82));
-        ui::draw_console_header(rect.x + 12.0, rect.y + 18.0, "SURVIVAL", "", dark::POSITIVE);
+        let t = &text().hud;
+        ui::draw_console_header(
+            rect.x + 12.0,
+            rect.y + 18.0,
+            &t.survival,
+            "",
+            dark::POSITIVE,
+        );
         draw_bounded_text(
             self.factory.phase.label(),
             rect.x + rect.w - 112.0,
@@ -102,11 +112,16 @@ impl GameplayState {
             ConsoleIcon::People,
             rect.x + 12.0,
             y,
-            "POP",
-            &format!(
-                "{}/{}",
-                self.population.count,
-                self.constants.starting.population + 12
+            &t.pop,
+            &fill(
+                &t.pop_value,
+                &[
+                    ("count", &self.population.count.to_string()),
+                    (
+                        "max",
+                        &(self.constants.starting.population + 12).to_string(),
+                    ),
+                ],
             ),
             dark::TEXT_BRIGHT,
         );
@@ -114,7 +129,7 @@ impl GameplayState {
             ConsoleIcon::Food,
             rect.x + col_w,
             y,
-            "FOOD",
+            &t.food,
             &format!("{:.0}", self.population.food_supply),
             dark::TEXT_BRIGHT,
         );
@@ -129,7 +144,7 @@ impl GameplayState {
             ConsoleIcon::Morale,
             rect.x + col_w * 2.0,
             y,
-            "MORALE",
+            &t.morale,
             &format!("{:.0}%", self.population.morale),
             morale_color,
         );
@@ -142,7 +157,7 @@ impl GameplayState {
             ConsoleIcon::Health,
             rect.x + col_w * 3.0,
             y,
-            "HEALTH",
+            &t.health,
             &format!("{:.0}%", self.population.health),
             health_color,
         );
@@ -155,21 +170,22 @@ impl GameplayState {
             dark::POSITIVE
         };
         ui::draw_console_panel(rect, Color::new(accent.r, accent.g, accent.b, 0.82));
-        ui::draw_console_header(rect.x + 12.0, rect.y + 18.0, "POWER GRID", "", accent);
+        let t = &text().hud;
+        ui::draw_console_header(rect.x + 12.0, rect.y + 18.0, &t.power_grid, "", accent);
 
         let number_y = rect.y + 45.0;
         let col_w = rect.w / 4.0;
         draw_small_metric(
             rect.x + 12.0,
             number_y,
-            "GEN",
+            &t.gen,
             &format!("{:.0}", power.generated),
             dark::POSITIVE,
         );
         draw_small_metric(
             rect.x + col_w,
             number_y,
-            "USED",
+            &t.used,
             &format!("{:.0}", power.used),
             dark::WARNING,
         );
@@ -181,14 +197,14 @@ impl GameplayState {
         draw_small_metric(
             rect.x + col_w * 2.0,
             number_y,
-            "NET",
+            &t.net,
             &format!("{:+.0}/s", power.net),
             net_color,
         );
         draw_small_metric(
             rect.x + col_w * 3.0,
             number_y,
-            "BATTERY",
+            &t.battery,
             &format!("{:.0}", power.battery),
             dark::TEXT_BRIGHT,
         );
@@ -206,7 +222,7 @@ impl GameplayState {
         );
         if power.offline_towers > 0 {
             draw_ui_text(
-                &format!("{} OFFLINE", power.offline_towers),
+                &fill(&t.offline, &[("n", &power.offline_towers.to_string())]),
                 bar_x,
                 bar_y - 8.0,
                 9.0,
@@ -217,15 +233,16 @@ impl GameplayState {
 
     fn draw_threat_zone(&self, rect: Rect, advice: &UiAdvice) {
         ui::draw_console_panel(rect, Color::new(0.48, 0.2, 0.16, 0.85));
-        ui::draw_console_header(rect.x + 12.0, rect.y + 18.0, "THREAT", "", dark::WARNING);
+        let t = &text().hud;
+        ui::draw_console_header(rect.x + 12.0, rect.y + 18.0, &t.threat, "", dark::WARNING);
 
         // What is drawing the most machine attention right now — the signal the
         // player can act on to go quieter. Right-aligned in the header row.
         if let Some(loudest) = self.loudest_threat_label() {
-            let text = format!("\u{25B2} {loudest}");
-            let w = measure_ui_text(&text, None, 10, 1.0).width;
+            let line = fill(&t.loudest, &[("label", loudest)]);
+            let w = measure_ui_text(&line, None, 10, 1.0).width;
             draw_ui_text(
-                &text,
+                &line,
                 rect.x + rect.w - 12.0 - w,
                 rect.y + 16.0,
                 10.0,
@@ -237,22 +254,26 @@ impl GameplayState {
         // of. The awareness tier already lives in the beacon panel — repeating
         // it here was clutter (and the third line overlapped the second).
         let (status, status_color) = if !self.beacon_active && !self.shutdown_triggered {
-            ("Beacon offline — no waves".to_string(), dark::TEXT_DIM)
+            (t.beacon_offline.clone(), dark::TEXT_DIM)
         } else if self.between_waves {
             (
-                format!(
-                    "Wave {} in {:.0}s",
-                    self.current_wave + 1,
-                    self.wave_timer.max(0.0)
+                fill(
+                    &t.wave_incoming,
+                    &[
+                        ("wave", &(self.current_wave + 1).to_string()),
+                        ("secs", &format!("{:.0}", self.wave_timer.max(0.0))),
+                    ],
                 ),
                 dark::TEXT_BRIGHT,
             )
         } else {
             (
-                format!(
-                    "Wave {}: {} alive",
-                    self.current_wave,
-                    self.wave_manager.alive_count()
+                fill(
+                    &t.wave_active,
+                    &[
+                        ("wave", &self.current_wave.to_string()),
+                        ("alive", &self.wave_manager.alive_count().to_string()),
+                    ],
                 ),
                 dark::TEXT_BRIGHT,
             )
@@ -271,7 +292,13 @@ impl GameplayState {
         // the raw counts.
         let composition = super::ui_advice::format_enemy_counts(&advice.wave_preview.counts);
         let (line, line_color) = match self.adaptation_incoming_label() {
-            Some(note) => (format!("{note} \u{00B7} {composition}"), dark::WARNING),
+            Some(note) => (
+                fill(
+                    &t.adaptation_composition,
+                    &[("note", note), ("composition", &composition)],
+                ),
+                dark::WARNING,
+            ),
             None => (composition, dark::TEXT_DIM),
         };
         draw_bounded_text(
@@ -286,8 +313,9 @@ impl GameplayState {
 
     fn draw_objective_strip(&mut self, rect: Rect, advice: &UiAdvice, data: &GameData) {
         ui::draw_console_panel(rect, Color::new(0.2, 0.42, 0.64, 0.9));
+        let t = &text().hud;
         draw_ui_text(
-            "NEXT STEP",
+            &t.next_step,
             rect.x + 12.0,
             rect.y + 16.0,
             11.0,
@@ -302,7 +330,13 @@ impl GameplayState {
             dark::TEXT_BRIGHT,
         );
         draw_bounded_text(
-            &format!("{}    {}", advice.suggested_action.cost, advice.risk),
+            &fill(
+                &t.cost_risk,
+                &[
+                    ("cost", &advice.suggested_action.cost),
+                    ("risk", &advice.risk),
+                ],
+            ),
             rect.x + 12.0,
             rect.y + 46.0,
             rect.w - 124.0,
@@ -320,7 +354,7 @@ impl GameplayState {
             rect.y + 12.0,
             92.0,
             31.0,
-            "FOCUS",
+            &t.focus,
             btn_state,
         ) {
             let target = advice.suggested_action.target.clone();
@@ -381,258 +415,19 @@ impl GameplayState {
         }
     }
 
-    fn draw_beacon_panel(&mut self, rect: Rect) {
-        let phase_color = beacon_color(&self.beacon_phase);
-        let danger = match self.beacon_phase {
-            crate::engine::beacon::BeaconPhase::WarmSignal => 0.24,
-            crate::engine::beacon::BeaconPhase::SustainedCall => 0.48,
-            crate::engine::beacon::BeaconPhase::ScreamingBeacon => 0.72,
-            crate::engine::beacon::BeaconPhase::TerminalHowl => 1.0,
-        };
-        let pulse = pulse_range(4.0 + danger * 4.0, 0.68, 0.86);
-        ui::draw_console_panel(rect, Color::new(0.78, 0.16, 0.12, pulse));
-        draw_ui_text(
-            "BEACON CONTROL",
-            rect.x + 14.0,
-            rect.y + 18.0,
-            11.0,
-            dark::NEGATIVE,
-        );
-        // Sacrifice ledger, always visible: total survivors evacuated so far,
-        // plus the un-banked count the current beacon window is earning (lost if
-        // the factory falls before shutdown).
-        let evac_text = if self.beacon_active {
-            format!(
-                "EVAC {} (+{:.0})",
-                self.survivors_evacuated, self.pending_evacuees
-            )
-        } else {
-            format!("EVAC {}", self.survivors_evacuated)
-        };
-        let evac_w = measure_ui_text(&evac_text, None, 11, 1.0).width;
-        draw_ui_text(
-            &evac_text,
-            rect.x + rect.w - 14.0 - evac_w,
-            rect.y + 18.0,
-            11.0,
-            dark::POSITIVE,
-        );
-        draw_bounded_text(
-            &self.beacon_phase.label().to_uppercase(),
-            rect.x + 14.0,
-            rect.y + 43.0,
-            rect.w - 28.0,
-            24.0,
-            phase_color,
-        );
-
-        draw_segmented_meter(
-            rect.x + 14.0,
-            rect.y + 55.0,
-            rect.w - 28.0,
-            11.0,
-            danger,
-            phase_color,
-        );
-        draw_bounded_text(
-            &format!("Next phase: +{:.0} draw", self.beacon_draw_to_next_phase()),
-            rect.x + 14.0,
-            rect.y + 78.0,
-            rect.w * 0.48,
-            11.0,
-            dark::TEXT_DIM,
-        );
-        draw_bounded_text(
-            &format!(
-                "{} {:.0}",
-                self.threat.reaction_tier().label(),
-                self.threat.awareness_level()
-            ),
-            rect.x + rect.w * 0.5,
-            rect.y + 78.0,
-            rect.w * 0.45,
-            11.0,
-            threat_color(&self.threat),
-        );
-
-        if self.beacon_active {
-            self.draw_scavenger_status_cards(rect);
-        } else {
-            draw_bounded_text(
-                &format!(
-                    "Teams ready: {}",
-                    self.constants.scavenger.initial_scavengers
-                ),
-                rect.x + 14.0,
-                rect.y + 100.0,
-                rect.w - 28.0,
-                12.0,
-                dark::TEXT_BRIGHT,
-            );
-        }
-
-        // Buttons behind a modal (salvage report) or the pause menu must not
-        // register clicks.
-        let interactive = self.salvage_report.is_none() && !self.paused;
-
-        let btn_y = rect.y + rect.h - 29.0;
-        if !self.beacon_active {
-            // While the salvage report modal is up the beacon can't be re-raised
-            // from the panel behind it; the player rebuilds first.
-            let start_state = if interactive {
-                ConsoleButtonState::Dangerous
-            } else {
-                ConsoleButtonState::Disabled
-            };
-            let start_rect = Rect::new(rect.x + 14.0, btn_y, rect.w - 28.0, 24.0);
-            if ui::draw_console_button(
-                start_rect.x,
-                start_rect.y,
-                start_rect.w,
-                start_rect.h,
-                "START BEACON",
-                start_state,
-            ) && interactive
-            {
-                self.start_beacon();
-            }
-            draw_button_hint(
-                start_rect,
-                "Raise the beacon",
-                "Draws the machines in and sends scavenger teams out for salvage.",
-            );
-            return;
-        }
-
-        let left_w = (rect.w - 34.0) * 0.5;
-        let recall_rect = Rect::new(rect.x + 14.0, btn_y, left_w, 24.0);
-        if interactive && self.scavengers_out > 0 && !self.scavenger_recall_active {
-            if ui::draw_console_button(
-                recall_rect.x,
-                recall_rect.y,
-                recall_rect.w,
-                recall_rect.h,
-                "RECALL",
-                ConsoleButtonState::Recommended,
-            ) {
-                self.scavenger_recall_active = true;
-                self.scavenger_recall_timer = 0.0;
-            }
-        } else {
-            ui::draw_console_button(
-                recall_rect.x,
-                recall_rect.y,
-                recall_rect.w,
-                recall_rect.h,
-                "RECALL",
-                ConsoleButtonState::Disabled,
-            );
-        }
-        draw_button_hint(
-            recall_rect,
-            "Recall scavengers",
-            "Brings field teams home to bank their salvage before the beacon worsens.",
-        );
-
-        let shutdown_state = if self.shutdown_triggered || self.current_wave < 1 || !interactive {
-            ConsoleButtonState::Disabled
-        } else {
-            ConsoleButtonState::Dangerous
-        };
-        let shutdown_label = if self.current_wave < 1 {
-            "SHUTDOWN LOCKED"
-        } else {
-            "SHUTDOWN"
-        };
-        let shutdown_rect = Rect::new(rect.x + 20.0 + left_w, btn_y, left_w, 24.0);
-        if ui::draw_console_button(
-            shutdown_rect.x,
-            shutdown_rect.y,
-            shutdown_rect.w,
-            shutdown_rect.h,
-            shutdown_label,
-            shutdown_state,
-        ) && interactive
-        {
-            self.trigger_shutdown();
-        }
-        draw_button_hint(
-            shutdown_rect,
-            "Shut down the beacon",
-            "Stops new waves. Clear the field for a salvage report, then rebuild.",
-        );
-    }
-
-    fn draw_scavenger_status_cards(&self, rect: Rect) {
-        let card_y = rect.y + 90.0;
-        let card_h = 20.0;
-        let gap = 5.0;
-        let card_w = (rect.w - 28.0 - gap * 2.0) / 3.0;
-        for i in 0..3 {
-            let x = rect.x + 14.0 + i as f32 * (card_w + gap);
-            draw_rectangle(
-                x,
-                card_y,
-                card_w,
-                card_h,
-                Color::new(0.08, 0.07, 0.07, 0.78),
-            );
-            draw_rectangle_lines(
-                x,
-                card_y,
-                card_w,
-                card_h,
-                1.0,
-                Color::new(0.5, 0.18, 0.14, 0.5),
-            );
-            let text = if !self.beacon_active {
-                if i == 0 {
-                    format!("Ready {}", self.constants.scavenger.initial_scavengers)
-                } else {
-                    "Standby".to_string()
-                }
-            } else if self.scavenger_recall_active {
-                if i == 0 {
-                    let remaining = (self.constants.scavenger.recall_interval
-                        - self.scavenger_recall_timer)
-                        .max(0.0);
-                    format!("Return {:.0}s", remaining)
-                } else {
-                    "Awaiting".to_string()
-                }
-            } else if i < self.scavengers_out as usize {
-                if self.beacon_phase.rank() >= 2 {
-                    "At Risk".to_string()
-                } else {
-                    "Out".to_string()
-                }
-            } else {
-                "Home".to_string()
-            };
-            draw_bounded_text(
-                &text,
-                x + 6.0,
-                card_y + 14.0,
-                card_w - 12.0,
-                10.0,
-                dark::TEXT_BRIGHT,
-            );
-        }
-    }
-
     pub(super) fn draw_wave_status(&self) {
         if self.time_scale <= 1.0 {
             return;
         }
 
-        let text = "2x";
+        let tag = &text().hud.speed_tag;
         let tag_w = 34.0;
         let tag_h = 20.0;
         let x = screen_width() - self.constants.ui.sector_panel_w - tag_w - 12.0;
         let y = self.constants.ui.hud_height + 8.0;
         draw_rectangle(x, y, tag_w, tag_h, Color::new(0.12, 0.09, 0.03, 0.86));
         draw_rectangle_lines(x, y, tag_w, tag_h, 1.0, dark::WARNING);
-        draw_centered_text(text, x + tag_w * 0.5, y + 14.0, 12.0, dark::WARNING);
+        draw_centered_text(tag, x + tag_w * 0.5, y + 14.0, 12.0, dark::WARNING);
     }
 
     pub(super) fn draw_wave_start_flash(&self) {
@@ -640,10 +435,11 @@ impl GameplayState {
             return;
         }
         let alpha = (self.wave_flash_timer / self.constants.ui.wave_flash_duration).clamp(0.0, 1.0);
-        let text = if self.shutdown_triggered {
-            "BEACON SHUTDOWN".to_string()
+        let t = &text().hud;
+        let flash = if self.shutdown_triggered {
+            t.beacon_shutdown_flash.clone()
         } else {
-            format!("WAVE {}", self.last_wave_started)
+            fill(&t.wave_flash, &[("n", &self.last_wave_started.to_string())])
         };
         let w = 300.0;
         let h = 46.0;
@@ -657,15 +453,15 @@ impl GameplayState {
         draw_rectangle(x, y, w, h, Color::new(0.08, 0.07, 0.06, 0.84 * alpha));
         draw_rectangle_lines(x, y, w, h, 2.0, Color::new(1.0, 0.58, 0.18, 0.9 * alpha));
         draw_ui_text(
-            "INCOMING",
+            &t.incoming,
             x + 18.0,
             y + 17.0,
             11.0,
             Color::new(1.0, 0.72, 0.34, alpha),
         );
-        let dims = measure_ui_text(&text, None, 24, 1.0);
+        let dims = measure_ui_text(&flash, None, 24, 1.0);
         draw_ui_text(
-            &text,
+            &flash,
             x + (w - dims.width) * 0.5,
             y + 34.0,
             24.0,
@@ -720,24 +516,7 @@ fn draw_small_metric(x: f32, y: f32, label: &str, value: &str, color: Color) {
     draw_ui_text(value, x, y + 12.0, 18.0, color);
 }
 
-fn draw_segmented_meter(x: f32, y: f32, w: f32, h: f32, value: f32, color: Color) {
-    let segments = 14;
-    let gap = 3.0;
-    let seg_w = (w - gap * (segments as f32 - 1.0)) / segments as f32;
-    let filled = (value * segments as f32).ceil() as i32;
-    for i in 0..segments {
-        let sx = x + i as f32 * (seg_w + gap);
-        let active = i < filled;
-        let fill = if active {
-            color
-        } else {
-            Color::new(0.18, 0.09, 0.08, 0.78)
-        };
-        draw_rectangle(sx, y, seg_w, h, fill);
-    }
-}
-
-fn draw_bounded_text(text: &str, x: f32, y: f32, max_w: f32, size: f32, color: Color) {
+pub(super) fn draw_bounded_text(text: &str, x: f32, y: f32, max_w: f32, size: f32, color: Color) {
     let bounded = truncate_to_width(text, max_w, size as u16);
     draw_ui_text(&bounded, x, y, size, color);
 }
@@ -760,7 +539,7 @@ fn truncate_to_width(text: &str, max_w: f32, font_size: u16) -> String {
 
 /// If the mouse is over `anchor`, draw a small explanatory tooltip just below
 /// it. Used to spell out what the beacon-control buttons actually do.
-fn draw_button_hint(anchor: Rect, title: &str, body: &str) {
+pub(super) fn draw_button_hint(anchor: Rect, title: &str, body: &str) {
     let (mx, my) = mouse_position();
     let hovered =
         mx >= anchor.x && mx <= anchor.x + anchor.w && my >= anchor.y && my <= anchor.y + anchor.h;

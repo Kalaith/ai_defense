@@ -1,5 +1,6 @@
 //! Player intents: map picking and the state mutations the panels dispatch to.
 
+use crate::data::strings::{fill, text};
 use crate::data::GameData;
 use crate::engine::map::{BuildingState, SlotState};
 use crate::state::gameplay::{CycleBaseline, GameplayState, TowerUiStats};
@@ -93,7 +94,7 @@ impl GameplayState {
 
     pub(crate) fn clear_slot(&mut self, idx: usize) {
         if self.beacon_active {
-            self.push_notification("Repairs locked during beacon operation".to_string());
+            self.push_notification(text().notifications.repairs_locked.clone());
             return;
         }
         if !self.slot_power_requirement_met(idx) {
@@ -106,13 +107,14 @@ impl GameplayState {
         self.resources.scrap -= cost;
         let newly_active = self.map_state.set_slot_state(idx, SlotState::Cleared);
         for path_id in &newly_active {
-            self.push_notification(format!("New path opened: {}", path_id));
+            let path = self.path_display_name(path_id);
+            self.push_notification(fill(&text().notifications.path_opened, &[("path", &path)]));
         }
     }
 
     pub(crate) fn power_slot(&mut self, idx: usize) {
         if self.beacon_active {
-            self.push_notification("Repairs locked during beacon operation".to_string());
+            self.push_notification(text().notifications.repairs_locked.clone());
             return;
         }
         if !self.slot_power_requirement_met(idx) {
@@ -125,7 +127,8 @@ impl GameplayState {
         self.resources.scrap -= cost;
         let newly_active = self.map_state.set_slot_state(idx, SlotState::Powered);
         for path_id in &newly_active {
-            self.push_notification(format!("New path opened: {}", path_id));
+            let path = self.path_display_name(path_id);
+            self.push_notification(fill(&text().notifications.path_opened, &[("path", &path)]));
         }
     }
 
@@ -139,7 +142,10 @@ impl GameplayState {
             return true;
         }
         let name = self.building_display_name_by_id(&req);
-        self.push_notification(format!("Requires power from {}", name));
+        self.push_notification(fill(
+            &text().notifications.needs_power_from,
+            &[("name", &name)],
+        ));
         false
     }
 
@@ -152,7 +158,10 @@ impl GameplayState {
             return true;
         }
         let name = self.building_display_name_by_id(&req);
-        self.push_notification(format!("Requires power from {}", name));
+        self.push_notification(fill(
+            &text().notifications.needs_power_from,
+            &[("name", &name)],
+        ));
         false
     }
 
@@ -217,7 +226,7 @@ impl GameplayState {
 
     pub(crate) fn repair_building(&mut self, idx: usize) {
         if self.beacon_active {
-            self.push_notification("Repairs locked during beacon operation".to_string());
+            self.push_notification(text().notifications.repairs_locked.clone());
             return;
         }
         if !self.building_power_requirement_met(idx) {
@@ -230,12 +239,13 @@ impl GameplayState {
         self.resources.scrap -= cost;
         self.map_state
             .set_building_state(idx, BuildingState::Repaired);
-        self.push_notification(format!("{} repaired", self.map_state.buildings[idx].id));
+        let name = self.building_display_name(&self.map_state.buildings[idx]);
+        self.push_notification(fill(&text().notifications.repaired, &[("name", &name)]));
     }
 
     pub(crate) fn power_building(&mut self, idx: usize) {
         if self.beacon_active {
-            self.push_notification("Repairs locked during beacon operation".to_string());
+            self.push_notification(text().notifications.repairs_locked.clone());
             return;
         }
         if !self.building_power_requirement_met(idx) {
@@ -249,9 +259,11 @@ impl GameplayState {
         let newly_active = self
             .map_state
             .set_building_state(idx, BuildingState::Powered);
-        self.push_notification(format!("{} powered on", self.map_state.buildings[idx].id));
+        let name = self.building_display_name(&self.map_state.buildings[idx]);
+        self.push_notification(fill(&text().notifications.powered, &[("name", &name)]));
         for path_id in &newly_active {
-            self.push_notification(format!("New entrance opened: {}", path_id));
+            let path = self.path_display_name(path_id);
+            self.push_notification(fill(&text().notifications.path_opened, &[("path", &path)]));
         }
     }
 
@@ -300,7 +312,7 @@ impl GameplayState {
         self.scavengers_sent += teams;
         self.scavenger_recall_active = false;
         self.scavenger_recall_timer = 0.0;
-        self.push_notification("Beacon activated. Machines inbound.".to_string());
+        self.push_notification(text().notifications.beacon_up.clone());
     }
 
     pub(crate) fn trigger_shutdown(&mut self) {
@@ -311,6 +323,6 @@ impl GameplayState {
         self.scavenger_recall_timer = 0.0;
         self.wave_manager.spawn_queue.clear();
         self.between_waves = false;
-        self.push_notification("Beacon shut down. No new waves incoming.".to_string());
+        self.push_notification(text().notifications.beacon_down.clone());
     }
 }

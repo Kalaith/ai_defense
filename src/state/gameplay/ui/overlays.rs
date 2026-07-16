@@ -1,8 +1,9 @@
 //! Full-screen modals and banners: the premise card, pause menu, onboarding
 //! coach, and end-of-cycle salvage report. Each handles its own buttons.
 
+use crate::data::strings::{fill, text};
 use crate::engine::map::BuildingState;
-use crate::state::gameplay::{GameplayState, COACH_STEPS};
+use crate::state::gameplay::GameplayState;
 use crate::ui;
 use macroquad::prelude::*;
 use macroquad_toolkit::colors::dark;
@@ -24,49 +25,27 @@ impl GameplayState {
         draw_rectangle(0.0, 0.0, sw, sh, Color::new(0.0, 0.0, 0.0, 0.82));
 
         let pw = 620.0_f32.min(sw - 40.0);
-        let ph = 400.0_f32.min(sh - 40.0);
+        let ph = 470.0_f32.min(sh - 40.0);
         let px = (sw - pw) * 0.5;
         let py = (sh - ph) * 0.5;
         let surface = macroquad_toolkit::ui::SurfaceStyle::new(Color::new(0.04, 0.06, 0.07, 0.98))
             .with_border(1.6, Color::new(0.78, 0.16, 0.12, 0.9));
         macroquad_toolkit::ui::draw_surface(Rect::new(px, py, pw, ph), &surface);
 
+        let t = &text().intro;
         let cx = px + pw * 0.5;
-        centered("LAST ASSEMBLY", cx, py + 46.0, 28.0, dark::NEGATIVE);
-        centered(
-            "You woke a dead megafactory. Its beacon is bait.",
-            cx,
-            py + 74.0,
-            14.0,
-            dark::TEXT_DIM,
-        );
+        centered(&t.title, cx, py + 46.0, 28.0, dark::NEGATIVE);
+        centered(&t.subtitle, cx, py + 74.0, 14.0, dark::TEXT_DIM);
 
-        let body = [
-            "The factory screams into the dark so the machines swarm you",
-            "instead of the last human settlements hiding elsewhere.",
-            "",
-            "Restore its systems to help those settlers — but every system",
-            "you power makes the beacon louder and the attacks harder.",
-            "",
-            "While it burns, send scavengers out for salvage. Recall them",
-            "in time, and choose when to go dark. Then rebuild and do it",
-            "again. There is no clean victory — only how long you hold.",
-        ];
         let mut y = py + 108.0;
-        for line in body {
+        for line in &t.body {
             draw_ui_text(line, px + 40.0, y, 15.0, dark::TEXT);
             y += 24.0;
         }
 
         let bw = 220.0;
         let bh = 42.0;
-        if button(
-            cx - bw * 0.5,
-            py + ph - bh - 22.0,
-            bw,
-            bh,
-            "Hold the Beacon",
-        ) {
+        if button(cx - bw * 0.5, py + ph - bh - 22.0, bw, bh, &t.button) {
             self.show_intro = false;
         }
     }
@@ -94,7 +73,8 @@ impl GameplayState {
         let surface = macroquad_toolkit::ui::SurfaceStyle::new(Color::new(0.04, 0.06, 0.07, 0.98))
             .with_border(1.6, Color::new(0.24, 0.58, 0.62, 0.9));
         macroquad_toolkit::ui::draw_surface(Rect::new(px, py, pw, ph), &surface);
-        centered("PAUSED", px + pw * 0.5, py + 44.0, 26.0, dark::ACCENT);
+        let t = &text().pause;
+        centered(&t.title, px + pw * 0.5, py + 44.0, 26.0, dark::ACCENT);
 
         let bw = pw - 48.0;
         let bh = 40.0;
@@ -102,19 +82,19 @@ impl GameplayState {
         let gap = 12.0;
         let mut y = py + 74.0;
 
-        if button(bx, y, bw, bh, "Resume") {
+        if button(bx, y, bw, bh, &t.resume) {
             self.paused = false;
         }
         y += bh + gap;
-        if button(bx, y, bw, bh, "Settings") {
+        if button(bx, y, bw, bh, &t.settings) {
             self.show_settings = true;
         }
         y += bh + gap;
-        if button(bx, y, bw, bh, "Abandon Run (see report)") {
+        if button(bx, y, bw, bh, &t.abandon) {
             self.end_campaign_requested = true;
         }
         y += bh + gap;
-        if button(bx, y, bw, bh, "Quit to Desktop") {
+        if button(bx, y, bw, bh, &t.quit) {
             crate::state::menu::request_exit();
         }
     }
@@ -140,7 +120,7 @@ impl GameplayState {
         };
         if done {
             self.coach.step += 1;
-            if self.coach.step >= COACH_STEPS.len() {
+            if self.coach.step >= text().coach.steps.len() {
                 self.finish_coach();
             }
         }
@@ -161,7 +141,8 @@ impl GameplayState {
         if !self.coach.active {
             return;
         }
-        let Some((title, body)) = COACH_STEPS.get(self.coach.step).copied() else {
+        let coach = &text().coach;
+        let Some(step) = coach.steps.get(self.coach.step) else {
             return;
         };
 
@@ -179,31 +160,41 @@ impl GameplayState {
         macroquad_toolkit::ui::draw_surface(Rect::new(bx, by, bw, bh), &surface);
 
         draw_ui_text(
-            &format!(
-                "GETTING STARTED  ·  Step {} of {}",
-                self.coach.step + 1,
-                COACH_STEPS.len()
+            &fill(
+                &coach.header,
+                &[
+                    ("step", &(self.coach.step + 1).to_string()),
+                    ("total", &coach.steps.len().to_string()),
+                ],
             ),
             bx + 12.0,
             by + 18.0,
             11.0,
             dark::ACCENT,
         );
-        draw_ui_text(title, bx + 12.0, by + 39.0, 16.0, dark::TEXT_BRIGHT);
-        ui::draw_bounded_text(body, bx + 12.0, by + 59.0, bw - 24.0, 11.0, dark::TEXT_DIM);
+        draw_ui_text(&step.title, bx + 12.0, by + 39.0, 16.0, dark::TEXT_BRIGHT);
+        ui::draw_bounded_text(
+            &step.body,
+            bx + 12.0,
+            by + 59.0,
+            bw - 24.0,
+            11.0,
+            dark::TEXT_DIM,
+        );
 
         let skip_w = 86.0;
         let skip_h = 22.0;
         let skip_x = bx + bw - skip_w - 10.0;
         let skip_y = by + 8.0;
-        if button(skip_x, skip_y, skip_w, skip_h, "Skip") {
+        if button(skip_x, skip_y, skip_w, skip_h, &coach.skip) {
             self.finish_coach();
         }
     }
 
     /// Inline end-of-cycle salvage report shown after the beacon is shut down
-    /// and the field clears. Offers a return to base-build (raise the beacon
-    /// again) or ending the campaign for a final tally. Handles its own clicks.
+    /// and the field clears. Its only exit is back to base-build for the next
+    /// cycle — stopping the run is the pause menu's business. Handles its own
+    /// clicks.
     pub fn draw_salvage_report(&mut self) {
         let Some(report) = self.salvage_report.clone() else {
             return;
@@ -215,7 +206,7 @@ impl GameplayState {
         draw_rectangle(0.0, 0.0, sw, sh, Color::new(0.0, 0.0, 0.0, 0.62));
 
         let panel_w = 540.0_f32.min(sw - 40.0);
-        let panel_h = 452.0_f32.min(sh - 40.0);
+        let panel_h = 400.0_f32.min(sh - 40.0);
         let panel_x = (sw - panel_w) * 0.5;
         let panel_y = (sh - panel_h) * 0.5;
 
@@ -226,30 +217,28 @@ impl GameplayState {
             &surface,
         );
 
+        let t = &text().report;
         let cx = panel_x + panel_w * 0.5;
-        let title = format!("SALVAGE REPORT — Cycle {}", report.cycle);
+        let title = fill(&t.title, &[("cycle", &report.cycle.to_string())]);
         centered(&title, cx, panel_y + 40.0, 24.0, dark::POSITIVE);
-        centered(
-            "Beacon dark. The field is clear.",
-            cx,
-            panel_y + 64.0,
-            13.0,
-            dark::TEXT_DIM,
-        );
+        centered(&t.subtitle, cx, panel_y + 64.0, 13.0, dark::TEXT_DIM);
 
         // Headline: the sacrifice ledger. This is the campaign's real score —
         // how many people the beacon's scream let escape elsewhere this cycle.
         centered(
-            &format!("+{} SURVIVORS EVACUATED", report.survivors_evacuated_cycle),
+            &fill(
+                &t.headline,
+                &[("n", &report.survivors_evacuated_cycle.to_string())],
+            ),
             cx,
             panel_y + 100.0,
             22.0,
             dark::POSITIVE,
         );
         centered(
-            &format!(
-                "{} have now reached safe territory",
-                report.survivors_evacuated_total
+            &fill(
+                &t.total,
+                &[("total", &report.survivors_evacuated_total.to_string())],
             ),
             cx,
             panel_y + 122.0,
@@ -258,15 +247,19 @@ impl GameplayState {
         );
 
         let lines = [
-            format!("Waves held this cycle: {}", report.waves),
-            format!("Peak beacon: {}", report.beacon_phase.label()),
-            format!(
-                "Scavengers  sent {} / returned {} / lost {}",
-                report.scavengers_sent, report.scavengers_returned, report.scavengers_lost
+            fill(&t.waves, &[("n", &report.waves.to_string())]),
+            fill(&t.peak, &[("phase", report.beacon_phase.label())]),
+            fill(
+                &t.teams,
+                &[
+                    ("out", &report.scavengers_sent.to_string()),
+                    ("home", &report.scavengers_returned.to_string()),
+                    ("lost", &report.scavengers_lost.to_string()),
+                ],
             ),
-            format!("Salvage banked: +{:.0} scrap", report.scrap),
-            format!("Rations banked: +{:.0} food", report.food),
-            format!("Survivors found: +{}", report.population),
+            fill(&t.scrap, &[("n", &format!("{:.0}", report.scrap))]),
+            fill(&t.food, &[("n", &format!("{:.0}", report.food))]),
+            fill(&t.population, &[("n", &report.population.to_string())]),
         ];
         let mut y = panel_y + 154.0;
         for line in &lines {
@@ -276,9 +269,9 @@ impl GameplayState {
 
         // The machines are wiser: warn that the next cycle starts harder.
         draw_ui_text(
-            &format!(
-                "Machine assault escalation: +{:.0}% — the next cycle starts harder.",
-                report.escalation_pct
+            &fill(
+                &t.escalation,
+                &[("pct", &format!("{:.0}", report.escalation_pct))],
             ),
             panel_x + 40.0,
             y + 4.0,
@@ -286,20 +279,14 @@ impl GameplayState {
             dark::WARNING,
         );
 
-        let btn_w = (panel_w - 60.0) * 0.5;
+        // One way out of the report: back to the work. Ending the run is the
+        // player's own decision from the pause menu — the cycle boundary should
+        // never offer to stop as though it were the natural thing to do.
+        let btn_w = 240.0_f32.min(panel_w - 40.0);
         let btn_h = 40.0;
         let btn_y = panel_y + panel_h - btn_h - 24.0;
-        if button(
-            panel_x + 20.0,
-            btn_y,
-            btn_w,
-            btn_h,
-            "Rebuild & Raise Beacon",
-        ) {
+        if button(cx - btn_w * 0.5, btn_y, btn_w, btn_h, &t.button) {
             self.dismiss_salvage_report();
-        }
-        if button(panel_x + 40.0 + btn_w, btn_y, btn_w, btn_h, "End Campaign") {
-            self.end_campaign_requested = true;
         }
     }
 }

@@ -281,7 +281,12 @@ impl GameplayState {
             EnemyType::Scout => {
                 self.threat
                     .add_noise(self.constants.threat.noise_scout_breach);
-                self.push_notification("Scout slipped through — threat increased".to_string());
+                self.push_notification(
+                    crate::data::strings::text()
+                        .notifications
+                        .scout_breach
+                        .clone(),
+                );
             }
             EnemyType::Saboteur => {
                 if self.population.count > 0 {

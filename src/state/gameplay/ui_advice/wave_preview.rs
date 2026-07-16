@@ -82,12 +82,18 @@ fn bump_enemy_count(counts: &mut Vec<(EnemyType, usize)>, enemy_type: EnemyType)
 }
 
 pub fn format_enemy_counts(counts: &[(EnemyType, usize)]) -> String {
+    let t = &crate::data::strings::text().wave_preview;
     if counts.is_empty() {
-        return "No preview".to_string();
+        return t.no_preview.clone();
     }
     counts
         .iter()
-        .map(|(kind, count)| format!("{} {}", count, enemy_label(kind)))
+        .map(|(kind, count)| {
+            crate::data::strings::fill(
+                &t.entry,
+                &[("count", &count.to_string()), ("name", enemy_label(kind))],
+            )
+        })
         .collect::<Vec<_>>()
-        .join(" / ")
+        .join(&t.separator)
 }

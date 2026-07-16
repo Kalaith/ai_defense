@@ -1,6 +1,7 @@
 //! The beacon cycle: raise it, accrue evacuees while it screams, then bank the
 //! ledger and escalate the machines when it goes dark.
 
+use crate::data::strings::{fill, text};
 use crate::engine::beacon::{phase_from_strength, BeaconPhase};
 use macroquad_toolkit::rng;
 
@@ -56,8 +57,9 @@ impl GameplayState {
         let interval = self.constants.evacuation.milestone_interval.max(1);
         while self.survivors_evacuated >= self.next_evac_milestone {
             let reached = self.next_evac_milestone;
-            self.push_notification(format!(
-                "{reached} survivors have reached safe territory because you held the line."
+            self.push_notification(fill(
+                &text().notifications.evac_milestone,
+                &[("n", &reached.to_string())],
             ));
             self.next_evac_milestone += interval;
         }
@@ -112,9 +114,7 @@ impl GameplayState {
         self.beacon_active = false;
         self.between_waves = true;
         self.wave_timer = self.constants.ui.wave_start_delay;
-        self.push_notification(
-            "Field secured. Rebuild the line, then raise the beacon again.".to_string(),
-        );
+        self.push_notification(text().notifications.field_secured.clone());
     }
 
     /// Beacon draw is a function of how much factory is lit up; crossing a
@@ -187,7 +187,7 @@ impl GameplayState {
                 if rng::chance(self.constants.scavenger.terminal_loss_chance) {
                     self.scavengers_out = self.scavengers_out.saturating_sub(1);
                     self.scavengers_lost += 1;
-                    self.push_notification("Scavenger team lost in the field".to_string());
+                    self.push_notification(text().notifications.team_lost.clone());
                     return;
                 }
                 (
@@ -208,9 +208,13 @@ impl GameplayState {
         self.scavenger_food_gained += food;
         self.scavenger_population_gained += pop_gain;
 
-        self.push_notification(format!(
-            "Scavengers returned: +{:.0} scrap, +{:.0} food, +{} pop",
-            scrap, food, pop_gain
+        self.push_notification(fill(
+            &text().notifications.team_returned,
+            &[
+                ("scrap", &format!("{scrap:.0}")),
+                ("food", &format!("{food:.0}")),
+                ("pop", &pop_gain.to_string()),
+            ],
         ));
     }
 }
@@ -218,17 +222,12 @@ impl GameplayState {
 /// Short narrative line pushed as a notification when the beacon escalates to a
 /// new phase. `WarmSignal` is the opening state, so it has no line.
 fn beacon_phase_flavor(phase: &BeaconPhase) -> Option<&'static str> {
+    let flavor = &text().beacon.flavor;
     match phase {
         BeaconPhase::WarmSignal => None,
-        BeaconPhase::SustainedCall => {
-            Some("The beacon steadies into a sustained call — the swarm has your scent.")
-        }
-        BeaconPhase::ScreamingBeacon => {
-            Some("Screaming beacon. Everything within range is turning toward you.")
-        }
-        BeaconPhase::TerminalHowl => {
-            Some("Terminal howl — the factory is a dying star. Bank what you can.")
-        }
+        BeaconPhase::SustainedCall => Some(flavor.sustained_call.as_str()),
+        BeaconPhase::ScreamingBeacon => Some(flavor.screaming_beacon.as_str()),
+        BeaconPhase::TerminalHowl => Some(flavor.terminal_howl.as_str()),
     }
 }
 

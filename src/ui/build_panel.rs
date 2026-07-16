@@ -1,5 +1,6 @@
 //! Left sidebar: the tower build list and the map glyph legend.
 
+use crate::data::strings::{fill, text};
 use crate::data::TowerDef;
 use macroquad::prelude::*;
 use macroquad_toolkit::colors::dark;
@@ -33,14 +34,9 @@ pub fn draw_build_panel(
     let sidebar = Rect::new(x, y, w, screen_height() - y);
     let sidebar_surface = macroquad_toolkit::ui::SurfaceStyle::new(Color::new(0.1, 0.1, 0.12, 0.9));
     macroquad_toolkit::ui::draw_surface(sidebar, &sidebar_surface);
-    draw_ui_text("TOWERS", x + 10.0, y + 20.0, 18.0, dark::ACCENT);
-    draw_ui_text(
-        "Select, then place on powered pads",
-        x + 10.0,
-        y + 36.0,
-        11.0,
-        dark::TEXT_DIM,
-    );
+    let t = &text().build_panel;
+    draw_ui_text(&t.title, x + 10.0, y + 20.0, 18.0, dark::ACCENT);
+    draw_ui_text(&t.subtitle, x + 10.0, y + 36.0, 11.0, dark::TEXT_DIM);
 
     let mut btn_y = y + 54.0;
     let btn_h = 68.0;
@@ -59,9 +55,13 @@ pub fn draw_build_panel(
         }
 
         let can_afford = scrap >= def.cost_scrap && power >= def.cost_power;
-        let label = format!(
-            "{} ({}s/{}p)",
-            def.name, def.cost_scrap as i32, def.cost_power as i32
+        let label = fill(
+            &t.tower_label,
+            &[
+                ("name", &def.name),
+                ("scrap", &(def.cost_scrap as i32).to_string()),
+                ("power", &(def.cost_power as i32).to_string()),
+            ],
         );
 
         let color = if can_afford {
@@ -82,7 +82,7 @@ pub fn draw_build_panel(
         } else {
             Color::new(0.28, 0.32, 0.34, 0.55)
         };
-        let fill = if hovered && can_afford {
+        let fill_color = if hovered && can_afford {
             Color::new(0.09, 0.12, 0.14, 0.82)
         } else {
             Color::new(0.02, 0.03, 0.04, 0.68)
@@ -92,7 +92,7 @@ pub fn draw_build_panel(
             button_rect.y,
             button_rect.w,
             button_rect.h,
-            fill,
+            fill_color,
         );
         draw_rectangle_lines(
             button_rect.x,
@@ -140,11 +140,17 @@ pub fn draw_build_panel(
         draw_button_corners(button_rect, accent);
         draw_bounded_text(&label, x + 15.0, btn_y + 23.0, w - 50.0, 15.0, color);
         let afford_line = if can_afford {
-            "Affordable".to_string()
+            t.affordable.clone()
         } else if scrap < def.cost_scrap {
-            format!("Need {:.0} more scrap", def.cost_scrap - scrap)
+            fill(
+                &t.need_scrap,
+                &[("n", &format!("{:.0}", def.cost_scrap - scrap))],
+            )
         } else {
-            format!("Need {:.0} power buffer", def.cost_power - power)
+            fill(
+                &t.need_power,
+                &[("n", &format!("{:.0}", def.cost_power - power))],
+            )
         };
         draw_bounded_text(
             &afford_line,
@@ -194,10 +200,11 @@ fn draw_locked_row(x: f32, btn_y: f32, w: f32, name: &str, requirement: &str) ->
     );
     draw_rectangle(row.x, row.y, 3.0, row.h, Color::new(0.28, 0.32, 0.34, 0.4));
     draw_bounded_text(name, x + 15.0, btn_y + 14.0, w - 30.0, 12.0, dark::TEXT_DIM);
+    let t = &text().build_panel;
     let req_line = if requirement.is_empty() {
-        "Locked".to_string()
+        t.locked.clone()
     } else {
-        format!("Needs {}", requirement)
+        fill(&t.needs, &[("name", requirement)])
     };
     draw_bounded_text(
         &req_line,
@@ -232,7 +239,8 @@ fn draw_map_key(x: f32, list_bottom: f32, w: f32) {
         1.0,
         Color::new(0.25, 0.35, 0.38, 0.6),
     );
-    draw_ui_text("MAP KEY", x + 10.0, key_y + 18.0, 12.0, dark::TEXT_DIM);
+    let t = &text().build_panel;
+    draw_ui_text(&t.map_key, x + 10.0, key_y + 18.0, 12.0, dark::TEXT_DIM);
 
     let glyph_x = x + 19.0;
     let text_x = x + 36.0;
@@ -268,7 +276,7 @@ fn draw_map_key(x: f32, list_bottom: f32, w: f32) {
         1.6,
         Color::new(0.5, 1.0, 0.6, 0.8),
     );
-    label("Powered pad — build towers here", cy);
+    label(&t.key_powered_pad, cy);
     row_y += ROW_H;
 
     // Unpowered pad: blue ring + dot.
@@ -276,7 +284,7 @@ fn draw_map_key(x: f32, list_bottom: f32, w: f32) {
     draw_circle(glyph_x, cy, 7.0, Color::new(0.05, 0.12, 0.2, 0.75));
     draw_circle_lines(glyph_x, cy, 9.0, 1.8, Color::new(0.32, 0.68, 1.0, 0.82));
     draw_circle(glyph_x, cy, 2.4, Color::new(0.45, 0.82, 1.0, 0.7));
-    label("Unpowered pad — pay to power", cy);
+    label(&t.key_unpowered_pad, cy);
     row_y += ROW_H;
 
     // Debris: brown circle + orange cross.
@@ -300,7 +308,7 @@ fn draw_map_key(x: f32, list_bottom: f32, w: f32) {
         1.6,
         Color::new(1.0, 0.66, 0.2, 0.68),
     );
-    label("Debris — clear for a new pad", cy);
+    label(&t.key_debris, cy);
     row_y += ROW_H;
 
     // Machine: small box.
@@ -320,14 +328,14 @@ fn draw_map_key(x: f32, list_bottom: f32, w: f32) {
         1.6,
         Color::new(0.78, 0.18, 0.12, 0.86),
     );
-    label("Machine — repair, then power", cy);
+    label(&t.key_machine, cy);
     row_y += ROW_H;
 
     // Enemy entrance: red pulse circle.
     let cy = row_y + ROW_H * 0.5 - 4.0;
     draw_circle(glyph_x, cy, 6.0, Color::new(0.92, 0.18, 0.08, 0.88));
     draw_circle_lines(glyph_x, cy, 9.0, 1.8, Color::new(1.0, 0.46, 0.12, 0.7));
-    label("Enemy entrance", cy);
+    label(&t.key_entrance, cy);
     row_y += ROW_H;
 
     // Route: orange line with a chevron.
@@ -346,5 +354,5 @@ fn draw_map_key(x: f32, list_bottom: f32, w: f32) {
         vec2(glyph_x + 3.0, cy + 4.0),
         Color::new(1.0, 0.78, 0.22, 0.95),
     );
-    label("Attack route to your core", cy);
+    label(&t.key_route, cy);
 }

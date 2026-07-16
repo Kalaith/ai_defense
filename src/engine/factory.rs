@@ -1,5 +1,6 @@
 //! Factory sectors, awakening phases, and module management.
 
+use crate::data::strings::text;
 use crate::data::{SectorData, UpgradeDef};
 
 #[derive(Clone, Debug)]
@@ -13,12 +14,13 @@ pub enum FactoryPhase {
 
 impl FactoryPhase {
     pub fn label(&self) -> &'static str {
+        let phases = &text().factory_phases;
         match self {
-            Self::DormantRuin => "Dormant Ruin",
-            Self::StirringMachine => "Stirring Machine",
-            Self::FunctionalSystem => "Functional System",
-            Self::SentientStructure => "Sentient Structure",
-            Self::TranscendentEntity => "Transcendent Entity",
+            Self::DormantRuin => phases.dormant_ruin.as_str(),
+            Self::StirringMachine => phases.stirring_machine.as_str(),
+            Self::FunctionalSystem => phases.functional_system.as_str(),
+            Self::SentientStructure => phases.sentient_structure.as_str(),
+            Self::TranscendentEntity => phases.transcendent_entity.as_str(),
         }
     }
 }

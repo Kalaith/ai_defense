@@ -1,5 +1,6 @@
 //! Bottom-panel context for a selected tower pad: clear it, power it, or build.
 
+use crate::data::strings::{fill, text};
 use crate::data::{GameData, TowerDef};
 use crate::engine::map::SlotState;
 use crate::ui::{self, ConsoleButtonState, ConsoleIcon};
@@ -35,8 +36,8 @@ impl GameplayState {
         ui::draw_console_header(
             rect.x + 56.0,
             rect.y + 24.0,
-            &format!("PAD {}", slot_id.to_uppercase()),
-            "tower pad command surface",
+            &fill(&text().panels.pad, &[("id", &slot_id.to_uppercase())]),
+            &text().panels.pad_subtitle,
             dark::ACCENT,
         );
 
@@ -48,10 +49,15 @@ impl GameplayState {
             SlotState::Debris => {
                 let warning = opens
                     .as_deref()
-                    .map(|id| format!("Clearing can open {}", self.path_display_name(id)))
-                    .unwrap_or_else(|| "Clears a build position".to_string());
+                    .map(|id| {
+                        fill(
+                            &text().panels.clearing_opens,
+                            &[("path", &self.path_display_name(id))],
+                        )
+                    })
+                    .unwrap_or_else(|| text().panels.clears_position.clone());
                 ui::draw_bounded_text(
-                    "Status: Debris",
+                    &text().panels.status_debris,
                     detail_x,
                     detail_y,
                     210.0,
@@ -66,13 +72,13 @@ impl GameplayState {
                     12.0,
                     dark::TEXT_DIM,
                 );
-                if self.draw_cost_action(rect, clear_cost, "CLEAR") {
+                if self.draw_cost_action(rect, clear_cost, &text().panels.clear) {
                     self.clear_slot(idx);
                 }
             }
             SlotState::Cleared => {
                 ui::draw_bounded_text(
-                    "Status: Cleared",
+                    &text().panels.status_cleared,
                     detail_x,
                     detail_y,
                     210.0,
@@ -87,14 +93,14 @@ impl GameplayState {
                     12.0,
                     dark::TEXT_DIM,
                 );
-                if self.draw_cost_action(rect, power_cost, "POWER PAD") {
+                if self.draw_cost_action(rect, power_cost, &text().panels.power_pad) {
                     self.power_slot(idx);
                 }
             }
             SlotState::Powered => match tower_index {
                 Some(tower_idx) => {
                     ui::draw_bounded_text(
-                        "Status: Occupied",
+                        &text().panels.status_occupied,
                         detail_x,
                         detail_y,
                         210.0,
@@ -116,7 +122,7 @@ impl GameplayState {
                         rect.y + 58.0,
                         ACTION_W,
                         ACTION_H,
-                        "SELECT TOWER",
+                        &text().panels.select_tower,
                         ConsoleButtonState::Affordable,
                     ) {
                         self.selected_tower = Some(tower_idx);
@@ -124,7 +130,7 @@ impl GameplayState {
                 }
                 None => {
                     ui::draw_bounded_text(
-                        "Status: Powered",
+                        &text().panels.status_powered,
                         detail_x,
                         detail_y,
                         210.0,
@@ -159,7 +165,7 @@ impl GameplayState {
         };
 
         ui::draw_bounded_text(
-            &format!("Recommended: {}", def.name),
+            &fill(&text().panels.recommended, &[("name", &def.name)]),
             rect.x + 56.0,
             rect.y + 100.0,
             300.0,
@@ -170,11 +176,20 @@ impl GameplayState {
         let armed = self.placing_tower.as_deref() == Some(def.id.as_str());
         let can_build = self.resources.scrap >= def.cost_scrap;
         let label = if !armed {
-            "SELECT TOWER".to_string()
+            text().panels.select_tower.clone()
         } else if can_build {
-            format!("BUILD {:.0}", def.cost_scrap)
+            fill(
+                &text().panels.build,
+                &[("n", &format!("{:.0}", def.cost_scrap))],
+            )
         } else {
-            format!("NEED {:.0} SCRAP", def.cost_scrap - self.resources.scrap)
+            fill(
+                &text().status.need_scrap,
+                &[(
+                    "n",
+                    &format!("{:.0}", def.cost_scrap - self.resources.scrap),
+                )],
+            )
         };
         let state = if can_build {
             ConsoleButtonState::Recommended
@@ -203,9 +218,15 @@ impl GameplayState {
     fn draw_cost_action(&self, rect: Rect, cost: f32, verb: &str) -> bool {
         let can = self.resources.scrap >= cost;
         let label = if can {
-            format!("{} {:.0}", verb, cost)
+            fill(
+                &text().panels.cost_action,
+                &[("verb", verb), ("n", &format!("{cost:.0}"))],
+            )
         } else {
-            format!("NEED {:.0} SCRAP", cost - self.resources.scrap)
+            fill(
+                &text().status.need_scrap,
+                &[("n", &format!("{:.0}", cost - self.resources.scrap))],
+            )
         };
         let state = if can {
             ConsoleButtonState::Recommended
@@ -246,13 +267,19 @@ impl GameplayState {
 
     fn coverage_for_best_available_tower(&self, pos: Vec2, data: &GameData) -> String {
         let Some(def) = self.recommended_tower_for_position(pos, data) else {
-            return "Coverage potential: no tower unlocked".to_string();
+            return text().panels.no_tower_unlocked.clone();
         };
         let covered = self.covered_paths_for_range(pos, self.effective_tower_range(def.base_range));
         if covered.is_empty() {
-            format!("{} covers no active route", def.name)
+            fill(&text().panels.covers_no_route, &[("name", &def.name)])
         } else {
-            format!("{} covers {}", def.name, self.join_path_names(&covered))
+            fill(
+                &text().panels.covers_routes,
+                &[
+                    ("name", &def.name),
+                    ("paths", &self.join_path_names(&covered)),
+                ],
+            )
         }
     }
 }
