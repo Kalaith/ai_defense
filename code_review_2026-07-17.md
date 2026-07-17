@@ -60,7 +60,7 @@ Its 323 lines are dead in two layers:
 
 This also violates §2.3 ("Do not keep both `foo.rs` and `foo/mod.rs`; Rust treats that as an ambiguous module source"). Only the explicit `#[path]` disambiguates it — which is the workaround, not the fix.
 
-## Severity 2 — `src/engine/wave.rs`: 358 of 363 lines are commented-out legacy
+## ✅ DONE — Severity 2 — `src/engine/wave.rs`: 358 of 363 lines are commented-out legacy
 
 **§1.4** · **Fix: delete lines 6–363**
 
