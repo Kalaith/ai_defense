@@ -149,7 +149,9 @@ With 4b, tuning the beacon requires a recompile *and* reasoning across two files
 
 **✅ DONE — 4f. Minor** — `update/systems.rs:311`: `food_reward *= 1.5;` (logistics hub bonus, sitting two lines below correct `constants.waves.*` usage); `engine/tower.rs:334`: `fired_count * 0.01 * dt` (sole feed into the `heat` signature). Resolved: moved to `constants.waves.logistics_hub_food_mult` and `constants.tower.heat_per_shot` (threaded through `TowerTuning`) respectively.
 
-## Severity 5 — `draw_circuit_board` is 531 lines
+## ✅ DONE — Severity 5 — `draw_circuit_board` is 531 lines
+
+Resolved: split into `src/state/gameplay/render_map/circuit_board.rs` (new child module, mirroring the `render_hud.rs`+`render_hud/` pattern already used elsewhere), with the 531-line body broken into 7 cohesive `&self` methods (`draw_pcb_background`, `draw_sections_and_corridors`, `draw_traces`, `draw_paths_and_entrances`, `draw_tower_slots`, `draw_map_buildings`, `draw_factory_core`) plus two further extractions (`building_visual`, `draw_slot_pad`) that got the two largest of those under the 100-line max as well. `render_map.rs` is now 154 lines (down from 786, resolving the near-800 watch note) and `circuit_board.rs` is 661 lines — under the 800 hard limit, one function (`draw_sections_and_corridors`, ~118 lines) still marginally over the 100-line soft max but a single cohesive concern not worth fragmenting further. Verified with the screenshot capture harness (`scripts/capture_ui.ps1 -Scenes gameplay`) — the map renders identically (sections, traces, tower slots, buildings, factory core all correct).
 
 **§4.1** · 15 functions exceed the **absolute max of 100**:
 
