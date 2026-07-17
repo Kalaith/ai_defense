@@ -54,6 +54,7 @@ impl GameplayState {
         } else {
             self.compute_beacon_start_difficulty_bonus()
         };
+        let tuning = self.wave_manager.tuning();
         preview_wave_entries(
             self.current_wave + 1,
             &self.enemy_defs,
@@ -62,13 +63,7 @@ impl GameplayState {
             self.beacon_phase.tier_floor(),
             self.constants.waves.budget_multiplier + budget_bonus,
             self.beacon_phase == BeaconPhase::TerminalHowl,
-            self.constants.waves.budget_base,
-            self.constants.waves.budget_per_wave,
-            self.constants.waves.commander_every,
-            self.constants.threat.budget_divisor,
-            self.constants.threat.health_mult_per_awareness,
-            self.constants.threat.tier_2_awareness,
-            self.constants.threat.tier_3_awareness,
+            &tuning,
             &spawn_points,
             &self.wave_adaptation(),
         )

@@ -172,7 +172,9 @@ With 4b, tuning the beacon requires a recompile *and* reasoning across two files
 
 Note `render_map.rs` at 786 lines is **under** the 800 hard limit but close enough to watch — extracting `draw_circuit_board` resolves both concerns at once.
 
-## Severity 6 — 14-parameter functions, against a "prefer ≤ 3" rule
+## ✅ DONE — Severity 6 — 14-parameter functions, against a "prefer ≤ 3" rule
+
+Resolved: `preview_wave`, `preview_wave_entries`, and `build_spawn_queue` now take `tuning: &WaveTuning` instead of the five (now seven, after Sev3/4a) individually-threaded tuning fields — down to 9-10 params from 13-16. Added `WaveManager::tuning()` to reconstruct a `WaveTuning` from a live manager for callers (wave preview) that need one without duplicating field-by-field construction. The `too_many_arguments` allows remain — verified by temporarily removing one and rebuilding, param counts are still above clippy's default threshold of 7 — but they're now on functions whose params are irreducibly distinct (wave request shape + one tuning bundle), not five loose scalars that happened to belong to the same struct.
 
 **§4.3** · `src/engine/wave_impl.rs` is the outlier:
 

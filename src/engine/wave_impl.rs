@@ -115,6 +115,8 @@ impl WaveManager {
         self.spawn_queue.clear();
         self.spawn_timer = 0.0;
 
+        let tuning = self.tuning();
+
         self.spawn_queue = build_spawn_queue(
             wave_number,
             enemy_defs,
@@ -124,13 +126,7 @@ impl WaveManager {
             budget_multiplier,
             force_commander,
             spawn_points,
-            self.wave_budget_base,
-            self.wave_budget_per_wave,
-            self.wave_commander_every,
-            self.threat_budget_divisor,
-            self.threat_health_mult_per_awareness,
-            self.tier_2_awareness,
-            self.tier_3_awareness,
+            &tuning,
             adaptation,
         );
     }
@@ -211,6 +207,25 @@ impl WaveManager {
     pub fn alive_count(&self) -> usize {
         self.enemies.iter().filter(|e| e.is_alive).count()
     }
+
+    /// Reconstruct the `WaveTuning` this manager was built from, for callers
+    /// (e.g. wave preview) that need to pass it to the free spawn-queue
+    /// functions without duplicating the manager's own live state.
+    pub fn tuning(&self) -> WaveTuning {
+        WaveTuning {
+            spawn_interval: self.spawn_interval,
+            commander_aura_radius: self.commander_aura_radius,
+            commander_aura_speed_mult: self.commander_aura_speed_mult,
+            enemy_tuning: self.enemy_tuning.clone(),
+            wave_budget_base: self.wave_budget_base,
+            wave_budget_per_wave: self.wave_budget_per_wave,
+            wave_commander_every: self.wave_commander_every,
+            threat_budget_divisor: self.threat_budget_divisor,
+            threat_health_mult_per_awareness: self.threat_health_mult_per_awareness,
+            tier_2_awareness: self.tier_2_awareness,
+            tier_3_awareness: self.tier_3_awareness,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -223,13 +238,7 @@ pub fn preview_wave(
     tier_floor: u32,
     budget_multiplier: f32,
     force_commander: bool,
-    wave_budget_base: u32,
-    wave_budget_per_wave: u32,
-    wave_commander_every: u32,
-    threat_budget_divisor: f32,
-    threat_health_mult_per_awareness: f32,
-    tier_2_awareness: f32,
-    tier_3_awareness: f32,
+    tuning: &WaveTuning,
     adaptation: &WaveAdaptation,
 ) -> Vec<EnemyType> {
     let dummy_spawn = vec![("preview".to_string(), Vec2::new(0.0, 0.0))];
@@ -241,13 +250,7 @@ pub fn preview_wave(
         tier_floor,
         budget_multiplier,
         force_commander,
-        wave_budget_base,
-        wave_budget_per_wave,
-        wave_commander_every,
-        threat_budget_divisor,
-        threat_health_mult_per_awareness,
-        tier_2_awareness,
-        tier_3_awareness,
+        tuning,
         &dummy_spawn,
         adaptation,
     );
@@ -263,13 +266,7 @@ pub fn preview_wave_entries(
     tier_floor: u32,
     budget_multiplier: f32,
     force_commander: bool,
-    wave_budget_base: u32,
-    wave_budget_per_wave: u32,
-    wave_commander_every: u32,
-    threat_budget_divisor: f32,
-    threat_health_mult_per_awareness: f32,
-    tier_2_awareness: f32,
-    tier_3_awareness: f32,
+    tuning: &WaveTuning,
     spawn_points: &[(String, Vec2)],
     adaptation: &WaveAdaptation,
 ) -> Vec<PreviewSpawnEntry> {
@@ -282,13 +279,7 @@ pub fn preview_wave_entries(
         budget_multiplier,
         force_commander,
         spawn_points,
-        wave_budget_base,
-        wave_budget_per_wave,
-        wave_commander_every,
-        threat_budget_divisor,
-        threat_health_mult_per_awareness,
-        tier_2_awareness,
-        tier_3_awareness,
+        tuning,
         adaptation,
     );
     queue
@@ -327,25 +318,19 @@ fn build_spawn_queue(
     budget_multiplier: f32,
     force_commander: bool,
     spawn_points: &[(String, Vec2)],
-    wave_budget_base: u32,
-    wave_budget_per_wave: u32,
-    wave_commander_every: u32,
-    threat_budget_divisor: f32,
-    threat_health_mult_per_awareness: f32,
-    tier_2_awareness: f32,
-    tier_3_awareness: f32,
+    tuning: &WaveTuning,
     adaptation: &WaveAdaptation,
 ) -> Vec<SpawnEntry> {
     if spawn_points.is_empty() {
         return Vec::new();
     }
 
-    let threat_health_bonus = 1.0 + threat_awareness * threat_health_mult_per_awareness;
+    let threat_health_bonus = 1.0 + threat_awareness * tuning.threat_health_mult_per_awareness;
     let scale = base_health_scale.powi(wave_number as i32) * threat_health_bonus;
 
-    let threat_budget_bonus = (threat_awareness / threat_budget_divisor).floor() as i32;
-    let base_budget = wave_budget_base as i32
-        + wave_number as i32 * wave_budget_per_wave as i32
+    let threat_budget_bonus = (threat_awareness / tuning.threat_budget_divisor).floor() as i32;
+    let base_budget = tuning.wave_budget_base as i32
+        + wave_number as i32 * tuning.wave_budget_per_wave as i32
         + threat_budget_bonus;
     let mut budget = (base_budget as f32 * budget_multiplier).round().max(1.0) as i32;
 
@@ -355,9 +340,9 @@ fn build_spawn_queue(
         _ => 3,
     };
 
-    if threat_awareness >= tier_3_awareness {
+    if threat_awareness >= tuning.tier_3_awareness {
         max_tier = max_tier.max(3);
-    } else if threat_awareness >= tier_2_awareness {
+    } else if threat_awareness >= tuning.tier_2_awareness {
         max_tier = max_tier.max(2);
     }
 
@@ -381,8 +366,8 @@ fn build_spawn_queue(
     let mut path_robin = 0usize;
 
     if (wave_number > 0
-        && wave_commander_every != 0
-        && wave_number.is_multiple_of(wave_commander_every))
+        && tuning.wave_commander_every != 0
+        && wave_number.is_multiple_of(tuning.wave_commander_every))
         || force_commander
     {
         if let Some(boss) = eligible
@@ -480,13 +465,7 @@ mod tests {
             1,
             data.constants.waves.budget_multiplier,
             false,
-            data.constants.waves.budget_base,
-            data.constants.waves.budget_per_wave,
-            data.constants.waves.commander_every,
-            data.constants.threat.budget_divisor,
-            data.constants.threat.health_mult_per_awareness,
-            data.constants.threat.tier_2_awareness,
-            data.constants.threat.tier_3_awareness,
+            &test_tuning(&data),
             &WaveAdaptation::default(),
         );
 
@@ -546,6 +525,7 @@ mod tests {
         let data = GameData::load();
         let spawn_points = vec![("west".to_string(), vec2(0.0, 0.0))];
 
+        let tuning = test_tuning(&data);
         let entries = |adaptation: &WaveAdaptation| {
             preview_wave_entries(
                 1, // wave 1 normally only unlocks tier-1 (Scout/Drone)
@@ -555,13 +535,7 @@ mod tests {
                 1,
                 data.constants.waves.budget_multiplier,
                 false,
-                data.constants.waves.budget_base,
-                data.constants.waves.budget_per_wave,
-                data.constants.waves.commander_every,
-                data.constants.threat.budget_divisor,
-                data.constants.threat.health_mult_per_awareness,
-                data.constants.threat.tier_2_awareness,
-                data.constants.threat.tier_3_awareness,
+                &tuning,
                 &spawn_points,
                 adaptation,
             )
@@ -602,13 +576,7 @@ mod tests {
             1,
             data.constants.waves.budget_multiplier,
             false,
-            data.constants.waves.budget_base,
-            data.constants.waves.budget_per_wave,
-            data.constants.waves.commander_every,
-            data.constants.threat.budget_divisor,
-            data.constants.threat.health_mult_per_awareness,
-            data.constants.threat.tier_2_awareness,
-            data.constants.threat.tier_3_awareness,
+            &test_tuning(&data),
             &spawn_points,
             &WaveAdaptation::default(),
         );
