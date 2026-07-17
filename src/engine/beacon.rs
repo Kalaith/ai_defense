@@ -1,6 +1,7 @@
 //! Beacon strength, phases, and scavenging tiers.
 
 use crate::data::strings::text;
+use crate::data::EvacuationConstants;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum BeaconPhase {
@@ -40,12 +41,12 @@ impl BeaconPhase {
     }
 }
 
-pub fn phase_from_strength(strength: f32) -> BeaconPhase {
-    if strength >= 61.0 {
+pub fn phase_from_strength(strength: f32, evac: &EvacuationConstants) -> BeaconPhase {
+    if strength >= evac.terminal_threshold {
         BeaconPhase::TerminalHowl
-    } else if strength >= 36.0 {
+    } else if strength >= evac.screaming_threshold {
         BeaconPhase::ScreamingBeacon
-    } else if strength >= 16.0 {
+    } else if strength >= evac.sustained_threshold {
         BeaconPhase::SustainedCall
     } else {
         BeaconPhase::WarmSignal

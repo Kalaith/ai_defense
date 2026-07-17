@@ -112,8 +112,8 @@ impl GameplayState {
             return;
         };
 
-        let grid_generation =
-            self.factory.power_generation() + self.unlocked_building_boon().power_per_sec;
+        let grid_generation = self.factory.power_generation(&self.constants.economy)
+            + self.unlocked_building_boon().power_per_sec;
         let current_drain = self.factory.power_consumption()
             + self
                 .towers

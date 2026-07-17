@@ -1,7 +1,7 @@
 //! Factory sectors, awakening phases, and module management.
 
 use crate::data::strings::text;
-use crate::data::{SectorData, UpgradeDef};
+use crate::data::{EconomyConstants, SectorData, UpgradeDef};
 
 #[derive(Clone, Debug)]
 pub enum FactoryPhase {
@@ -77,7 +77,7 @@ impl Factory {
             .any(|s| s.id == id && s.unlocked && s.integrity > 0.0)
     }
 
-    pub fn power_generation(&self) -> f32 {
+    pub fn power_generation(&self, economy: &EconomyConstants) -> f32 {
         let has_power_core = self.is_sector_active("power_core");
         if !has_power_core {
             return 0.0;
@@ -87,7 +87,8 @@ impl Factory {
             .iter()
             .filter(|s| s.unlocked && s.integrity > 0.0 && s.id != "power_core")
             .count();
-        40.0 + other_unlocked as f32 * 4.0
+        economy.power_core_base_generation
+            + other_unlocked as f32 * economy.power_per_other_unlocked_sector
     }
 
     pub fn power_consumption(&self) -> f32 {

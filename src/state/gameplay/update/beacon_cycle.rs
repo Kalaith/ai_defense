@@ -121,20 +121,21 @@ impl GameplayState {
     /// threshold escalates the phase permanently for this cycle.
     pub(crate) fn update_beacon(&mut self) {
         let unlocked = self.factory.unlocked_count() as f32;
-        let power_throughput = self.factory.power_generation();
+        let power_throughput = self.factory.power_generation(&self.constants.economy);
         let ai_vault_tier = if self.factory.is_sector_active("ai_vault") {
             1.0
         } else {
             0.0
         };
         let population = self.population.count as f32;
+        let evac = &self.constants.evacuation;
 
-        self.beacon_strength = (unlocked * 2.0)
-            + (power_throughput / 10.0)
-            + (ai_vault_tier * 5.0)
-            + (population / 20.0);
+        self.beacon_strength = (unlocked * evac.strength_per_unlocked_sector)
+            + (power_throughput * evac.strength_per_power_throughput)
+            + (ai_vault_tier * evac.strength_per_ai_vault)
+            + (population * evac.strength_per_population);
 
-        let next_phase = phase_from_strength(self.beacon_strength);
+        let next_phase = phase_from_strength(self.beacon_strength, evac);
         if next_phase.rank() > self.beacon_phase.rank() {
             if let Some(flavor) = beacon_phase_flavor(&next_phase) {
                 self.push_notification(flavor.to_string());

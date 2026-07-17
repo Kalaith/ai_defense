@@ -186,7 +186,7 @@ impl GameplayState {
             return;
         }
 
-        let gen = self.factory.power_generation();
+        let gen = self.factory.power_generation(&self.constants.economy);
         let current_drain: f32 = self.factory.power_consumption()
             + self
                 .towers

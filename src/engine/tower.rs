@@ -42,6 +42,7 @@ pub struct TowerTuning {
     pub laser_vs_heavy_mult: f32,
     pub laser_vs_scout_mult: f32,
     pub ballistic_vs_heavy_mult: f32,
+    pub heat_per_shot: f32,
 }
 
 /// A world-space shot trail (line or ring) that fades out over its
@@ -335,7 +336,7 @@ pub fn tick_towers(
         }
     }
 
-    let heat_generated = fired_count * 0.01 * dt;
+    let heat_generated = fired_count * tuning.heat_per_shot * dt;
     TowerCombatResult {
         scrap_earned,
         effects,

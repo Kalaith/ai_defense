@@ -172,8 +172,8 @@ impl GameplayState {
     /// A tower may be built if the grid can carry it outright, or if the battery
     /// holds enough charge to absorb the deficit for now.
     pub(super) fn has_power_buffer_for(&self, def: &TowerDef) -> bool {
-        let generated =
-            self.factory.power_generation() + self.unlocked_building_boon().power_per_sec;
+        let generated = self.factory.power_generation(&self.constants.economy)
+            + self.unlocked_building_boon().power_per_sec;
         let current_drain: f32 = self.factory.power_consumption()
             + self
                 .towers

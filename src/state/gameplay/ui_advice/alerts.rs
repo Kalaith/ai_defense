@@ -9,8 +9,8 @@ use super::{AlertBanner, AlertSeverity, PowerGridSnapshot};
 
 impl GameplayState {
     pub(super) fn power_grid_snapshot(&self) -> PowerGridSnapshot {
-        let generated =
-            self.factory.power_generation() + self.unlocked_building_boon().power_per_sec;
+        let generated = self.factory.power_generation(&self.constants.economy)
+            + self.unlocked_building_boon().power_per_sec;
         let tower_drain: f32 = self.towers.iter().map(|t| t.power_drain).sum();
         let used = self.factory.power_consumption() + tower_drain;
         let net = generated - used;

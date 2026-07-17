@@ -134,20 +134,20 @@ if level < 25.0 { dark::TEXT_DIM } else if level < 60.0 { dark::WARNING }
 
 `wave_impl` never calls `reaction_tier()`. Changing the curve in one place **silently desyncs enemy unlocks from the colour the player sees** — a real bug waiting, not just a standards nit. `constants.threat` already holds `adaptation_threshold` and `adaptation_unlock_threshold`, so this was the intended home.
 
-**4b. Beacon phase thresholds hardcoded** — `engine/beacon.rs:43-51`: `61.0` / `36.0` / `16.0`. Half the dial (rates) is in JSON, half (boundaries) in Rust.
+**✅ DONE — 4b. Beacon phase thresholds hardcoded** — `engine/beacon.rs:43-51`: `61.0` / `36.0` / `16.0`. Half the dial (rates) is in JSON, half (boundaries) in Rust. Resolved: moved into `constants.evacuation` as `sustained_threshold`/`screaming_threshold`/`terminal_threshold`; `phase_from_strength` now takes `&EvacuationConstants`.
 
-**4c. The entire beacon-strength formula is hardcoded** — `update/beacon_cycle.rs:132-135`, four uncommented weights:
+**✅ DONE — 4c. The entire beacon-strength formula is hardcoded** — `update/beacon_cycle.rs:132-135`, four uncommented weights:
 ```rust
 self.beacon_strength = (unlocked * 2.0) + (power_throughput / 10.0)
     + (ai_vault_tier * 5.0) + (population / 20.0);
 ```
-With 4b, tuning the beacon requires a recompile *and* reasoning across two files.
+With 4b, tuning the beacon requires a recompile *and* reasoning across two files. Resolved: the four weights moved into `constants.evacuation` as `strength_per_unlocked_sector`/`strength_per_power_throughput`/`strength_per_ai_vault`/`strength_per_population`.
 
-**4d. Threat decay rates hardcoded** — `engine/threat.rs:160-174`: `let decay_rate = 0.5 * dt;` and the `* 0.2` territory modifier. Accrual is data-driven, decay is not — the two sides of one equilibrium live in different files. The `* 0.2` is precisely the territory-decay dial balanced against the survival-proof test, and it is currently invisible to anyone reading the JSON.
+**✅ DONE — 4d. Threat decay rates hardcoded** — `engine/threat.rs:160-174`: `let decay_rate = 0.5 * dt;` and the `* 0.2` territory modifier. Accrual is data-driven, decay is not — the two sides of one equilibrium live in different files. The `* 0.2` is precisely the territory-decay dial balanced against the survival-proof test, and it is currently invisible to anyone reading the JSON. Resolved: moved into `constants.threat` as `decay_rate`/`territory_decay_mult`; `tick_decay` now takes `&ThreatConstants`. Values unchanged (0.5, 0.2) — the survival-proof test still passes.
 
-**4e. Power economy** — `engine/factory.rs:90`: `40.0 + other_unlocked as f32 * 4.0`. Primary economy dials; `constants.economy` has no generation terms.
+**✅ DONE — 4e. Power economy** — `engine/factory.rs:90`: `40.0 + other_unlocked as f32 * 4.0`. Primary economy dials; `constants.economy` has no generation terms. Resolved: moved into `constants.economy` as `power_core_base_generation`/`power_per_other_unlocked_sector`; `Factory::power_generation` now takes `&EconomyConstants`.
 
-**4f. Minor** — `update/systems.rs:311`: `food_reward *= 1.5;` (logistics hub bonus, sitting two lines below correct `constants.waves.*` usage); `engine/tower.rs:334`: `fired_count * 0.01 * dt` (sole feed into the `heat` signature).
+**✅ DONE — 4f. Minor** — `update/systems.rs:311`: `food_reward *= 1.5;` (logistics hub bonus, sitting two lines below correct `constants.waves.*` usage); `engine/tower.rs:334`: `fired_count * 0.01 * dt` (sole feed into the `heat` signature). Resolved: moved to `constants.waves.logistics_hub_food_mult` and `constants.tower.heat_per_shot` (threaded through `TowerTuning`) respectively.
 
 ## Severity 5 — `draw_circuit_board` is 531 lines
 

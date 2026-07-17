@@ -157,14 +157,14 @@ impl ThreatSignature {
         })
     }
 
-    pub fn tick_decay(&mut self, dt: f32) {
-        let decay_rate = 0.5 * dt;
+    pub fn tick_decay(&mut self, dt: f32, constants: &crate::data::ThreatConstants) {
+        let decay_rate = constants.decay_rate * dt;
         self.energy = (self.energy - decay_rate).max(0.0);
         self.heat = (self.heat - decay_rate).max(0.0);
         self.data = (self.data - decay_rate).max(0.0);
         self.corruption = (self.corruption - decay_rate).max(0.0);
         self.noise = (self.noise - decay_rate).max(0.0);
-        self.territory = (self.territory - decay_rate * 0.2).max(0.0);
+        self.territory = (self.territory - decay_rate * constants.territory_decay_mult).max(0.0);
     }
 
     pub fn add_from_wave(&mut self, wave_number: u32) {

@@ -10,7 +10,9 @@
   "economy": {
     "power_cap": 200.0,
     "power_buffer_min_for_build": 10.0,
-    "productivity_scrap_rate": 0.02
+    "productivity_scrap_rate": 0.02,
+    "power_core_base_generation": 40.0,
+    "power_per_other_unlocked_sector": 4.0
   },
   "population": {
     "food_consumption_per_person": 1.0,
@@ -39,14 +41,22 @@
     "budget_base": 8,
     "budget_per_wave": 4,
     "commander_every": 5,
-    "escalation_per_cycle": 0.18
+    "escalation_per_cycle": 0.18,
+    "logistics_hub_food_mult": 1.5
   },
   "evacuation": {
     "warm_rate": 0.15,
     "sustained_rate": 0.45,
     "screaming_rate": 1.0,
     "terminal_rate": 1.8,
-    "milestone_interval": 25
+    "milestone_interval": 25,
+    "sustained_threshold": 16.0,
+    "screaming_threshold": 36.0,
+    "terminal_threshold": 61.0,
+    "strength_per_unlocked_sector": 2.0,
+    "strength_per_power_throughput": 0.1,
+    "strength_per_ai_vault": 5.0,
+    "strength_per_population": 0.05
   },
   "threat": {
     "budget_divisor": 10.0,
@@ -61,7 +71,9 @@
     "adaptation_unlock_threshold": 30.0,
     "tier_2_awareness": 25.0,
     "tier_3_awareness": 60.0,
-    "tier_4_awareness": 100.0
+    "tier_4_awareness": 100.0,
+    "decay_rate": 0.5,
+    "territory_decay_mult": 0.2
   },
   "enemy": {
     "scout_dodge_chance": 0.2,
@@ -85,7 +97,8 @@
     "commander_death_fraction": 0.1,
     "laser_vs_heavy_mult": 1.5,
     "laser_vs_scout_mult": 0.5,
-    "ballistic_vs_heavy_mult": 0.9
+    "ballistic_vs_heavy_mult": 0.9,
+    "heat_per_shot": 0.01
   },
   "sector": {
     "repair_cost": 20.0,

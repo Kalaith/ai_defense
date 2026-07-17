@@ -114,6 +114,7 @@ impl GameplayState {
             laser_vs_heavy_mult: self.constants.tower.laser_vs_heavy_mult,
             laser_vs_scout_mult: self.constants.tower.laser_vs_scout_mult,
             ballistic_vs_heavy_mult: self.constants.tower.ballistic_vs_heavy_mult,
+            heat_per_shot: self.constants.tower.heat_per_shot,
         };
 
         let combat = tick_towers(
@@ -153,7 +154,7 @@ impl GameplayState {
 
     pub(super) fn update_power(&mut self, dt: f32) {
         let building_power = self.unlocked_building_boon().power_per_sec;
-        let gen = self.factory.power_generation() + building_power;
+        let gen = self.factory.power_generation(&self.constants.economy) + building_power;
         let tower_drain: f32 = self
             .towers
             .iter()
@@ -212,8 +213,8 @@ impl GameplayState {
         // Gather everything the whole-self helpers need up front, before taking
         // the mutable borrow of self.threat below.
         let building_threat = self.unlocked_building_threat_per_sec();
-        let power_gen =
-            self.factory.power_generation() + self.unlocked_building_boon().power_per_sec;
+        let power_gen = self.factory.power_generation(&self.constants.economy)
+            + self.unlocked_building_boon().power_per_sec;
         let sectors = self.factory.unlocked_count() as f32;
         let towers = self.towers.len() as f32;
         let research_active = self.factory.is_sector_active("research_lab");
@@ -241,7 +242,7 @@ impl GameplayState {
             self.threat.add_corruption(corruption_rate * dt);
         }
 
-        self.threat.tick_decay(dt);
+        self.threat.tick_decay(dt, &self.constants.threat);
         let current_tier = self.threat.reaction_tier(&self.constants.threat);
         if super::super::helpers::reaction_tier_rank(&current_tier)
             > super::super::helpers::reaction_tier_rank(&self.last_reaction_tier)
@@ -308,7 +309,7 @@ impl GameplayState {
             + self.current_wave as f32 * self.constants.waves.scrap_per_wave_per_wave;
         let mut food_reward = self.base_food_per_wave;
         if self.factory.is_sector_active("logistics_hub") {
-            food_reward *= 1.5;
+            food_reward *= self.constants.waves.logistics_hub_food_mult;
         }
         self.population.food_supply += food_reward;
 

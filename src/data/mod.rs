@@ -79,6 +79,10 @@ pub struct EconomyConstants {
     pub power_cap: f32,
     pub power_buffer_min_for_build: f32,
     pub productivity_scrap_rate: f32,
+    /// Power generation while `power_core` is active: a flat base plus a
+    /// per-sector bonus for every other unlocked, undamaged sector.
+    pub power_core_base_generation: f32,
+    pub power_per_other_unlocked_sector: f32,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -117,6 +121,8 @@ pub struct WaveConstants {
     /// The machines learn you are the bait, so every cycle starts harder and the
     /// safe low-phase farm erodes.
     pub escalation_per_cycle: f32,
+    /// Multiplier on the per-wave food reward while `logistics_hub` is active.
+    pub logistics_hub_food_mult: f32,
 }
 
 /// Rate (survivors/sec) at which the active beacon draws machine attention away
@@ -130,6 +136,20 @@ pub struct EvacuationConstants {
     pub terminal_rate: f32,
     /// Every N banked survivors triggers a milestone notification.
     pub milestone_interval: u32,
+    /// Beacon-strength boundaries that select the current phase (see
+    /// `beacon::phase_from_strength`). Below `sustained_threshold` is
+    /// WarmSignal.
+    pub sustained_threshold: f32,
+    pub screaming_threshold: f32,
+    pub terminal_threshold: f32,
+    /// Weights for the beacon-strength formula (see
+    /// `GameplayState::update_beacon`): how much each unlocked sector, unit of
+    /// power throughput, the AI vault, and each surviving population point
+    /// contribute to the strength that drives phase escalation.
+    pub strength_per_unlocked_sector: f32,
+    pub strength_per_power_throughput: f32,
+    pub strength_per_ai_vault: f32,
+    pub strength_per_population: f32,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -160,6 +180,11 @@ pub struct ThreatConstants {
     pub tier_2_awareness: f32,
     pub tier_3_awareness: f32,
     pub tier_4_awareness: f32,
+    /// Per-second decay applied to every signature except territory, which
+    /// decays at this rate scaled by `territory_decay_mult` — territory lingers
+    /// far longer than the others, balanced against the survival-proof test.
+    pub decay_rate: f32,
+    pub territory_decay_mult: f32,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -188,6 +213,9 @@ pub struct TowerConstants {
     pub laser_vs_heavy_mult: f32,
     pub laser_vs_scout_mult: f32,
     pub ballistic_vs_heavy_mult: f32,
+    /// Heat-signature contribution per tower shot per second (sole feed into
+    /// the heat awareness signal — see `ThreatKind::Heat`).
+    pub heat_per_shot: f32,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
