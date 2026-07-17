@@ -210,7 +210,9 @@ warning: variant `Info` is never constructed   --> src\state\gameplay\ui_advice.
 
 **All 13 `#[allow]` sites are undocumented**, against §10.2's *"Document any `#[allow]` with a comment"*: `map.rs:146,158`; `tower.rs:123,173`; `wave.rs:3`; `wave_impl.rs:91,205,206,242,301`; `ui_advice.rs:56`; `state/mod.rs:14,40`. The five `clippy::too_many_arguments` sites are defensible on merit but point straight at Severity 6 — they suppress the exact lint that would have flagged it.
 
-## Severity 8 — `engine/` calculations are almost entirely untested
+## PARTIALLY DONE — Severity 8 — `engine/` calculations are almost entirely untested
+
+Addressed the three sharpest gaps the review named: added 5 `tick_towers` tests (`engine/tower.rs`, covering ballistic kill+scrap, out-of-range no-op, laser vs-heavy multiplier, commander death-burst splash, area-denial multi-hit), 2 `tick_decay`/territory-lag tests (`engine/threat.rs`, on top of the reaction-tier boundary test from Sev3/4a), and 2 `SaveData` tests (`save/mod.rs`: JSON round-trip equality, and a legacy-save-missing-newer-fields defaulting test — via direct `serde_json` round-trip rather than real `SaveRoot` file I/O, to stay hermetic). 23 tests now pass, up from 13. `map.rs`, `beacon.rs`, `factory.rs`, `population.rs`, `enemy.rs` remain untested — left for a follow-up pass; not done in this session.
 
 **§11.1** · 13 tests exist and all pass. But §11.1 names "core game calculations" as the priority, and **every `engine/` module except `wave_impl.rs` has zero tests**:
 
