@@ -3,6 +3,7 @@
 use crate::data::strings::{fill, text};
 use crate::engine::beacon::BeaconPhase;
 use crate::engine::enemy::EnemyType;
+use crate::engine::threat::ReactionTier;
 
 use super::super::GameplayState;
 use super::{AlertBanner, AlertSeverity, PowerGridSnapshot};
@@ -112,20 +113,24 @@ impl GameplayState {
         }
 
         let awareness = self.threat.awareness_level();
-        if awareness >= 60.0 {
-            alerts.push(AlertBanner {
-                severity: AlertSeverity::Critical,
-                label: t.machine_aware.clone(),
-                detail: fill(&t.awareness_detail, &[("pct", &format!("{awareness:.0}"))]),
-                priority: 68,
-            });
-        } else if awareness >= 25.0 {
-            alerts.push(AlertBanner {
-                severity: AlertSeverity::Warning,
-                label: t.machine_watching.clone(),
-                detail: fill(&t.awareness_detail, &[("pct", &format!("{awareness:.0}"))]),
-                priority: 58,
-            });
+        match self.threat.reaction_tier(&self.constants.threat) {
+            ReactionTier::Suppression | ReactionTier::Extermination => {
+                alerts.push(AlertBanner {
+                    severity: AlertSeverity::Critical,
+                    label: t.machine_aware.clone(),
+                    detail: fill(&t.awareness_detail, &[("pct", &format!("{awareness:.0}"))]),
+                    priority: 68,
+                });
+            }
+            ReactionTier::Adaptation => {
+                alerts.push(AlertBanner {
+                    severity: AlertSeverity::Warning,
+                    label: t.machine_watching.clone(),
+                    detail: fill(&t.awareness_detail, &[("pct", &format!("{awareness:.0}"))]),
+                    priority: 58,
+                });
+            }
+            ReactionTier::Observation => {}
         }
 
         if self.factory_integrity < 35.0 {
@@ -171,10 +176,13 @@ impl GameplayState {
     }
 
     pub fn beacon_draw_to_next_phase(&self) -> f32 {
+        let evac = &self.constants.evacuation;
         let next = match self.beacon_phase {
-            BeaconPhase::WarmSignal => 16.0,
-            BeaconPhase::SustainedCall => 36.0,
-            BeaconPhase::ScreamingBeacon => 61.0,
+            BeaconPhase::WarmSignal => evac.sustained_threshold,
+            BeaconPhase::SustainedCall => evac.screaming_threshold,
+            BeaconPhase::ScreamingBeacon => evac.terminal_threshold,
+            // No further phase exists; this is a display-only countdown ceiling
+            // a little past the terminal threshold, not a tuning dial.
             BeaconPhase::TerminalHowl => 70.0,
         };
         (next - self.beacon_strength).max(0.0)
