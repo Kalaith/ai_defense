@@ -7,6 +7,29 @@
 
 ---
 
+## ✅ ALL ITEMS RESOLVED (2026-07-17)
+
+Every severity below (1 through 9, plus the Severity 3 `UiAction` decision) has been addressed and committed as a separate commit on `master`. Summary of outcomes:
+
+| Severity | Outcome |
+|---|---|
+| 1 — dead `state/gameplay.rs` | Deleted |
+| 2 — dead legacy block in `wave.rs` | Deleted |
+| 3 — `UiAction` pattern doesn't exist | Doc corrected to match reality; pattern kept as an accepted, explained divergence (see section for the decision writeup) |
+| 4 (4a) — threat-threshold triplication | Fixed — single source of truth in `constants.threat`, with a boundary test |
+| 4 (4b–4f) — beacon/threat/economy dials hardcoded | Migrated into `constants.json` |
+| 5 — `draw_circuit_board` 531 lines | Extracted into a `render_map/circuit_board.rs` submodule |
+| 6 — 13–16 param free functions | Threaded `&WaveTuning` through instead |
+| 7 — `#[allow]`s masking dead code | Swept; remaining allows documented |
+| 8 — `engine/` mostly untested | Added tests for `tick_towers`, threat decay, and save round-trip (partial — `map.rs`/`beacon.rs`/`factory.rs`/`population.rs`/`enemy.rs` remain untested) |
+| 9 — duplication and smaller items | All 7 sub-items addressed (9a–9e, 9g fixed; 9f documented as deliberate) |
+
+At every step: `cargo build --all-targets`, `cargo test`, `cargo clippy --all-targets --all-features -- -D warnings`, and `cargo fmt --check` were run clean before committing; rendering changes (Sev5, 9e) were additionally verified with the screenshot capture harness. Final state: 23/23 tests passing (up from 13), zero clippy warnings, fmt clean.
+
+The original review content below is preserved for reference, with a ✅/outcome note prepended to each resolved section.
+
+---
+
 ## Verdict
 
 This is a **healthy, well-disciplined codebase**. The automated gates are green (`cargo clippy -D warnings` clean, `cargo fmt --check` clean, 13/13 tests passing), no file breaches the 800-line hard limit, deployment is fully compliant, and error handling is the strongest area in the project.
