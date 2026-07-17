@@ -79,7 +79,9 @@ Lines 6–363 are a `/* … */` block wrapping a `#[cfg(FALSE)] mod legacy` — 
 
 These two files hold the **pre-migration hardcoded constants**. Any grep-driven review — human or agent — surfaces phantom findings from them. During this very review, two independent reviewers had to spend effort ruling out magic numbers at `wave.rs:301`, `:297`, and `:313-315` that live inside a comment block. The live equivalents at `wave_impl.rs:325-328` correctly read from JSON tuning. **This debris has already cost real review time and will keep doing so until deleted.**
 
-## Severity 3 — The `UiAction` pattern (§7.2) does not exist
+## ✅ DONE (doc corrected, pattern kept as accepted divergence) — Severity 3 — The `UiAction` pattern (§7.2) does not exist
+
+**Decision (2026-07-17, discussed with the project owner):** keep the `&mut self` view-layer pattern rather than build a `UiAction` enum + dispatcher. `GameplayState` is the sole owner of both the view and the state being mutated — there's no second consumer of the intents and no alternate view that would ever replay them, so a dispatcher would add indirection without buying real decoupling. Also considered and rejected: promoting the pattern into `macroquad-toolkit` as shared code — there's no reusable logic to extract, since the concrete `UiAction` variants (`StartBeacon`, `PlaceTower(id)`, …) are inherently game-specific; the convention already lives at the right level as `docs/CODE_STANDARDS.md` §7.2, copied into every game via the sync scripts. **Fixed:** `src/state/gameplay/ui.rs:1-12`'s module doc no longer asserts an invariant the code doesn't hold — it now describes the actual `&mut self` pattern and explains why it's accepted here, with a pointer back to this review section for the fuller argument. The 19 mutation-inside-draw call sites listed below are unchanged (that was always the intended fix — correct the doc, not the code).
 
 **§7.1, §7.2** · **Fix: introduce `UiAction`, or correct the docs to match reality**
 

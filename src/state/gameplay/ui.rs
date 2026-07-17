@@ -1,9 +1,16 @@
 //! The gameplay screen's view layer, split by surface: [`panels`] draws the
 //! docked sidebars, [`placement`] the world-space build ghost, [`overlays`] the
-//! modals and banners, and [`actions`] applies the intents they raise.
+//! modals and banners, and [`actions`] holds the resulting state mutations.
 //!
-//! Panels never mutate state directly — they resolve a click to an intent and
-//! dispatch it to an `actions` method.
+//! This diverges from `docs/CODE_STANDARDS.md` §7.2's `UiAction`/dispatcher
+//! pattern: panels call `self.*` mutation methods (defined in `actions`)
+//! directly from inside their draw functions, rather than returning an intent
+//! enum for a separate dispatcher to apply. Accepted here rather than fixed —
+//! `GameplayState` is the sole owner of both the view and the state being
+//! mutated, so a dispatcher would add a layer of indirection without buying
+//! real decoupling (there's no second consumer of the intents, and no
+//! alternate view that would ever replay them). See the code review dated
+//! 2026-07-17 (Severity 3) for the fuller argument and the sites involved.
 
 mod actions;
 mod overlays;
