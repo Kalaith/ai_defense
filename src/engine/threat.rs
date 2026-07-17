@@ -99,13 +99,13 @@ impl ThreatSignature {
         self.energy + self.heat + self.data + self.corruption + self.noise + self.territory
     }
 
-    pub fn reaction_tier(&self) -> ReactionTier {
+    pub fn reaction_tier(&self, constants: &crate::data::ThreatConstants) -> ReactionTier {
         let level = self.awareness_level();
-        if level < 25.0 {
+        if level < constants.tier_2_awareness {
             ReactionTier::Observation
-        } else if level < 60.0 {
+        } else if level < constants.tier_3_awareness {
             ReactionTier::Adaptation
-        } else if level < 100.0 {
+        } else if level < constants.tier_4_awareness {
             ReactionTier::Suppression
         } else {
             ReactionTier::Extermination
@@ -170,5 +170,52 @@ impl ThreatSignature {
     pub fn add_from_wave(&mut self, wave_number: u32) {
         self.noise += 1.0 + wave_number as f32 * 0.5;
         self.heat += 0.5;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::data::GameData;
+
+    fn signature_at(level: f32) -> ThreatSignature {
+        let mut sig = ThreatSignature::new();
+        sig.energy = level;
+        sig
+    }
+
+    #[test]
+    fn reaction_tier_boundaries_match_constants_json() {
+        let data = GameData::load();
+        let t = &data.constants.threat;
+
+        assert!(matches!(
+            signature_at(0.0).reaction_tier(t),
+            ReactionTier::Observation
+        ));
+        assert!(matches!(
+            signature_at(t.tier_2_awareness - 0.01).reaction_tier(t),
+            ReactionTier::Observation
+        ));
+        assert!(matches!(
+            signature_at(t.tier_2_awareness).reaction_tier(t),
+            ReactionTier::Adaptation
+        ));
+        assert!(matches!(
+            signature_at(t.tier_3_awareness - 0.01).reaction_tier(t),
+            ReactionTier::Adaptation
+        ));
+        assert!(matches!(
+            signature_at(t.tier_3_awareness).reaction_tier(t),
+            ReactionTier::Suppression
+        ));
+        assert!(matches!(
+            signature_at(t.tier_4_awareness - 0.01).reaction_tier(t),
+            ReactionTier::Suppression
+        ));
+        assert!(matches!(
+            signature_at(t.tier_4_awareness).reaction_tier(t),
+            ReactionTier::Extermination
+        ));
     }
 }

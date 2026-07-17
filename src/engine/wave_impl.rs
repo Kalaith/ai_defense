@@ -26,6 +26,8 @@ pub struct WaveManager {
     pub wave_commander_every: u32,
     pub threat_budget_divisor: f32,
     pub threat_health_mult_per_awareness: f32,
+    pub tier_2_awareness: f32,
+    pub tier_3_awareness: f32,
 }
 
 #[derive(Clone, Debug)]
@@ -39,6 +41,11 @@ pub struct WaveTuning {
     pub wave_commander_every: u32,
     pub threat_budget_divisor: f32,
     pub threat_health_mult_per_awareness: f32,
+    /// Awareness-level boundaries that unlock enemy tiers early — kept in
+    /// sync with `ThreatSignature::reaction_tier` via `constants.threat`
+    /// (both read the same JSON, avoiding the drift a hardcoded copy risks).
+    pub tier_2_awareness: f32,
+    pub tier_3_awareness: f32,
 }
 
 pub struct SpawnEntry {
@@ -85,6 +92,8 @@ impl WaveManager {
             wave_commander_every: tuning.wave_commander_every,
             threat_budget_divisor: tuning.threat_budget_divisor,
             threat_health_mult_per_awareness: tuning.threat_health_mult_per_awareness,
+            tier_2_awareness: tuning.tier_2_awareness,
+            tier_3_awareness: tuning.tier_3_awareness,
         }
     }
 
@@ -120,6 +129,8 @@ impl WaveManager {
             self.wave_commander_every,
             self.threat_budget_divisor,
             self.threat_health_mult_per_awareness,
+            self.tier_2_awareness,
+            self.tier_3_awareness,
             adaptation,
         );
     }
@@ -217,6 +228,8 @@ pub fn preview_wave(
     wave_commander_every: u32,
     threat_budget_divisor: f32,
     threat_health_mult_per_awareness: f32,
+    tier_2_awareness: f32,
+    tier_3_awareness: f32,
     adaptation: &WaveAdaptation,
 ) -> Vec<EnemyType> {
     let dummy_spawn = vec![("preview".to_string(), Vec2::new(0.0, 0.0))];
@@ -233,6 +246,8 @@ pub fn preview_wave(
         wave_commander_every,
         threat_budget_divisor,
         threat_health_mult_per_awareness,
+        tier_2_awareness,
+        tier_3_awareness,
         &dummy_spawn,
         adaptation,
     );
@@ -253,6 +268,8 @@ pub fn preview_wave_entries(
     wave_commander_every: u32,
     threat_budget_divisor: f32,
     threat_health_mult_per_awareness: f32,
+    tier_2_awareness: f32,
+    tier_3_awareness: f32,
     spawn_points: &[(String, Vec2)],
     adaptation: &WaveAdaptation,
 ) -> Vec<PreviewSpawnEntry> {
@@ -270,6 +287,8 @@ pub fn preview_wave_entries(
         wave_commander_every,
         threat_budget_divisor,
         threat_health_mult_per_awareness,
+        tier_2_awareness,
+        tier_3_awareness,
         adaptation,
     );
     queue
@@ -313,6 +332,8 @@ fn build_spawn_queue(
     wave_commander_every: u32,
     threat_budget_divisor: f32,
     threat_health_mult_per_awareness: f32,
+    tier_2_awareness: f32,
+    tier_3_awareness: f32,
     adaptation: &WaveAdaptation,
 ) -> Vec<SpawnEntry> {
     if spawn_points.is_empty() {
@@ -334,9 +355,9 @@ fn build_spawn_queue(
         _ => 3,
     };
 
-    if threat_awareness >= 60.0 {
+    if threat_awareness >= tier_3_awareness {
         max_tier = max_tier.max(3);
-    } else if threat_awareness >= 25.0 {
+    } else if threat_awareness >= tier_2_awareness {
         max_tier = max_tier.max(2);
     }
 
@@ -442,6 +463,8 @@ mod tests {
             wave_commander_every: data.constants.waves.commander_every,
             threat_budget_divisor: data.constants.threat.budget_divisor,
             threat_health_mult_per_awareness: data.constants.threat.health_mult_per_awareness,
+            tier_2_awareness: data.constants.threat.tier_2_awareness,
+            tier_3_awareness: data.constants.threat.tier_3_awareness,
         }
     }
 
@@ -462,6 +485,8 @@ mod tests {
             data.constants.waves.commander_every,
             data.constants.threat.budget_divisor,
             data.constants.threat.health_mult_per_awareness,
+            data.constants.threat.tier_2_awareness,
+            data.constants.threat.tier_3_awareness,
             &WaveAdaptation::default(),
         );
 
@@ -535,6 +560,8 @@ mod tests {
                 data.constants.waves.commander_every,
                 data.constants.threat.budget_divisor,
                 data.constants.threat.health_mult_per_awareness,
+                data.constants.threat.tier_2_awareness,
+                data.constants.threat.tier_3_awareness,
                 &spawn_points,
                 adaptation,
             )
@@ -580,6 +607,8 @@ mod tests {
             data.constants.waves.commander_every,
             data.constants.threat.budget_divisor,
             data.constants.threat.health_mult_per_awareness,
+            data.constants.threat.tier_2_awareness,
+            data.constants.threat.tier_3_awareness,
             &spawn_points,
             &WaveAdaptation::default(),
         );

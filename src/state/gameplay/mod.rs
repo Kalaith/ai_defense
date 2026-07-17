@@ -212,7 +212,7 @@ impl GameplayState {
         factory.init_sectors(&data.sector_defs);
 
         let threat = ThreatSignature::new();
-        let last_reaction_tier = threat.reaction_tier();
+        let last_reaction_tier = threat.reaction_tier(&data.constants.threat);
 
         let settings = crate::save::Settings::load();
         let coach_active = !settings.tutorial_seen;
@@ -242,6 +242,8 @@ impl GameplayState {
                 wave_commander_every: data.constants.waves.commander_every,
                 threat_budget_divisor: data.constants.threat.budget_divisor,
                 threat_health_mult_per_awareness: data.constants.threat.health_mult_per_awareness,
+                tier_2_awareness: data.constants.threat.tier_2_awareness,
+                tier_3_awareness: data.constants.threat.tier_3_awareness,
             }),
             threat,
             population: Population::new(&data.constants),
@@ -372,7 +374,7 @@ impl GameplayState {
         self.threat.corruption = save.threat.corruption;
         self.threat.noise = save.threat.noise;
         self.threat.territory = save.threat.territory;
-        self.last_reaction_tier = self.threat.reaction_tier();
+        self.last_reaction_tier = self.threat.reaction_tier(&self.constants.threat);
 
         for saved in save.sectors {
             if let Some(sector) = self.factory.sectors.iter_mut().find(|s| s.id == saved.id) {
@@ -456,6 +458,8 @@ impl GameplayState {
             wave_commander_every: self.constants.waves.commander_every,
             threat_budget_divisor: self.constants.threat.budget_divisor,
             threat_health_mult_per_awareness: self.constants.threat.health_mult_per_awareness,
+            tier_2_awareness: self.constants.threat.tier_2_awareness,
+            tier_3_awareness: self.constants.threat.tier_3_awareness,
         });
         self.selected_tower = None;
         self.selected_slot = None;

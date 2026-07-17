@@ -242,7 +242,7 @@ impl GameplayState {
         }
 
         self.threat.tick_decay(dt);
-        let current_tier = self.threat.reaction_tier();
+        let current_tier = self.threat.reaction_tier(&self.constants.threat);
         if super::super::helpers::reaction_tier_rank(&current_tier)
             > super::super::helpers::reaction_tier_rank(&self.last_reaction_tier)
         {

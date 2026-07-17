@@ -30,14 +30,11 @@ pub fn reaction_tier_rank(tier: &ReactionTier) -> u32 {
     }
 }
 
-pub fn threat_color(threat: &ThreatSignature) -> Color {
-    let level = threat.awareness_level();
-    if level < 25.0 {
-        dark::TEXT_DIM
-    } else if level < 60.0 {
-        dark::WARNING
-    } else {
-        dark::NEGATIVE
+pub fn threat_color(threat: &ThreatSignature, constants: &crate::data::ThreatConstants) -> Color {
+    match threat.reaction_tier(constants) {
+        ReactionTier::Observation => dark::TEXT_DIM,
+        ReactionTier::Adaptation => dark::WARNING,
+        ReactionTier::Suppression | ReactionTier::Extermination => dark::NEGATIVE,
     }
 }
 

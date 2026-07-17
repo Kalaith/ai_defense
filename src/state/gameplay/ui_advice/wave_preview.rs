@@ -67,6 +67,8 @@ impl GameplayState {
             self.constants.waves.commander_every,
             self.constants.threat.budget_divisor,
             self.constants.threat.health_mult_per_awareness,
+            self.constants.threat.tier_2_awareness,
+            self.constants.threat.tier_3_awareness,
             &spawn_points,
             &self.wave_adaptation(),
         )

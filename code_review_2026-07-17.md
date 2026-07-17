@@ -119,7 +119,7 @@ Related §7.1 breaches — side effects inside the render pass:
 
 `assets/constants.json` (15 sections) is real and well-plumbed — `state/gameplay/mod.rs:229-245` builds `WaveTuning` field-by-field from it. But **one subsystem was missed**, and the JSON's own shape proves it: `evacuation` defines all four per-phase rates (`warm_rate`, `sustained_rate`, `screaming_rate`, `terminal_rate`) but **not the thresholds that select the phase**; `threat` defines every accrual rate but **no decay rates and no tier boundaries**. The sections are ready; the dials are missing.
 
-**4a. Threat tier thresholds triplicated — the one with correctness risk.** The `25.0` / `60.0` pair is hand-re-derived in three modules with no shared source:
+**✅ DONE — 4a. Threat tier thresholds triplicated — the one with correctness risk.** Resolved: `tier_2_awareness`/`tier_3_awareness`/`tier_4_awareness` added to `constants.threat` (JSON + `ThreatConstants`); `reaction_tier()` now takes `&ThreatConstants` and reads them instead of hardcoding `25.0`/`60.0`/`100.0`; `wave_impl::build_spawn_queue` (and its callers up the chain) take `tier_2_awareness`/`tier_3_awareness` as params instead of re-deriving; `helpers::threat_color` now matches on `reaction_tier()` instead of re-deriving the HUD colour boundary. Added `engine::threat::tests::reaction_tier_boundaries_match_constants_json`, pinning the tier boundaries against the loaded JSON. The `25.0` / `60.0` pair is hand-re-derived in three modules with no shared source:
 
 ```rust
 // engine/threat.rs:104-108        — the canonical reaction_tier()

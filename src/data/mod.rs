@@ -151,6 +151,15 @@ pub struct ThreatConstants {
     /// archetype in ahead of the tier schedule.
     pub adaptation_threshold: f32,
     pub adaptation_unlock_threshold: f32,
+    /// Awareness-level boundaries for `ThreatSignature::reaction_tier` —
+    /// the single source of truth for the tier that also gates enemy-unlock
+    /// escalation (`wave_impl::build_spawn_queue`) and the HUD threat colour
+    /// (`helpers::threat_color`). Below `tier_2` is Observation, below
+    /// `tier_3` is Adaptation, below `tier_4` is Suppression, at or above
+    /// `tier_4` is Extermination.
+    pub tier_2_awareness: f32,
+    pub tier_3_awareness: f32,
+    pub tier_4_awareness: f32,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

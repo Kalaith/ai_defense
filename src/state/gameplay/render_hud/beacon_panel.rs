@@ -87,7 +87,10 @@ impl GameplayState {
             &fill(
                 &t.threat_readout,
                 &[
-                    ("tier", self.threat.reaction_tier().label()),
+                    (
+                        "tier",
+                        self.threat.reaction_tier(&self.constants.threat).label(),
+                    ),
                     ("pct", &format!("{:.0}", self.threat.awareness_level())),
                 ],
             ),
@@ -95,7 +98,7 @@ impl GameplayState {
             rect.y + 78.0,
             rect.w * 0.45,
             11.0,
-            threat_color(&self.threat),
+            threat_color(&self.threat, &self.constants.threat),
         );
 
         if self.beacon_active {

@@ -246,7 +246,7 @@ impl GameplayState {
                 rect.x + rect.w - 12.0 - w,
                 rect.y + 16.0,
                 10.0,
-                threat_color(&self.threat),
+                threat_color(&self.threat, &self.constants.threat),
             );
         }
 
