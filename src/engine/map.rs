@@ -143,9 +143,7 @@ pub struct MapState {
 }
 
 #[derive(Clone, Debug)]
-#[allow(dead_code)]
 pub struct SectionRenderInfo {
-    pub id: String,
     pub label: String,
     pub core_building: String,
     pub unlock_entrance: Option<String>,
@@ -155,9 +153,7 @@ pub struct SectionRenderInfo {
     pub visible: bool,
 }
 
-#[allow(dead_code)]
 pub struct MapSection {
-    pub id: String,
     pub label: String,
     pub core_building: String,
     pub buildings: Vec<String>,
@@ -253,7 +249,6 @@ impl MapState {
             }
             building_sections.insert(def.core_building.clone(), idx);
             result.push(MapSection {
-                id: def.id.clone(),
                 label: def.label.clone(),
                 core_building: def.core_building.clone(),
                 buildings: def.buildings.clone(),
@@ -349,7 +344,6 @@ impl MapState {
             }
 
             result.push(SectionRenderInfo {
-                id: section.id.clone(),
                 label: section.label.clone(),
                 core_building: section.core_building.clone(),
                 unlock_entrance: section.unlock_entrance.clone(),

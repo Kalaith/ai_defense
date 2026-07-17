@@ -120,6 +120,8 @@ pub struct TowerTickStats {
 }
 
 impl Tower {
+    // Each param is a distinct tower-def field with no natural grouping; a
+    // config struct would just move the field list, not shrink it.
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         tower_type: TowerType,
@@ -170,6 +172,8 @@ impl Tower {
 
 /// Run tower combat: each tower finds a target, fires if ready, applies damage.
 /// Returns total scrap earned from kills.
+// Params are independent inputs from separate subsystems (enemies, path,
+// power grid, dt); bundling them would just hide the coupling in a struct.
 #[allow(clippy::too_many_arguments)]
 pub fn tick_towers(
     towers: &mut [Tower],

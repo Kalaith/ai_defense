@@ -185,7 +185,10 @@ Note `render_map.rs` at 786 lines is **under** the 800 hard limit but close enou
 
 22 more functions take 5–7 params, mostly UI primitives where `(x, y, w, h, …)` geometry is defensible — treat those as idiom, not findings.
 
-## Severity 7 — `#[allow]`s masking genuinely dead code
+## ✅ DONE — Severity 7 — `#[allow]`s masking genuinely dead code
+
+Resolved: `SectionRenderInfo.id` and the now-consequently-dead `MapSection.id` deleted; `AlertSeverity::Info` variant removed (and its match arms); `preview_wave` re-gated `#[cfg(test)]` instead of `dead_code`; stale `wave.rs:3` and `map.rs:158` allows dropped (removing them produced no warnings). All remaining `#[allow]` sites now carry a documentation comment, except the four `too_many_arguments` allows in `wave_impl.rs` (`:91,206,242,301`), which are resolved structurally by threading `&WaveTuning` in Severity 6 below rather than documented in place.
+
 
 **§1.4, §10.2** · Verified by stripping the allows in a scratch copy and rebuilding. Warnings that fired:
 

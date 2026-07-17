@@ -202,8 +202,8 @@ impl WaveManager {
     }
 }
 
+#[cfg(test)]
 #[allow(clippy::too_many_arguments)]
-#[allow(dead_code)]
 pub fn preview_wave(
     wave_number: u32,
     enemy_defs: &[EnemyDef],

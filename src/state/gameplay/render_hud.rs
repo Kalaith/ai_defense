@@ -385,7 +385,6 @@ impl GameplayState {
             let color = match alert.severity {
                 AlertSeverity::Critical => dark::NEGATIVE,
                 AlertSeverity::Warning => dark::WARNING,
-                AlertSeverity::Info => dark::ACCENT,
             };
             let pulse = if alert.severity == AlertSeverity::Critical {
                 pulse_range(7.0, 0.72, 0.92)

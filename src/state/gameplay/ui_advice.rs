@@ -53,9 +53,7 @@ pub enum AdviceTarget {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-#[allow(dead_code)]
 pub enum AlertSeverity {
-    Info,
     Warning,
     Critical,
 }

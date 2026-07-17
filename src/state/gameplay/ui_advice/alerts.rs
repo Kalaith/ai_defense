@@ -183,8 +183,7 @@ impl GameplayState {
 
 pub(super) fn severity_rank(severity: AlertSeverity) -> u32 {
     match severity {
-        AlertSeverity::Info => 0,
-        AlertSeverity::Warning => 1,
-        AlertSeverity::Critical => 2,
+        AlertSeverity::Warning => 0,
+        AlertSeverity::Critical => 1,
     }
 }

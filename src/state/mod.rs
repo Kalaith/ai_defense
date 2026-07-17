@@ -10,6 +10,8 @@ use gameplay::GameplayState;
 use menu::MenuState;
 use results::ResultsState;
 
+// GameplayState is intentionally much larger than Menu/Results — it owns the
+// whole live simulation. Boxing it would just move the size cost to every read.
 #[allow(clippy::large_enum_variant)]
 pub enum GameState {
     Menu(MenuState),
@@ -36,6 +38,8 @@ pub struct RunSummary {
     pub evacuees_lost: u32,
 }
 
+// The shared `To` prefix reads as clearer at call sites (state.transition_to(ToGameplay))
+// than trimming it would.
 #[allow(clippy::enum_variant_names)]
 pub enum StateTransition {
     ToMenu,
