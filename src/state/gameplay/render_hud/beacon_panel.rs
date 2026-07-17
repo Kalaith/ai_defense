@@ -11,7 +11,7 @@ use macroquad_toolkit::ui::{draw_ui_text, measure_ui_text};
 
 use super::super::helpers::{beacon_color, threat_color};
 use super::super::GameplayState;
-use super::{draw_bounded_text, draw_button_hint};
+use super::draw_button_hint;
 
 impl GameplayState {
     pub(super) fn draw_beacon_panel(&mut self, rect: Rect) {
@@ -55,7 +55,7 @@ impl GameplayState {
             11.0,
             dark::POSITIVE,
         );
-        draw_bounded_text(
+        ui::draw_bounded_text(
             &self.beacon_phase.label().to_uppercase(),
             rect.x + 14.0,
             rect.y + 43.0,
@@ -72,7 +72,7 @@ impl GameplayState {
             danger,
             phase_color,
         );
-        draw_bounded_text(
+        ui::draw_bounded_text(
             &fill(
                 &t.next_phase,
                 &[("draw", &format!("{:.0}", self.beacon_draw_to_next_phase()))],
@@ -83,7 +83,7 @@ impl GameplayState {
             11.0,
             dark::TEXT_DIM,
         );
-        draw_bounded_text(
+        ui::draw_bounded_text(
             &fill(
                 &t.threat_readout,
                 &[
@@ -104,7 +104,7 @@ impl GameplayState {
         if self.beacon_active {
             self.draw_scavenger_status_cards(rect);
         } else {
-            draw_bounded_text(
+            ui::draw_bounded_text(
                 &fill(
                     &t.teams_ready,
                     &[(
@@ -253,7 +253,7 @@ impl GameplayState {
             } else {
                 t.card_home.clone()
             };
-            draw_bounded_text(
+            ui::draw_bounded_text(
                 &card,
                 x + 6.0,
                 card_y + 14.0,

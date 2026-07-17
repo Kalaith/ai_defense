@@ -1,3 +1,7 @@
+//! Small shared lookups and cross-cutting `GameplayState` methods: label/colour
+//! resolution for enemies/threat/beacon phase, unlock checks, boon
+//! aggregation, particle spawning, and sector-damage/integrity math.
+
 use crate::data::strings::text;
 use crate::data::BuildingBoon;
 use crate::engine::beacon::BeaconPhase;

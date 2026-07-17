@@ -3,8 +3,6 @@
 pub mod loader;
 pub mod strings;
 
-use crate::engine::enemy::EnemyType;
-use crate::engine::tower::TowerType;
 use macroquad::prelude::Color;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -388,6 +386,26 @@ pub struct BuildingBoon {
     pub food_per_sec: f32,
     pub water_per_sec: f32,
     pub power_per_sec: f32,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "PascalCase")]
+pub enum TowerType {
+    Ballistic,
+    Laser,
+    Emp,
+    AreaDenial,
+    Subversion,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "PascalCase")]
+pub enum EnemyType {
+    Scout,
+    Drone,
+    HeavyUnit,
+    Saboteur,
+    Commander,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

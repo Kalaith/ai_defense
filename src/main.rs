@@ -1,3 +1,5 @@
+//! Last Assembly entry point: window setup and the macroquad main loop.
+
 mod data;
 mod engine;
 mod game;

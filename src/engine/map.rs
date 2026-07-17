@@ -163,6 +163,15 @@ pub struct MapSection {
     pub visible: bool,
 }
 
+/// Result of [`MapState::build_sections`] — named so the two lookup maps
+/// (structurally identical `HashMap<String, usize>`) can't be swapped at the
+/// call site the way an unnamed tuple return would allow.
+struct BuiltSections {
+    sections: Vec<MapSection>,
+    slot_sections: HashMap<String, usize>,
+    building_sections: HashMap<String, usize>,
+}
+
 impl MapState {
     pub fn from_def(def: MapDef) -> Self {
         let mut slots = Vec::with_capacity(def.slots.len());
@@ -202,7 +211,11 @@ impl MapState {
         let mut traces = Self::build_traces(&slots, &buildings, def.traces);
         traces.extend(Self::auto_building_traces(&slots, &buildings, &traces));
 
-        let (sections, slot_sections, building_sections) = Self::build_sections(&def.sections);
+        let BuiltSections {
+            sections,
+            slot_sections,
+            building_sections,
+        } = Self::build_sections(&def.sections);
         let mut state = Self {
             map_size: Vec2::new(def.map_size[0], def.map_size[1]),
             factory_core: Vec2::new(def.factory_core[0], def.factory_core[1]),
@@ -230,13 +243,7 @@ impl MapState {
         }
     }
 
-    fn build_sections(
-        sections: &[SectionDef],
-    ) -> (
-        Vec<MapSection>,
-        HashMap<String, usize>,
-        HashMap<String, usize>,
-    ) {
+    fn build_sections(sections: &[SectionDef]) -> BuiltSections {
         let mut slot_sections: HashMap<String, usize> = HashMap::new();
         let mut building_sections: HashMap<String, usize> = HashMap::new();
         let mut result = Vec::new();
@@ -258,7 +265,11 @@ impl MapState {
                 visible: def.visible_at_start,
             });
         }
-        (result, slot_sections, building_sections)
+        BuiltSections {
+            sections: result,
+            slot_sections,
+            building_sections,
+        }
     }
 
     pub fn update_section_visibility(&mut self) {

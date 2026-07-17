@@ -193,6 +193,10 @@ pub fn draw_console_button(
     if !enabled {
         return false;
     }
+    // Deliberately fires on press, not release like toolkit::input::was_clicked
+    // — these are high-stakes console actions (start/shutdown beacon, place
+    // tower) where instant feedback on press reads as more responsive, and
+    // there's no drag-to-cancel gesture in this UI to protect against.
     hovered && is_mouse_button_pressed(MouseButton::Left)
 }
 

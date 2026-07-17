@@ -244,115 +244,107 @@ fn draw_map_key(x: f32, list_bottom: f32, w: f32) {
 
     let glyph_x = x + 19.0;
     let text_x = x + 36.0;
+    let label_max_w = w - (text_x - x) - 10.0;
     let mut row_y = key_y + 30.0;
-    let label = |text: &str, y: f32| {
-        draw_bounded_text(
-            text,
-            text_x,
-            y + 5.0,
-            w - (text_x - x) - 10.0,
-            11.0,
-            dark::TEXT_DIM,
-        );
+    let mut draw_row = |label: &str, draw_glyph: &dyn Fn(f32, f32)| {
+        let cy = row_y + ROW_H * 0.5 - 4.0;
+        draw_glyph(glyph_x, cy);
+        draw_bounded_text(label, text_x, cy + 5.0, label_max_w, 11.0, dark::TEXT_DIM);
+        row_y += ROW_H;
     };
 
     // Powered pad: green ring + plus (same glyph as the map).
-    let cy = row_y + ROW_H * 0.5 - 4.0;
-    draw_circle(glyph_x, cy, 7.0, Color::new(0.04, 0.2, 0.08, 0.9));
-    draw_circle_lines(glyph_x, cy, 9.0, 1.8, Color::new(0.25, 1.0, 0.45, 0.8));
-    draw_line(
-        glyph_x - 3.5,
-        cy,
-        glyph_x + 3.5,
-        cy,
-        1.6,
-        Color::new(0.5, 1.0, 0.6, 0.8),
-    );
-    draw_line(
-        glyph_x,
-        cy - 3.5,
-        glyph_x,
-        cy + 3.5,
-        1.6,
-        Color::new(0.5, 1.0, 0.6, 0.8),
-    );
-    label(&t.key_powered_pad, cy);
-    row_y += ROW_H;
+    draw_row(&t.key_powered_pad, &|gx, cy| {
+        draw_circle(gx, cy, 7.0, Color::new(0.04, 0.2, 0.08, 0.9));
+        draw_circle_lines(gx, cy, 9.0, 1.8, Color::new(0.25, 1.0, 0.45, 0.8));
+        draw_line(
+            gx - 3.5,
+            cy,
+            gx + 3.5,
+            cy,
+            1.6,
+            Color::new(0.5, 1.0, 0.6, 0.8),
+        );
+        draw_line(
+            gx,
+            cy - 3.5,
+            gx,
+            cy + 3.5,
+            1.6,
+            Color::new(0.5, 1.0, 0.6, 0.8),
+        );
+    });
 
     // Unpowered pad: blue ring + dot.
-    let cy = row_y + ROW_H * 0.5 - 4.0;
-    draw_circle(glyph_x, cy, 7.0, Color::new(0.05, 0.12, 0.2, 0.75));
-    draw_circle_lines(glyph_x, cy, 9.0, 1.8, Color::new(0.32, 0.68, 1.0, 0.82));
-    draw_circle(glyph_x, cy, 2.4, Color::new(0.45, 0.82, 1.0, 0.7));
-    label(&t.key_unpowered_pad, cy);
-    row_y += ROW_H;
+    draw_row(&t.key_unpowered_pad, &|gx, cy| {
+        draw_circle(gx, cy, 7.0, Color::new(0.05, 0.12, 0.2, 0.75));
+        draw_circle_lines(gx, cy, 9.0, 1.8, Color::new(0.32, 0.68, 1.0, 0.82));
+        draw_circle(gx, cy, 2.4, Color::new(0.45, 0.82, 1.0, 0.7));
+    });
 
     // Debris: brown circle + orange cross.
-    let cy = row_y + ROW_H * 0.5 - 4.0;
-    draw_circle(glyph_x, cy, 7.0, Color::new(0.28, 0.17, 0.08, 0.86));
-    draw_circle_lines(glyph_x, cy, 9.0, 1.6, Color::new(0.85, 0.52, 0.16, 0.78));
-    let s = 3.4;
-    draw_line(
-        glyph_x - s,
-        cy - s,
-        glyph_x + s,
-        cy + s,
-        1.6,
-        Color::new(1.0, 0.66, 0.2, 0.68),
-    );
-    draw_line(
-        glyph_x + s,
-        cy - s,
-        glyph_x - s,
-        cy + s,
-        1.6,
-        Color::new(1.0, 0.66, 0.2, 0.68),
-    );
-    label(&t.key_debris, cy);
-    row_y += ROW_H;
+    draw_row(&t.key_debris, &|gx, cy| {
+        draw_circle(gx, cy, 7.0, Color::new(0.28, 0.17, 0.08, 0.86));
+        draw_circle_lines(gx, cy, 9.0, 1.6, Color::new(0.85, 0.52, 0.16, 0.78));
+        let s = 3.4;
+        draw_line(
+            gx - s,
+            cy - s,
+            gx + s,
+            cy + s,
+            1.6,
+            Color::new(1.0, 0.66, 0.2, 0.68),
+        );
+        draw_line(
+            gx + s,
+            cy - s,
+            gx - s,
+            cy + s,
+            1.6,
+            Color::new(1.0, 0.66, 0.2, 0.68),
+        );
+    });
 
     // Machine: small box.
-    let cy = row_y + ROW_H * 0.5 - 4.0;
-    draw_rectangle(
-        glyph_x - 8.0,
-        cy - 5.5,
-        16.0,
-        11.0,
-        Color::new(0.28, 0.05, 0.05, 0.9),
-    );
-    draw_rectangle_lines(
-        glyph_x - 8.0,
-        cy - 5.5,
-        16.0,
-        11.0,
-        1.6,
-        Color::new(0.78, 0.18, 0.12, 0.86),
-    );
-    label(&t.key_machine, cy);
-    row_y += ROW_H;
+    draw_row(&t.key_machine, &|gx, cy| {
+        draw_rectangle(
+            gx - 8.0,
+            cy - 5.5,
+            16.0,
+            11.0,
+            Color::new(0.28, 0.05, 0.05, 0.9),
+        );
+        draw_rectangle_lines(
+            gx - 8.0,
+            cy - 5.5,
+            16.0,
+            11.0,
+            1.6,
+            Color::new(0.78, 0.18, 0.12, 0.86),
+        );
+    });
 
     // Enemy entrance: red pulse circle.
-    let cy = row_y + ROW_H * 0.5 - 4.0;
-    draw_circle(glyph_x, cy, 6.0, Color::new(0.92, 0.18, 0.08, 0.88));
-    draw_circle_lines(glyph_x, cy, 9.0, 1.8, Color::new(1.0, 0.46, 0.12, 0.7));
-    label(&t.key_entrance, cy);
-    row_y += ROW_H;
+    draw_row(&t.key_entrance, &|gx, cy| {
+        draw_circle(gx, cy, 6.0, Color::new(0.92, 0.18, 0.08, 0.88));
+        draw_circle_lines(gx, cy, 9.0, 1.8, Color::new(1.0, 0.46, 0.12, 0.7));
+    });
 
     // Route: orange line with a chevron.
-    let cy = row_y + ROW_H * 0.5 - 4.0;
-    draw_line(
-        glyph_x - 9.0,
-        cy,
-        glyph_x + 9.0,
-        cy,
-        4.0,
-        Color::new(1.0, 0.56, 0.12, 0.9),
-    );
-    draw_triangle(
-        vec2(glyph_x + 9.0, cy),
-        vec2(glyph_x + 3.0, cy - 4.0),
-        vec2(glyph_x + 3.0, cy + 4.0),
-        Color::new(1.0, 0.78, 0.22, 0.95),
-    );
-    label(&t.key_route, cy);
+    draw_row(&t.key_route, &|gx, cy| {
+        draw_line(
+            gx - 9.0,
+            cy,
+            gx + 9.0,
+            cy,
+            4.0,
+            Color::new(1.0, 0.56, 0.12, 0.9),
+        );
+        draw_triangle(
+            vec2(gx + 9.0, cy),
+            vec2(gx + 3.0, cy - 4.0),
+            vec2(gx + 3.0, cy + 4.0),
+            Color::new(1.0, 0.78, 0.22, 0.95),
+        );
+    });
 }

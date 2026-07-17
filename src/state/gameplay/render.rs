@@ -1,3 +1,6 @@
+//! Top-level draw dispatch: world-space map/entities under the camera, then
+//! screen-space HUD/panels/overlays.
+
 use crate::data::GameData;
 use macroquad::prelude::*;
 

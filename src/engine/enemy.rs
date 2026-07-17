@@ -2,17 +2,10 @@
 
 use macroquad::prelude::Vec2;
 use macroquad_toolkit::rng;
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "PascalCase")]
-pub enum EnemyType {
-    Scout,
-    Drone,
-    HeavyUnit,
-    Saboteur,
-    Commander,
-}
+/// `EnemyType` lives in `data` — it's a plain data-driven enum (see
+/// `EnemyDef::enemy_type`), and data must never depend on engine (§2.1).
+pub use crate::data::EnemyType;
 
 #[derive(Clone, Debug)]
 pub struct EnemyTuning {

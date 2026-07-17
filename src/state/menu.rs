@@ -6,7 +6,6 @@ use crate::state::StateTransition;
 use crate::ui;
 use macroquad::prelude::*;
 use macroquad_toolkit::math::pulse_range;
-use macroquad_toolkit::ui::{draw_ui_text, measure_ui_text};
 
 pub struct MenuState {
     start_clicked: bool,
@@ -219,7 +218,7 @@ fn draw_title_button(rect: Rect, label: &str, detail: &str, enabled: bool, prima
     } else {
         Color::new(0.42, 0.48, 0.5, 0.86)
     };
-    draw_bounded_text(
+    ui::draw_bounded_text(
         label,
         rect.x + 18.0,
         rect.y + 24.0,
@@ -227,7 +226,7 @@ fn draw_title_button(rect: Rect, label: &str, detail: &str, enabled: bool, prima
         18.0,
         label_color,
     );
-    draw_bounded_text(
+    ui::draw_bounded_text(
         detail,
         rect.x + 18.0,
         rect.y + 43.0,
@@ -258,25 +257,4 @@ fn draw_title_button(rect: Rect, label: &str, detail: &str, enabled: bool, prima
     }
 
     hovered && is_mouse_button_pressed(MouseButton::Left)
-}
-
-fn draw_bounded_text(text: &str, x: f32, y: f32, max_w: f32, font_size: f32, color: Color) {
-    let bounded = truncate_text(text, max_w, font_size as u16);
-    draw_ui_text(&bounded, x, y, font_size, color);
-}
-
-fn truncate_text(text: &str, max_w: f32, font_size: u16) -> String {
-    if measure_ui_text(text, None, font_size, 1.0).width <= max_w {
-        return text.to_string();
-    }
-
-    let mut out = String::new();
-    for ch in text.chars() {
-        let candidate = format!("{}{}...", out, ch);
-        if measure_ui_text(&candidate, None, font_size, 1.0).width > max_w {
-            break;
-        }
-        out.push(ch);
-    }
-    format!("{}...", out)
 }

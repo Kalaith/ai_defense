@@ -1,3 +1,6 @@
+//! The top HUD strip: survival/power/threat zones, the objective banner,
+//! alert cards, and (via [`beacon_panel`]) the beacon control panel.
+
 mod beacon_panel;
 
 use crate::data::strings::{fill, text};
@@ -97,7 +100,7 @@ impl GameplayState {
             "",
             dark::POSITIVE,
         );
-        draw_bounded_text(
+        ui::draw_bounded_text(
             self.factory.phase.label(),
             rect.x + rect.w - 112.0,
             rect.y + 18.0,
@@ -278,7 +281,7 @@ impl GameplayState {
                 dark::TEXT_BRIGHT,
             )
         };
-        draw_bounded_text(
+        ui::draw_bounded_text(
             &status,
             rect.x + 12.0,
             rect.y + 45.0,
@@ -301,7 +304,7 @@ impl GameplayState {
             ),
             None => (composition, dark::TEXT_DIM),
         };
-        draw_bounded_text(
+        ui::draw_bounded_text(
             &line,
             rect.x + 12.0,
             rect.y + 64.0,
@@ -321,7 +324,7 @@ impl GameplayState {
             11.0,
             Color::new(0.56, 0.82, 1.0, 1.0),
         );
-        draw_bounded_text(
+        ui::draw_bounded_text(
             &advice.suggested_action.label,
             rect.x + 12.0,
             rect.y + 35.0,
@@ -329,7 +332,7 @@ impl GameplayState {
             17.0,
             dark::TEXT_BRIGHT,
         );
-        draw_bounded_text(
+        ui::draw_bounded_text(
             &fill(
                 &t.cost_risk,
                 &[
@@ -395,7 +398,7 @@ impl GameplayState {
                 Rect::new(ax, y, each_w, h),
                 Color::new(color.r, color.g, color.b, pulse),
             );
-            draw_bounded_text(
+            ui::draw_bounded_text(
                 &alert.label,
                 ax + 10.0,
                 y + 21.0,
@@ -403,7 +406,7 @@ impl GameplayState {
                 13.0,
                 color,
             );
-            draw_bounded_text(
+            ui::draw_bounded_text(
                 &alert.detail,
                 ax + 10.0,
                 y + 40.0,
@@ -515,27 +518,6 @@ fn draw_small_metric(x: f32, y: f32, label: &str, value: &str, color: Color) {
     draw_ui_text(value, x, y + 12.0, 18.0, color);
 }
 
-pub(super) fn draw_bounded_text(text: &str, x: f32, y: f32, max_w: f32, size: f32, color: Color) {
-    let bounded = truncate_to_width(text, max_w, size as u16);
-    draw_ui_text(&bounded, x, y, size, color);
-}
-
-fn truncate_to_width(text: &str, max_w: f32, font_size: u16) -> String {
-    if measure_ui_text(text, None, font_size, 1.0).width <= max_w {
-        return text.to_string();
-    }
-
-    let mut out = String::new();
-    for ch in text.chars() {
-        let candidate = format!("{}{}...", out, ch);
-        if measure_ui_text(&candidate, None, font_size, 1.0).width > max_w {
-            break;
-        }
-        out.push(ch);
-    }
-    format!("{}...", out)
-}
-
 /// If the mouse is over `anchor`, draw a small explanatory tooltip just below
 /// it. Used to spell out what the beacon-control buttons actually do.
 pub(super) fn draw_button_hint(anchor: Rect, title: &str, body: &str) {
@@ -552,7 +534,7 @@ pub(super) fn draw_button_hint(anchor: Rect, title: &str, body: &str) {
     draw_rectangle(x, y, w, h, Color::new(0.03, 0.05, 0.06, 0.98));
     draw_rectangle_lines(x, y, w, h, 1.2, Color::new(0.22, 0.52, 0.52, 0.85));
     draw_ui_text(title, x + 9.0, y + 17.0, 12.0, dark::TEXT_BRIGHT);
-    draw_bounded_text(body, x + 9.0, y + 34.0, w - 18.0, 10.0, dark::TEXT_DIM);
+    ui::draw_bounded_text(body, x + 9.0, y + 34.0, w - 18.0, 10.0, dark::TEXT_DIM);
 }
 
 fn draw_centered_text(text: &str, center_x: f32, baseline_y: f32, font_size: f32, color: Color) {

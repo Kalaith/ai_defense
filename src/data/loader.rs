@@ -1,4 +1,12 @@
 //! JSON data loading utilities.
+//!
+//! Two different failure policies are deliberate, not an oversight: constants
+//! and the map definition `expect()` because the game genuinely cannot run
+//! without them (no map, no core loop; missing constants, no tuning at all —
+//! both are build-time authoring errors baked into the binary via
+//! `include_str!`). Towers/enemies/sectors/upgrades/unlocks degrade to an
+//! empty default with an `eprintln!` instead — losing one optional content
+//! set is a diminished game, not an unplayable one.
 
 use super::{EnemyDef, GameConstants, MapDef, SectorData, TowerDef, UnlocksDef, UpgradeDef};
 

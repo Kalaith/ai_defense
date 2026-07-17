@@ -231,32 +231,44 @@ What exists is good: `data/mod.rs:461` and `data/strings.rs:613` cover JSON load
 
 The sharpest gaps are **`tick_towers`** and **`threat.rs`** — they carry the game's balance math with no tests, and (per Severity 4a) `threat.rs`'s thresholds are simultaneously triplicated. A test pinning `reaction_tier()` boundaries would catch exactly the desync 4a describes. **`save/mod.rs` round-trip** is the other priority: it is the only genuinely fallible I/O here, and a save-corruption bug costs a player their campaign.
 
-## Severity 9 — Duplication and smaller items
+## ✅ DONE — Severity 9 — Duplication and smaller items
 
-**9a. §7.4 — `draw_bounded_text`/`truncate_text` exists in three local copies plus the toolkit.**
+**✅ 9a. §7.4 — `draw_bounded_text`/`truncate_text` exists in three local copies plus the toolkit.**
 - `src/ui/text.rs:7,13` — the canonical local pair
 - `src/state/menu.rs:263,268` — **byte-for-byte identical** private copy
 - `src/state/gameplay/render_hud.rs:519` — third copy, helper renamed `truncate_to_width`
 - `macroquad-toolkit/src/ui/font.rs:306` — `truncate_text_to_width` / `truncate_text_to_width_ex` already ship this
 
-One behavior, four implementations. Collapse onto the toolkit per §7.4.
+Resolved: deleted both local duplicates (`menu.rs`, `render_hud.rs`); all call sites now use the shared `crate::ui::draw_bounded_text` (already re-exported from `ui/mod.rs`). `ui/text.rs::truncate_text` now delegates to `macroquad_toolkit::ui::truncate_text_to_width` instead of reimplementing the ellipsis loop — one behavior, one implementation.
 
-**9b. §4.4 — Tuple returns.** `engine/map.rs:237`:
+**✅ 9b. §4.4 — Tuple returns.** `engine/map.rs:237`:
 ```rust
 fn build_sections(sections: &[SectionDef])
     -> (Vec<MapSection>, HashMap<String, usize>, HashMap<String, usize>)
 ```
 Two structurally identical `HashMap<String, usize>` returned unnamed and adjacent — **trivially swappable at the call site**. This is the one tuple return with real bug risk; it wants a named `MapSections` struct. Also `ui/panels.rs:233` `-> (String, &'static str, ConsoleButtonState)`, where the doc comment ("Label, intent, and button state") does the work field names should. The `Option<(usize, f32)>` trio (`map.rs:548`, `:564`, `helpers.rs:128`) is mild, well-worn idiom — not worth changing.
 
-**9c. §2.1 — `data/` knows about `engine/`.** `data/mod.rs:6-7` imports `crate::engine::enemy::EnemyType` and `crate::engine::tower::TowerType`, against *"Data module has no knowledge of engine or UI."* Both are plain serde enums that belong in `data/`; the dependency points the wrong way. This is the **only** cross-domain import violation in the crate and is mechanically fixable.
+Resolved: added a private `BuiltSections { sections, slot_sections, building_sections }` struct; `build_sections` returns it and the call site destructures by name instead of tuple position. `ui/panels.rs`'s tuple return left as-is per the review's own note (doc comment already does the job).
 
-**9d. §9.2 — 6 of 53 modules missing `//!` docs:** `main.rs`, `render_map.rs` (the largest file), `render_hud.rs`, `render.rs`, `helpers.rs`, `wave.rs` (moot once deleted). 47/53 comply — good discipline with a gap concentrated in the render layer. `helpers.rs` most needs one: "helpers" names nothing.
+**✅ 9c. §2.1 — `data/` knows about `engine/`.** `data/mod.rs:6-7` imports `crate::engine::enemy::EnemyType` and `crate::engine::tower::TowerType`, against *"Data module has no knowledge of engine or UI."* Both are plain serde enums that belong in `data/`; the dependency points the wrong way. This is the **only** cross-domain import violation in the crate and is mechanically fixable.
 
-**9e. §10.3 — Shadowing.** `ui/build_panel.rs` re-declares `let cy` six times in the same scope inside `draw_map_key` (lines 260, 283, 291, 315, 335, 342) — §10.3 names this explicitly. Low real risk (each legend row is sequential and self-contained), and it's a symptom of the 136-line function: extracting a `draw_key_row` helper fixes both at once.
+Resolved: `EnemyType`/`TowerType` now defined in `data/mod.rs`; `engine/enemy.rs` and `engine/tower.rs` each `pub use crate::data::{EnemyType|TowerType};` so every existing `crate::engine::enemy::EnemyType`/`crate::engine::tower::TowerType` import across the crate kept working unchanged. Dependency direction now correctly points engine → data only.
 
-**9f. §7.4 — Button semantics.** `ui/widgets.rs:196` calls `is_mouse_button_pressed` directly rather than `toolkit::input::was_clicked`, so `draw_console_button` fires on **press** where §7.4's standard button fires on **release** (no cancel-by-dragging-off). Deliberate for some controls, but worth an explicit choice.
+**✅ 9d. §9.2 — 6 of 53 modules missing `//!` docs:** `main.rs`, `render_map.rs` (the largest file), `render_hud.rs`, `render.rs`, `helpers.rs`, `wave.rs` (moot once deleted). 47/53 comply — good discipline with a gap concentrated in the render layer. `helpers.rs` most needs one: "helpers" names nothing.
 
-**9g. §6 — Loader policy is split and undocumented.** `data/loader.rs` treats its seven assets two ways: `load_tower_defs`/`load_enemy_defs`/`load_sector_data` degrade gracefully with `eprintln!` + empty default (matching §6.2 exactly), while `load_constants` (`:15`) and `load_map_def` (`:74`) `expect()`. That split is likely deliberate — no map means the game genuinely can't run, no towers is merely broken — but nothing says so. One comment settles it.
+Resolved: added `//!` docs to all 6 (`render_map.rs`'s was added incidentally during the Sev5 extraction). `wave.rs` wasn't deleted (only its dead legacy block, in Sev2) — the forwarding shim remains, now documented.
+
+**✅ 9e. §10.3 — Shadowing.** `ui/build_panel.rs` re-declares `let cy` six times in the same scope inside `draw_map_key` (lines 260, 283, 291, 315, 335, 342) — §10.3 names this explicitly. Low real risk (each legend row is sequential and self-contained), and it's a symptom of the 136-line function: extracting a `draw_key_row` helper fixes both at once.
+
+Resolved: extracted a `draw_row(label, draw_glyph)` closure-taking helper; each of the 6 legend rows now calls it once instead of hand-rolling `let cy = ...` + draw + `label(...)` + `row_y += ROW_H`. Verified visually with the screenshot capture harness — legend renders identically.
+
+**Not changed — 9f. §7.4 — Button semantics.** `ui/widgets.rs:196` calls `is_mouse_button_pressed` directly rather than `toolkit::input::was_clicked`, so `draw_console_button` fires on **press** where §7.4's standard button fires on **release** (no cancel-by-dragging-off). Deliberate for some controls, but worth an explicit choice.
+
+Left as-is (deliberate choice per the review's own framing) but now documented in place with a comment explaining why press-not-release is intentional here.
+
+**✅ 9g. §6 — Loader policy is split and undocumented.** `data/loader.rs` treats its seven assets two ways: `load_tower_defs`/`load_enemy_defs`/`load_sector_data` degrade gracefully with `eprintln!` + empty default (matching §6.2 exactly), while `load_constants` (`:15`) and `load_map_def` (`:74`) `expect()`. That split is likely deliberate — no map means the game genuinely can't run, no towers is merely broken — but nothing says so. One comment settles it.
+
+Resolved: added a module-level comment explaining the two policies and why each asset gets one or the other.
 
 ---
 

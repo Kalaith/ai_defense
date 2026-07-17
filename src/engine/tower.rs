@@ -3,17 +3,10 @@
 use crate::engine::enemy::{Enemy, EnemyType};
 use macroquad::prelude::{Color, Vec2};
 use macroquad_toolkit::timing::Cooldown;
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "PascalCase")]
-pub enum TowerType {
-    Ballistic,
-    Laser,
-    Emp,
-    AreaDenial,
-    Subversion,
-}
+/// `TowerType` lives in `data` — it's a plain data-driven enum (see
+/// `TowerDef::tower_type`), and data must never depend on engine (§2.1).
+pub use crate::data::TowerType;
 
 pub struct Tower {
     pub tower_type: TowerType,
