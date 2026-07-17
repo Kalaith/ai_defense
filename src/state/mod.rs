@@ -1,6 +1,5 @@
 //! Game state machine: one state active at a time, explicit transitions.
 
-#[path = "gameplay/mod.rs"]
 pub mod gameplay;
 pub mod menu;
 pub mod results;
