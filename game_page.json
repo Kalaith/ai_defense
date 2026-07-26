@@ -1,18 +1,36 @@
 {
   "title": "Last Assembly",
-  "status": { "text": "Playable", "class": "playable" },
+  "status": {
+    "text": "Playable",
+    "class": "playable"
+  },
   "canvas_rendering": "pixelated",
   "about": [
-    "Tower defense and factory management during an AI uprising. Awaken a dead industrial megafactory while keeping fragile human life alive inside it."
+    "The machines have risen, and you’re the last engineer. Reawaken a dead megafactory, build desperate defenses, and keep humanity’s final assembly line running."
   ],
   "controls": [
-    { "key": "Mouse", "desc": "Place towers, interact with UI" },
-    { "key": "Esc", "desc": "Pause" }
+    {
+      "key": "Mouse",
+      "desc": "Place towers, interact with UI"
+    },
+    {
+      "key": "Esc",
+      "desc": "Pause"
+    }
   ],
   "details": [
-    { "label": "Genre", "value": "Tower Defense / Factory Management" },
-    { "label": "Engine", "value": "Macroquad" },
-    { "label": "Platform", "value": "Browser, Windows" }
+    {
+      "label": "Genre",
+      "value": "Tower Defense / Factory Management"
+    },
+    {
+      "label": "Engine",
+      "value": "Macroquad"
+    },
+    {
+      "label": "Platform",
+      "value": "Browser, Windows"
+    }
   ],
   "download": {
     "href": "ai_defense_windows.zip",
