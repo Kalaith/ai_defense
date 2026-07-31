@@ -12,3 +12,6 @@ dist/
 *.history
 .vscode
 .gemini
+
+# Local runtime save written by `cargo run`
+save.json
