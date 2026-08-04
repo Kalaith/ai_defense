@@ -13,6 +13,10 @@ use macroquad_toolkit::capture;
 use macroquad_toolkit::colors::dark;
 
 fn window_conf() -> Conf {
+    // Hand-built Conf means no automatic arming: without this the capture run
+    // puts a full game window on the desktop for its whole duration.
+    capture::headless::arm("AI_DEFENSE");
+
     // Built by hand (not capture::capture_window_conf) to keep the
     // sample_count: 0 / high_dpi: false fields this game already relies on;
     // window_width/height still honor the AI_DEFENSE_WINDOW_* overrides so the
