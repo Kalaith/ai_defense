@@ -39,14 +39,16 @@ async fn main() {
     // Screenshot harness: when AI_DEFENSE_CAPTURE_PATH is set, seed a scene,
     // render deterministic frames, write a PNG, and exit. See
     // docs/screenshot_capture_harness_guide.md.
-    if let Some(config) = capture::CaptureConfig::from_env("AI_DEFENSE") {
-        game.begin_capture_scene(&config.scene);
-        capture::run_capture(&config, |_dt| {
-            clear_background(dark::BACKGROUND);
-            game.update();
-            game.draw();
-        })
-        .await;
+    if let Some(configs) = capture::CaptureConfig::all_from_env("AI_DEFENSE") {
+        for config in configs {
+            game.begin_capture_scene(&config.scene);
+            capture::run_capture_once(&config, |_dt| {
+                clear_background(dark::BACKGROUND);
+                game.update();
+                game.draw();
+            })
+            .await;
+        }
         return;
     }
 
