@@ -10,7 +10,7 @@ use macroquad_toolkit::ui::{draw_ui_text, measure_ui_text};
 
 use super::super::helpers::entrance_label;
 use super::super::GameplayState;
-use super::super::assets::{draw_frame, machine_index};
+use super::super::assets::{draw_frame, machine_index, tile_rect, FLOOR_VARIANTS, SECTION_TILES};
 use super::draw_label_tag;
 
 impl GameplayState {
@@ -20,7 +20,7 @@ impl GameplayState {
 
         for y in (0..map_h as i32).step_by(64) {
             for x in (0..map_w as i32).step_by(64) {
-                let variant = ((x / 64 + y / 64 * 3) % 3) as f32;
+                let variant = FLOOR_VARIANTS[((x / 64 + y / 64 * 3) as usize) % FLOOR_VARIANTS.len()];
                 draw_texture_ex(
                     &self.assets.tiles,
                     x as f32,
@@ -28,7 +28,7 @@ impl GameplayState {
                     WHITE,
                     DrawTextureParams {
                         dest_size: Some(vec2(64.0, 64.0)),
-                        source: Some(Rect::new(variant * 64.0, 0.0, 64.0, 64.0)),
+                        source: Some(tile_rect(variant)),
                         ..Default::default()
                     },
                 );
@@ -103,6 +103,19 @@ impl GameplayState {
             // read as gameplay elements — the water circle in particular
             // looked exactly like a tower range ring.
             draw_rectangle(min.x, min.y, w, h, fill);
+            let motif = tile_rect(SECTION_TILES[section.index.min(SECTION_TILES.len() - 1)]);
+            let motif_tint = Color::new(0.72, 0.82, 0.78, if section.visible { 0.30 } else { 0.10 });
+            for y in (min.y as i32..max.y as i32).step_by(64) {
+                for x in (min.x as i32..max.x as i32).step_by(64) {
+                    draw_texture_ex(
+                        &self.assets.tiles,
+                        x as f32,
+                        y as f32,
+                        motif_tint,
+                        DrawTextureParams { dest_size: Some(vec2(64.0, 64.0)), source: Some(motif), ..Default::default() },
+                    );
+                }
+            }
             draw_rectangle_lines(min.x, min.y, w, h, 2.0, border);
 
             if label_fade > 0.01 {
