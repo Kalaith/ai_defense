@@ -1,7 +1,7 @@
 //! Core gameplay state: wave defense, factory management, resource loop.
 
-mod helpers;
 mod assets;
+mod helpers;
 mod render;
 mod render_hud;
 mod render_map;
@@ -23,9 +23,9 @@ use crate::save::{
     SaveData, SavedBuilding, SavedPopulation, SavedResources, SavedSector, SavedSlot, SavedThreat,
     SavedTower,
 };
+use assets::GameplayAssets;
 use macroquad::prelude::{vec2, Vec2};
 use macroquad_toolkit::camera::{Camera2D as ToolkitCamera2D, Camera2DConfig, CameraBounds};
-use assets::GameplayAssets;
 
 pub struct GameplayState {
     pub assets: GameplayAssets,
