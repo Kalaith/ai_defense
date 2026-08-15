@@ -5,6 +5,14 @@ and scavenging, tower upgrades, food pressure, enemy variety, polish) are all bu
 is the persistent evacuation ledger, permanent per-cycle escalation, and the food ratchet.
 What follows is the work the design review left open.
 
+## Immediate improvements
+
+- Improve the intro story; parts are unclear and do not make sense.
+- Finish the tile-map graphics: replace placeholder icons with proper tile, tower, and
+  enemy visuals.
+- Improve the opening balance and tutorial: one starting tower is insufficient, but the
+  tutorial only explains that option. Start with or introduce multiple turrets.
+
 ## Stakes and the meta-loop
 
 - Make water a real demand: the population consumes it, running dry kills people. Today

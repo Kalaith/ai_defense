@@ -4,7 +4,7 @@ use macroquad_toolkit::persistence::SaveRoot;
 use macroquad_toolkit::settings::GameSettings;
 use serde::{Deserialize, Serialize};
 
-const GAME_NAME: &str = "ai_defense";
+const GAME_NAME: &str = "last_assembly";
 const SAVE_FILE: &str = "save.json";
 const SETTINGS_FILE: &str = "settings.json";
 

@@ -1,11 +1,11 @@
 <#
 .SYNOPSIS
-    Headless screenshot harness for Last Assembly (ai_defense).
+    Headless screenshot harness for Last Assembly.
 
 .DESCRIPTION
     Thin wrapper around the shared macroquad-toolkit capture script. Builds the
     debug exe and drives it through the env-var capture hook
-    (AI_DEFENSE_CAPTURE_*) provided by macroquad_toolkit::capture in
+    (LAST_ASSEMBLY_CAPTURE_*) provided by macroquad_toolkit::capture in
     src/main.rs. `menu` seeds the main menu and `gameplay` seeds a fresh
     gameplay session (see Game::begin_capture_scene in src/game.rs).
 
