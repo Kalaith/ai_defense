@@ -10,6 +10,7 @@ use macroquad_toolkit::ui::{draw_ui_text, measure_ui_text};
 
 use super::super::helpers::entrance_label;
 use super::super::GameplayState;
+use super::super::assets::{draw_frame, machine_index};
 use super::draw_label_tag;
 
 impl GameplayState {
@@ -17,7 +18,22 @@ impl GameplayState {
         let map_w = self.map_state.map_size.x;
         let map_h = self.map_state.map_size.y;
 
-        draw_rectangle(0.0, 0.0, map_w, map_h, Color::new(0.015, 0.045, 0.04, 1.0));
+        for y in (0..map_h as i32).step_by(64) {
+            for x in (0..map_w as i32).step_by(64) {
+                let variant = ((x / 64 + y / 64 * 3) % 3) as f32;
+                draw_texture_ex(
+                    &self.assets.tiles,
+                    x as f32,
+                    y as f32,
+                    WHITE,
+                    DrawTextureParams {
+                        dest_size: Some(vec2(64.0, 64.0)),
+                        source: Some(Rect::new(variant * 64.0, 0.0, 64.0, 64.0)),
+                        ..Default::default()
+                    },
+                );
+            }
+        }
         for x in (0..map_w as i32).step_by(160) {
             draw_line(
                 x as f32,
@@ -292,7 +308,7 @@ impl GameplayState {
             let e = path.entrance;
             if path.active {
                 let pulse = pulse_range(4.0, 0.55, 0.85);
-                draw_circle(e.x, e.y, 17.0, Color::new(0.92, 0.18, 0.08, 0.88));
+                draw_frame(&self.assets.breaches, 1, vec2(96.0, 96.0), e, vec2(64.0, 64.0), WHITE);
                 draw_circle_lines(e.x, e.y, 24.0, 3.0, Color::new(1.0, 0.46, 0.12, pulse));
                 draw_ui_text(
                     entrance_label(&path.id),
@@ -304,7 +320,7 @@ impl GameplayState {
             } else {
                 // Only drawn while the player is inspecting the pad/machine
                 // that would open this route — a warning preview.
-                draw_circle(e.x, e.y, 10.0, Color::new(0.45, 0.08, 0.08, 0.42));
+                draw_frame(&self.assets.breaches, 0, vec2(96.0, 96.0), e, vec2(52.0, 52.0), WHITE);
                 draw_circle_lines(e.x, e.y, 16.0, 2.0, Color::new(0.85, 0.24, 0.14, 0.44));
                 // Entrances can sit on the map's edge (e.g. the northwest
                 // breach at the top border); clamp the tag inward so it isn't
@@ -333,6 +349,7 @@ impl GameplayState {
             let hovered = hovered_slot == Some(idx);
             let pad = slot.position;
             draw_slot_pad(
+                &self.assets.pads,
                 pad,
                 slot.state,
                 slot.opens_entrance.is_some(),
@@ -382,6 +399,21 @@ impl GameplayState {
                 h,
                 2.0,
                 border_color,
+            );
+
+            let frame = match building.state {
+                BuildingState::Broken | BuildingState::Disabled => 0,
+                BuildingState::Repaired => 1,
+                BuildingState::Powered => 2,
+            };
+            let sprite_size = if is_core { vec2(108.0, 76.0) } else { vec2(76.0, 58.0) };
+            draw_frame(
+                &self.assets.machines[machine_index(&building.building_type)],
+                frame,
+                vec2(128.0, 96.0),
+                building.position,
+                sprite_size,
+                if unlocked { WHITE } else { Color::new(0.45, 0.5, 0.52, 0.55) },
             );
 
             let text_col = if selected || hovered {
@@ -445,9 +477,14 @@ impl GameplayState {
 
     pub(super) fn draw_factory_core(&self) {
         let core = self.map_state.factory_core;
-        let pulse = pulse_range(3.0, 0.6, 1.0);
-        draw_circle(core.x, core.y, 20.0, Color::new(0.1, 0.5, 0.2, pulse));
-        draw_circle_lines(core.x, core.y, 22.0, 2.0, Color::new(0.3, 0.9, 0.4, 0.8));
+        draw_frame(
+            &self.assets.core,
+            if self.map_state.buildings.iter().any(|b| b.state == BuildingState::Powered) { 2 } else { 0 },
+            vec2(128.0, 128.0),
+            core,
+            vec2(132.0, 104.0),
+            WHITE,
+        );
         draw_ui_text(
             &text().map.factory,
             core.x - 25.0,
@@ -496,44 +533,28 @@ fn building_visual(unlocked: bool, state: BuildingState) -> (Color, Color, &'sta
     }
 }
 
-fn draw_slot_pad(pad: Vec2, state: SlotState, opens_entrance: bool, has_tower: bool) {
+fn draw_slot_pad(texture: &Texture2D, pad: Vec2, state: SlotState, opens_entrance: bool, has_tower: bool) {
+    let frame = match state {
+        SlotState::Debris => 0,
+        SlotState::Cleared => 1,
+        SlotState::Powered if has_tower => 3,
+        SlotState::Powered => 2,
+    };
+    draw_frame(texture, frame, vec2(64.0, 64.0), pad, vec2(38.0, 38.0), WHITE);
     match state {
         SlotState::Debris => {
-            draw_circle(pad.x, pad.y, 13.0, Color::new(0.28, 0.17, 0.08, 0.86));
-            draw_circle_lines(pad.x, pad.y, 15.0, 2.4, Color::new(0.85, 0.52, 0.16, 0.78));
-            let s = 6.0;
-            draw_line(
-                pad.x - s,
-                pad.y - s,
-                pad.x + s,
-                pad.y + s,
-                2.0,
-                Color::new(1.0, 0.66, 0.2, 0.68),
-            );
-            draw_line(
-                pad.x + s,
-                pad.y - s,
-                pad.x - s,
-                pad.y + s,
-                2.0,
-                Color::new(1.0, 0.66, 0.2, 0.68),
-            );
             if opens_entrance {
                 draw_circle_lines(pad.x, pad.y, 18.0, 2.0, Color::new(1.0, 0.76, 0.18, 0.62));
             }
         }
         SlotState::Cleared => {
-            draw_circle(pad.x, pad.y, 13.0, Color::new(0.05, 0.12, 0.2, 0.75));
             draw_circle_lines(pad.x, pad.y, 16.0, 2.4, Color::new(0.32, 0.68, 1.0, 0.82));
-            draw_circle(pad.x, pad.y, 4.0, Color::new(0.45, 0.82, 1.0, 0.7));
         }
         SlotState::Powered => {
             if has_tower {
-                draw_circle(pad.x, pad.y, 14.0, Color::new(0.04, 0.18, 0.09, 0.62));
                 draw_circle_lines(pad.x, pad.y, 17.0, 2.0, Color::new(0.24, 0.92, 0.45, 0.55));
             } else {
                 let pulse = pulse_range(2.0, 0.5, 0.8);
-                draw_circle(pad.x, pad.y, 14.0, Color::new(0.04, 0.2, 0.08, 0.9));
                 draw_circle_lines(pad.x, pad.y, 18.0, 2.8, Color::new(0.25, 1.0, 0.45, pulse));
                 draw_line(
                     pad.x - 5.0,

@@ -8,6 +8,7 @@ use macroquad_toolkit::colors::dark;
 use macroquad_toolkit::ui::{draw_ui_text, measure_ui_text};
 
 use super::GameplayState;
+use super::assets::draw_frame;
 
 mod circuit_board;
 
@@ -39,9 +40,25 @@ impl GameplayState {
             let outline_alpha = if tower.is_active { 1.0 } else { 0.4 };
             let radius = self.constants.ui.tower_base_radius
                 + (tower.level.saturating_sub(1) as f32) * self.constants.ui.tower_level_radius_inc;
-            draw_circle(tower.position.x, tower.position.y, radius, col);
+            let column = match tower.tower_type {
+                crate::data::TowerType::Ballistic => 0,
+                crate::data::TowerType::Laser => 1,
+                crate::data::TowerType::Emp => 2,
+                crate::data::TowerType::AreaDenial => 3,
+                crate::data::TowerType::Subversion => 4,
+            };
+            let level = tower.level.saturating_sub(1).min(2) as usize;
+            let frame = level * 5 + column;
+            draw_frame(
+                &self.assets.towers,
+                frame,
+                vec2(64.0, 64.0),
+                tower.position,
+                vec2(radius * 3.0, radius * 3.0),
+                col,
+            );
             let outline = Color::new(dark::TEXT.r, dark::TEXT.g, dark::TEXT.b, outline_alpha);
-            draw_circle_lines(tower.position.x, tower.position.y, radius, 2.0, outline);
+            draw_circle_lines(tower.position.x, tower.position.y, radius, 1.5, outline);
 
             if tower.level > 1 {
                 let ring_radius = radius + self.constants.ui.tower_ring_offset;
@@ -116,12 +133,12 @@ impl GameplayState {
                 continue;
             }
 
-            let (radius, color) = match enemy.enemy_type {
-                EnemyType::Scout => (5.0, Color::new(0.4, 0.9, 0.4, 1.0)),
-                EnemyType::Drone => (7.0, Color::new(0.9, 0.5, 0.2, 1.0)),
-                EnemyType::HeavyUnit => (10.0, Color::new(0.8, 0.2, 0.2, 1.0)),
-                EnemyType::Saboteur => (6.0, Color::new(0.7, 0.3, 0.9, 1.0)),
-                EnemyType::Commander => (14.0, Color::new(1.0, 0.8, 0.0, 1.0)),
+            let (asset, radius, color, frame_size, sprite_size) = match enemy.enemy_type {
+                EnemyType::Scout => (0, 5.0, Color::new(0.4, 0.9, 0.4, 1.0), vec2(48.0, 48.0), vec2(38.0, 38.0)),
+                EnemyType::Drone => (1, 7.0, Color::new(0.9, 0.5, 0.2, 1.0), vec2(48.0, 48.0), vec2(42.0, 42.0)),
+                EnemyType::HeavyUnit => (2, 10.0, Color::new(0.8, 0.2, 0.2, 1.0), vec2(64.0, 64.0), vec2(56.0, 56.0)),
+                EnemyType::Saboteur => (3, 6.0, Color::new(0.7, 0.3, 0.9, 1.0), vec2(48.0, 48.0), vec2(38.0, 38.0)),
+                EnemyType::Commander => (4, 14.0, Color::new(1.0, 0.8, 0.0, 1.0), vec2(64.0, 64.0), vec2(58.0, 58.0)),
             };
 
             let mut col = color;
@@ -130,7 +147,8 @@ impl GameplayState {
             } else if enemy.dodge_timer > 0.0 {
                 col = Color::new(color.r, color.g, color.b, 0.4);
             }
-            draw_circle(enemy.position.x, enemy.position.y, radius, col);
+            let frame = ((get_time() * 8.0) as usize) % 4;
+            draw_frame(&self.assets.enemies[asset], frame, frame_size, enemy.position, sprite_size, col);
 
             let bar_w = radius * 3.0;
             let bar_h = 3.0;

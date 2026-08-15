@@ -1,6 +1,7 @@
 //! Core gameplay state: wave defense, factory management, resource loop.
 
 mod helpers;
+mod assets;
 mod render;
 mod render_hud;
 mod render_map;
@@ -24,8 +25,10 @@ use crate::save::{
 };
 use macroquad::prelude::{vec2, Vec2};
 use macroquad_toolkit::camera::{Camera2D as ToolkitCamera2D, Camera2DConfig, CameraBounds};
+use assets::GameplayAssets;
 
 pub struct GameplayState {
+    pub assets: GameplayAssets,
     pub constants: GameConstants,
     pub factory: Factory,
     pub wave_manager: WaveManager,
@@ -224,6 +227,7 @@ impl GameplayState {
         let autosave_enabled = settings.autosave;
 
         Self {
+            assets: GameplayAssets::load(),
             constants,
             factory,
             wave_manager: WaveManager::new(WaveTuning {
