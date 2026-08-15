@@ -3,6 +3,7 @@ name = "last_assembly"
 version = "0.1.0"
 edition = "2021"
 description = "Last Assembly - Tower defense and factory management during an AI uprising"
+repository = "https://github.com/Kalaith/last_assembly"
 
 [dependencies]
 macroquad = "0.4"
