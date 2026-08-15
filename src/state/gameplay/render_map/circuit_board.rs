@@ -5,12 +5,10 @@ use crate::data::strings::text;
 use crate::engine::map::{BuildingState, MapPath, SlotState, TraceNode};
 use macroquad::prelude::*;
 use macroquad_toolkit::colors::dark;
-use macroquad_toolkit::math::pulse_range;
 use macroquad_toolkit::ui::{draw_ui_text, measure_ui_text};
 
-use super::super::helpers::entrance_label;
+use super::super::assets::{draw_frame, machine_index, tile_rect, FLOOR_VARIANTS};
 use super::super::GameplayState;
-use super::super::assets::{draw_frame, machine_index, tile_rect, FLOOR_VARIANTS, SECTION_TILES};
 use super::draw_label_tag;
 
 impl GameplayState {
@@ -20,7 +18,8 @@ impl GameplayState {
 
         for y in (0..map_h as i32).step_by(64) {
             for x in (0..map_w as i32).step_by(64) {
-                let variant = FLOOR_VARIANTS[((x / 64 + y / 64 * 3) as usize) % FLOOR_VARIANTS.len()];
+                let variant =
+                    FLOOR_VARIANTS[((x / 64 + y / 64 * 3) as usize) % FLOOR_VARIANTS.len()];
                 draw_texture_ex(
                     &self.assets.tiles,
                     x as f32,
@@ -63,118 +62,9 @@ impl GameplayState {
     /// yet. Now only the *next* locked section renders — as an anonymous
     /// teaser — and everything further out is simply absent until revealed.
     pub(super) fn draw_sections_and_corridors(&self) {
-        let sections = self.map_state.section_render_info();
-        let next_hidden = sections
-            .iter()
-            .filter(|s| !s.visible)
-            .map(|s| s.index)
-            .min();
-        // Section name tags are orientation aids for the zoomed-out view; when
-        // the player zooms in to work on pads they become oversized text lying
-        // across the play area, so fade them out with zoom.
-        let label_fade = ((1.35 - self.camera.zoom) / 0.5).clamp(0.0, 1.0);
-        let mut section_centers: Vec<(Vec2, bool)> = Vec::new();
-        for section in &sections {
-            if !section.visible && Some(section.index) != next_hidden {
-                continue;
-            }
-            let pad_x = 80.0 + (section.index as f32 * 6.0);
-            let pad_y = 70.0 + (section.index as f32 * 4.0);
-            let min = vec2(section.min.x - pad_x, section.min.y - pad_y);
-            let max = vec2(section.max.x + pad_x, section.max.y + pad_y);
-            let w = (max.x - min.x).max(120.0);
-            let h = (max.y - min.y).max(80.0);
-            let base = 0.05 + (section.index as f32 * 0.02).min(0.28);
-            let fill = if section.visible {
-                Color::new(0.025 + base, 0.08 + base * 0.5, 0.06 + base * 0.25, 0.68)
-            } else {
-                // The locked teaser must sit *below* revealed content in
-                // visual weight — barely-there outline, not a bright slab.
-                Color::new(0.02, 0.035, 0.045, 0.14)
-            };
-            let border = if section.visible {
-                Color::new(0.12 + base, 0.32 + base, 0.22 + base * 0.45, 0.82)
-            } else {
-                Color::new(0.17, 0.28, 0.32, 0.22)
-            };
-
-            // Uniform, quiet backplate for every section. The old per-theme
-            // silhouettes (a giant circle for water, bands, nested boxes…)
-            // read as gameplay elements — the water circle in particular
-            // looked exactly like a tower range ring.
-            draw_rectangle(min.x, min.y, w, h, fill);
-            let motif = tile_rect(SECTION_TILES[section.index.min(SECTION_TILES.len() - 1)]);
-            let motif_tint = Color::new(0.72, 0.82, 0.78, if section.visible { 0.30 } else { 0.10 });
-            for y in (min.y as i32..max.y as i32).step_by(64) {
-                for x in (min.x as i32..max.x as i32).step_by(64) {
-                    draw_texture_ex(
-                        &self.assets.tiles,
-                        x as f32,
-                        y as f32,
-                        motif_tint,
-                        DrawTextureParams { dest_size: Some(vec2(64.0, 64.0)), source: Some(motif), ..Default::default() },
-                    );
-                }
-            }
-            draw_rectangle_lines(min.x, min.y, w, h, 2.0, border);
-
-            if label_fade > 0.01 {
-                if section.visible {
-                    draw_ui_text(
-                        &section.label,
-                        min.x + 14.0,
-                        min.y + 20.0,
-                        13.0,
-                        Color::new(0.48, 0.68, 0.62, 0.36 * label_fade),
-                    );
-                    if let Some(ref entrance) = section.unlock_entrance {
-                        draw_ui_text(
-                            &crate::data::strings::fill(
-                                &text().map.can_open,
-                                &[("path", entrance_label(entrance))],
-                            ),
-                            min.x + 14.0,
-                            min.y + 38.0,
-                            11.0,
-                            Color::new(0.95, 0.7, 0.24, 0.72 * label_fade),
-                        );
-                    }
-                } else {
-                    // The single next-locked teaser: no name spoiler, just a
-                    // hint that powering the frontier reveals it.
-                    draw_ui_text(
-                        &text().map.locked_section,
-                        min.x + 14.0,
-                        min.y + 20.0,
-                        12.0,
-                        Color::new(0.30, 0.42, 0.46, 0.34 * label_fade),
-                    );
-                    draw_ui_text(
-                        &text().map.power_frontier,
-                        min.x + 14.0,
-                        min.y + 38.0,
-                        10.0,
-                        Color::new(0.35, 0.52, 0.58, 0.4 * label_fade),
-                    );
-                }
-            }
-
-            let center = vec2((min.x + max.x) * 0.5, (min.y + max.y) * 0.5);
-            section_centers.push((center, section.visible));
-        }
-
-        for i in 0..section_centers.len().saturating_sub(1) {
-            let (a, a_visible) = section_centers[i];
-            let (b, b_visible) = section_centers[i + 1];
-            // Only link sections the player has actually revealed. A corridor
-            // stroke to the locked teaser cut a meaningless diagonal across
-            // the play area.
-            if !a_visible || !b_visible {
-                continue;
-            }
-            draw_line(a.x, a.y, b.x, b.y, 10.0, Color::new(0.02, 0.28, 0.18, 0.44));
-            draw_line(a.x, a.y, b.x, b.y, 4.0, Color::new(0.18, 0.58, 0.36, 0.72));
-        }
+        // The floor and live enemy lanes are the map's visual structure. The
+        // old section slabs and motif overlays obscured both, especially when
+        // the camera was framed tightly around the starting wing.
     }
 
     fn trace_node_pos(&self, node: &TraceNode) -> Vec2 {
@@ -304,50 +194,6 @@ impl GameplayState {
             }
             draw_enemy_route(path, reveal_limit, route_live);
         }
-
-        for path in &self.map_state.paths {
-            if !path.active && !previews_path(path) {
-                continue;
-            }
-            let reveal_limit = if path.active {
-                max_x + 80.0
-            } else {
-                max_x + 220.0
-            };
-            if path.entrance.x > reveal_limit {
-                continue;
-            }
-
-            let e = path.entrance;
-            if path.active {
-                let pulse = pulse_range(4.0, 0.55, 0.85);
-                draw_frame(&self.assets.breaches, 1, vec2(96.0, 96.0), e, vec2(64.0, 64.0), WHITE);
-                draw_circle_lines(e.x, e.y, 24.0, 3.0, Color::new(1.0, 0.46, 0.12, pulse));
-                draw_ui_text(
-                    entrance_label(&path.id),
-                    e.x + 24.0,
-                    e.y + 5.0,
-                    13.0,
-                    Color::new(1.0, 0.62, 0.24, 0.82),
-                );
-            } else {
-                // Only drawn while the player is inspecting the pad/machine
-                // that would open this route — a warning preview.
-                draw_frame(&self.assets.breaches, 0, vec2(96.0, 96.0), e, vec2(52.0, 52.0), WHITE);
-                draw_circle_lines(e.x, e.y, 16.0, 2.0, Color::new(0.85, 0.24, 0.14, 0.44));
-                // Entrances can sit on the map's edge (e.g. the northwest
-                // breach at the top border); clamp the tag inward so it isn't
-                // sliced off at the world boundary.
-                let label_y = (e.y + 4.0).max(26.0);
-                draw_ui_text(
-                    &text().map.opens_this_route,
-                    e.x + 18.0,
-                    label_y,
-                    10.0,
-                    Color::new(0.95, 0.42, 0.26, 0.6),
-                );
-            }
-        }
     }
 
     pub(super) fn draw_tower_slots(&self, hovered_slot: Option<usize>, max_x: f32) {
@@ -359,7 +205,7 @@ impl GameplayState {
                 continue;
             }
             let selected = self.selected_slot == Some(idx);
-            let hovered = hovered_slot == Some(idx);
+            let _hovered = hovered_slot == Some(idx);
             let pad = slot.position;
             draw_slot_pad(
                 &self.assets.pads,
@@ -369,11 +215,7 @@ impl GameplayState {
                 slot.tower_index.is_some(),
             );
 
-            if hovered && !selected {
-                draw_circle_lines(pad.x, pad.y, 23.0, 2.2, Color::new(0.35, 0.85, 1.0, 0.82));
-            }
             if selected {
-                draw_circle_lines(pad.x, pad.y, 26.0, 3.2, Color::new(0.45, 0.9, 1.0, 1.0));
                 draw_label_tag(
                     &slot.id.to_uppercase(),
                     pad + vec2(20.0, -22.0),
@@ -392,41 +234,33 @@ impl GameplayState {
             let unlocked = self.is_building_unlocked(building);
             let selected = self.selected_building == Some(idx);
             let hovered = hovered_building == Some(idx);
-            let (bg_color, border_color, state_text, state_color) =
+            let (_bg_color, _border_color, state_text, state_color) =
                 building_visual(unlocked, building.state);
 
             let is_core = self.map_state.is_core_building(&building.id);
             let w = if is_core { 84.0 } else { 62.0 };
             let h = if is_core { 50.0 } else { 38.0 };
-            draw_rectangle(
-                building.position.x - w / 2.0,
-                building.position.y - h / 2.0,
-                w,
-                h,
-                bg_color,
-            );
-            draw_rectangle_lines(
-                building.position.x - w / 2.0,
-                building.position.y - h / 2.0,
-                w,
-                h,
-                2.0,
-                border_color,
-            );
-
             let frame = match building.state {
                 BuildingState::Broken | BuildingState::Disabled => 0,
                 BuildingState::Repaired => 1,
                 BuildingState::Powered => 2,
             };
-            let sprite_size = if is_core { vec2(108.0, 76.0) } else { vec2(76.0, 58.0) };
+            let sprite_size = if is_core {
+                vec2(108.0, 76.0)
+            } else {
+                vec2(76.0, 58.0)
+            };
             draw_frame(
                 &self.assets.machines[machine_index(&building.building_type)],
                 frame,
                 vec2(128.0, 96.0),
                 building.position,
                 sprite_size,
-                if unlocked { WHITE } else { Color::new(0.45, 0.5, 0.52, 0.55) },
+                if unlocked {
+                    WHITE
+                } else {
+                    Color::new(0.45, 0.5, 0.52, 0.55)
+                },
             );
 
             let text_col = if selected || hovered {
@@ -448,37 +282,7 @@ impl GameplayState {
                 10.0,
                 state_color,
             );
-            if building.opens_entrance.is_some() && building.state != BuildingState::Powered {
-                draw_rectangle_lines(
-                    building.position.x - w / 2.0 - 5.0,
-                    building.position.y - h / 2.0 - 5.0,
-                    w + 10.0,
-                    h + 10.0,
-                    2.0,
-                    Color::new(1.0, 0.58, 0.16, 0.58),
-                );
-            }
-
-            if hovered && !selected && unlocked {
-                draw_rectangle_lines(
-                    building.position.x - w / 2.0 - 5.0,
-                    building.position.y - h / 2.0 - 5.0,
-                    w + 10.0,
-                    h + 10.0,
-                    2.0,
-                    Color::new(0.35, 0.85, 1.0, 0.74),
-                );
-            }
-
             if selected && unlocked {
-                draw_rectangle_lines(
-                    building.position.x - w / 2.0 - 7.0,
-                    building.position.y - h / 2.0 - 7.0,
-                    w + 14.0,
-                    h + 14.0,
-                    3.0,
-                    Color::new(0.45, 0.9, 1.0, 1.0),
-                );
                 draw_label_tag(
                     building_node_label(&building.building_type),
                     building.position + vec2(w * 0.5 + 8.0, -h * 0.5 - 4.0),
@@ -492,7 +296,16 @@ impl GameplayState {
         let core = self.map_state.factory_core;
         draw_frame(
             &self.assets.core,
-            if self.map_state.buildings.iter().any(|b| b.state == BuildingState::Powered) { 2 } else { 0 },
+            if self
+                .map_state
+                .buildings
+                .iter()
+                .any(|b| b.state == BuildingState::Powered)
+            {
+                2
+            } else {
+                0
+            },
             vec2(128.0, 128.0),
             core,
             vec2(132.0, 104.0),
@@ -546,46 +359,34 @@ fn building_visual(unlocked: bool, state: BuildingState) -> (Color, Color, &'sta
     }
 }
 
-fn draw_slot_pad(texture: &Texture2D, pad: Vec2, state: SlotState, opens_entrance: bool, has_tower: bool) {
+fn draw_slot_pad(
+    texture: &Texture2D,
+    pad: Vec2,
+    state: SlotState,
+    opens_entrance: bool,
+    has_tower: bool,
+) {
     let frame = match state {
         SlotState::Debris => 0,
         SlotState::Cleared => 1,
         SlotState::Powered if has_tower => 3,
         SlotState::Powered => 2,
     };
-    draw_frame(texture, frame, vec2(64.0, 64.0), pad, vec2(38.0, 38.0), WHITE);
+    draw_frame(
+        texture,
+        frame,
+        vec2(64.0, 64.0),
+        pad,
+        vec2(38.0, 38.0),
+        WHITE,
+    );
     match state {
         SlotState::Debris => {
-            if opens_entrance {
-                draw_circle_lines(pad.x, pad.y, 18.0, 2.0, Color::new(1.0, 0.76, 0.18, 0.62));
-            }
+            let _ = opens_entrance;
         }
-        SlotState::Cleared => {
-            draw_circle_lines(pad.x, pad.y, 16.0, 2.4, Color::new(0.32, 0.68, 1.0, 0.82));
-        }
+        SlotState::Cleared => {}
         SlotState::Powered => {
-            if has_tower {
-                draw_circle_lines(pad.x, pad.y, 17.0, 2.0, Color::new(0.24, 0.92, 0.45, 0.55));
-            } else {
-                let pulse = pulse_range(2.0, 0.5, 0.8);
-                draw_circle_lines(pad.x, pad.y, 18.0, 2.8, Color::new(0.25, 1.0, 0.45, pulse));
-                draw_line(
-                    pad.x - 5.0,
-                    pad.y,
-                    pad.x + 5.0,
-                    pad.y,
-                    2.0,
-                    Color::new(0.5, 1.0, 0.6, 0.8),
-                );
-                draw_line(
-                    pad.x,
-                    pad.y - 5.0,
-                    pad.x,
-                    pad.y + 5.0,
-                    2.0,
-                    Color::new(0.5, 1.0, 0.6, 0.8),
-                );
-            }
+            let _ = has_tower;
         }
     }
 }
@@ -622,11 +423,6 @@ fn draw_enemy_route(path: &MapPath, reveal_limit: f32, live: bool) {
                 draw_route_flow(a, b, reveal_limit);
             }
             draw_route_arrows(a, b, reveal_limit);
-        } else {
-            let mid = (a + b) * 0.5;
-            if mid.x <= reveal_limit {
-                draw_circle(mid.x, mid.y, 3.0, Color::new(0.9, 0.25, 0.12, 0.28));
-            }
         }
     }
 }
@@ -646,7 +442,12 @@ fn draw_route_flow(a: Vec2, b: Vec2, reveal_limit: f32) {
         if pos.x > reveal_limit {
             continue;
         }
-        draw_circle(pos.x, pos.y, 3.6, Color::new(1.0, 0.78, 0.24, 0.84));
+        draw_triangle(
+            pos + dir * 6.0,
+            pos - dir * 4.0 + vec2(-dir.y, dir.x) * 4.0,
+            pos - dir * 4.0 - vec2(-dir.y, dir.x) * 4.0,
+            Color::new(1.0, 0.78, 0.24, 0.84),
+        );
     }
 }
 

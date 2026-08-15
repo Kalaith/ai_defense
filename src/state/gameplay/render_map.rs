@@ -7,8 +7,8 @@ use macroquad::prelude::*;
 use macroquad_toolkit::colors::dark;
 use macroquad_toolkit::ui::{draw_ui_text, measure_ui_text};
 
-use super::GameplayState;
 use super::assets::draw_frame;
+use super::GameplayState;
 
 mod circuit_board;
 
@@ -37,7 +37,6 @@ impl GameplayState {
             if !tower.is_active {
                 col = Color::new(col.r, col.g, col.b, 0.5);
             }
-            let outline_alpha = if tower.is_active { 1.0 } else { 0.4 };
             let radius = self.constants.ui.tower_base_radius
                 + (tower.level.saturating_sub(1) as f32) * self.constants.ui.tower_level_radius_inc;
             let column = match tower.tower_type {
@@ -57,30 +56,7 @@ impl GameplayState {
                 vec2(radius * 3.0, radius * 3.0),
                 col,
             );
-            let outline = Color::new(dark::TEXT.r, dark::TEXT.g, dark::TEXT.b, outline_alpha);
-            draw_circle_lines(tower.position.x, tower.position.y, radius, 1.5, outline);
-
-            if tower.level > 1 {
-                let ring_radius = radius + self.constants.ui.tower_ring_offset;
-                draw_circle_lines(tower.position.x, tower.position.y, ring_radius, 1.5, col);
-            }
-
             if self.selected_tower == Some(idx) {
-                let range_alpha = if tower.is_active { 0.3 } else { 0.15 };
-                draw_circle_lines(
-                    tower.position.x,
-                    tower.position.y,
-                    radius + 8.0,
-                    3.0,
-                    Color::new(0.45, 0.9, 1.0, 1.0),
-                );
-                draw_circle_lines(
-                    tower.position.x,
-                    tower.position.y,
-                    self.effective_tower_range(tower.range),
-                    2.0,
-                    Color::new(col.r, col.g, col.b, range_alpha),
-                );
                 draw_label_tag(
                     &text().map.selected_tower,
                     tower.position + vec2(20.0, -24.0),
@@ -134,11 +110,41 @@ impl GameplayState {
             }
 
             let (asset, radius, color, frame_size, sprite_size) = match enemy.enemy_type {
-                EnemyType::Scout => (0, 5.0, Color::new(0.4, 0.9, 0.4, 1.0), vec2(48.0, 48.0), vec2(38.0, 38.0)),
-                EnemyType::Drone => (1, 7.0, Color::new(0.9, 0.5, 0.2, 1.0), vec2(48.0, 48.0), vec2(42.0, 42.0)),
-                EnemyType::HeavyUnit => (2, 10.0, Color::new(0.8, 0.2, 0.2, 1.0), vec2(64.0, 64.0), vec2(56.0, 56.0)),
-                EnemyType::Saboteur => (3, 6.0, Color::new(0.7, 0.3, 0.9, 1.0), vec2(48.0, 48.0), vec2(38.0, 38.0)),
-                EnemyType::Commander => (4, 14.0, Color::new(1.0, 0.8, 0.0, 1.0), vec2(64.0, 64.0), vec2(58.0, 58.0)),
+                EnemyType::Scout => (
+                    0,
+                    5.0,
+                    Color::new(0.4, 0.9, 0.4, 1.0),
+                    vec2(48.0, 48.0),
+                    vec2(38.0, 38.0),
+                ),
+                EnemyType::Drone => (
+                    1,
+                    7.0,
+                    Color::new(0.9, 0.5, 0.2, 1.0),
+                    vec2(48.0, 48.0),
+                    vec2(42.0, 42.0),
+                ),
+                EnemyType::HeavyUnit => (
+                    2,
+                    10.0,
+                    Color::new(0.8, 0.2, 0.2, 1.0),
+                    vec2(64.0, 64.0),
+                    vec2(56.0, 56.0),
+                ),
+                EnemyType::Saboteur => (
+                    3,
+                    6.0,
+                    Color::new(0.7, 0.3, 0.9, 1.0),
+                    vec2(48.0, 48.0),
+                    vec2(38.0, 38.0),
+                ),
+                EnemyType::Commander => (
+                    4,
+                    14.0,
+                    Color::new(1.0, 0.8, 0.0, 1.0),
+                    vec2(64.0, 64.0),
+                    vec2(58.0, 58.0),
+                ),
             };
 
             let mut col = color;
@@ -148,7 +154,14 @@ impl GameplayState {
                 col = Color::new(color.r, color.g, color.b, 0.4);
             }
             let frame = ((get_time() * 8.0) as usize) % 4;
-            draw_frame(&self.assets.enemies[asset], frame, frame_size, enemy.position, sprite_size, col);
+            draw_frame(
+                &self.assets.enemies[asset],
+                frame,
+                frame_size,
+                enemy.position,
+                sprite_size,
+                col,
+            );
 
             let bar_w = radius * 3.0;
             let bar_h = 3.0;
