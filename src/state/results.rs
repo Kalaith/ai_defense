@@ -34,7 +34,9 @@ impl ResultsState {
         let center_y = screen_height() / 2.0;
         let report_top = (center_y - 70.0).max(150.0);
 
-        let title = if self.summary.shutdown_triggered {
+        let title = if self.summary.campaign_won {
+            &t.title_victory
+        } else if self.summary.shutdown_triggered {
             &t.title_survived
         } else {
             &t.title_lost
@@ -45,7 +47,9 @@ impl ResultsState {
             center_x - dims.width / 2.0,
             report_top - 70.0,
             40.0,
-            if self.summary.shutdown_triggered {
+            if self.summary.campaign_won {
+                dark::ACCENT
+            } else if self.summary.shutdown_triggered {
                 dark::POSITIVE
             } else {
                 dark::NEGATIVE
@@ -113,7 +117,9 @@ fn build_report_lines(summary: &RunSummary) -> Vec<String> {
         &[("n", &summary.population_surviving.to_string())],
     ));
 
-    lines.push(if summary.shutdown_triggered {
+    lines.push(if summary.campaign_won {
+        t.outcome_victory.clone()
+    } else if summary.shutdown_triggered {
         t.outcome_survived.clone()
     } else {
         t.outcome_lost.clone()

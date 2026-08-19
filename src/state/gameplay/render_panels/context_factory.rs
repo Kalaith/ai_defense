@@ -2,6 +2,7 @@
 
 use crate::data::strings::{fill, text};
 use crate::data::{GameData, UpgradeDef};
+use crate::engine::vault::VaultStage;
 use crate::ui::{self, ConsoleButtonState, ConsoleIcon};
 use macroquad::prelude::*;
 use macroquad_toolkit::colors::dark;
@@ -28,6 +29,10 @@ impl GameplayState {
             dark::ACCENT,
         );
 
+        if self.draw_vault_takeover_control(rect) {
+            return;
+        }
+
         let upgrades = self.available_upgrades();
         let clicked_upgrade = self.draw_upgrade_list(rect, &upgrades);
 
@@ -46,6 +51,89 @@ impl GameplayState {
         if let Some(id) = unlock_upgrade {
             self.purchase_upgrade(&id);
         }
+    }
+
+    fn draw_vault_takeover_control(&mut self, rect: Rect) -> bool {
+        let ready = self.vault_takeover_ready();
+        if !ready && !self.vault_takeover.active && !self.vault_takeover.upload_complete {
+            return false;
+        }
+
+        let t = &text().vault;
+        let total = self.constants.vault.stage_seconds * 3.0;
+        let fraction = self.vault_takeover.fraction(total);
+        let stage = match self
+            .vault_takeover
+            .stage(self.constants.vault.stage_seconds)
+        {
+            VaultStage::Handshake => &t.handshake,
+            VaultStage::Severance => &t.severance,
+            VaultStage::Override => &t.override_stage,
+            VaultStage::Complete => &t.complete,
+        };
+        ui::draw_bounded_text(
+            &t.title,
+            rect.x + 56.0,
+            rect.y + 62.0,
+            rect.w * 0.32,
+            15.0,
+            dark::WARNING,
+        );
+        let detail = if ready { &t.ready_detail } else { stage };
+        ui::draw_bounded_text(
+            detail,
+            rect.x + 56.0,
+            rect.y + 84.0,
+            rect.w * 0.35,
+            11.0,
+            dark::TEXT_DIM,
+        );
+
+        let meter_x = rect.x + rect.w * 0.43;
+        let meter_w = rect.w * 0.30;
+        ui::draw_bounded_text(
+            &fill(
+                &t.progress,
+                &[
+                    ("stage", stage),
+                    ("pct", &format!("{:.0}", fraction * 100.0)),
+                ],
+            ),
+            meter_x,
+            rect.y + 62.0,
+            meter_w,
+            12.0,
+            dark::TEXT_BRIGHT,
+        );
+        ui::draw_resource_bar(
+            meter_x,
+            rect.y + 76.0,
+            meter_w,
+            10.0,
+            fraction,
+            1.0,
+            dark::WARNING,
+        );
+
+        let (label, state) = if ready {
+            (&t.begin, ConsoleButtonState::Dangerous)
+        } else if self.vault_takeover.upload_complete {
+            (&t.clear_line, ConsoleButtonState::Disabled)
+        } else {
+            (&t.locked, ConsoleButtonState::Disabled)
+        };
+        if ui::draw_console_button(
+            rect.x + rect.w - 210.0,
+            rect.y + 58.0,
+            194.0,
+            44.0,
+            label,
+            state,
+        ) && ready
+        {
+            self.start_vault_takeover();
+        }
+        true
     }
 
     /// Selectable rows for the first few available upgrades. Returns the id of a

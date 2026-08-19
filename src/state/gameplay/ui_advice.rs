@@ -18,6 +18,7 @@ pub use wave_preview::format_enemy_counts;
 
 use crate::data::GameData;
 use crate::engine::enemy::EnemyType;
+use crate::engine::vault::VaultStage;
 use macroquad::prelude::*;
 
 use super::GameplayState;
@@ -49,6 +50,7 @@ pub enum AdviceTarget {
     BeaconStart,
     BeaconShutdown,
     ScavengerRecall,
+    FactoryCore,
     None,
 }
 
@@ -126,6 +128,38 @@ impl GameplayState {
                 priority: 78,
             });
         }
+        if self.vault_takeover.active || self.vault_takeover.upload_complete {
+            let t = &crate::data::strings::text().vault;
+            let stage = match self
+                .vault_takeover
+                .stage(self.constants.vault.stage_seconds)
+            {
+                VaultStage::Handshake => &t.handshake,
+                VaultStage::Severance => &t.severance,
+                VaultStage::Override => &t.override_stage,
+                VaultStage::Complete => &t.complete,
+            };
+            alerts.push(AlertBanner {
+                severity: AlertSeverity::Critical,
+                label: t.alert.clone(),
+                detail: crate::data::strings::fill(
+                    &t.progress,
+                    &[
+                        ("stage", stage),
+                        (
+                            "pct",
+                            &format!(
+                                "{:.0}",
+                                self.vault_takeover
+                                    .fraction(self.constants.vault.stage_seconds * 3.0)
+                                    * 100.0
+                            ),
+                        ),
+                    ],
+                ),
+                priority: 100,
+            });
+        }
         alerts.sort_by(|a, b| {
             alerts::severity_rank(b.severity)
                 .cmp(&alerts::severity_rank(a.severity))
@@ -179,7 +213,8 @@ impl GameplayState {
             }
             AdviceTarget::BeaconStart
             | AdviceTarget::BeaconShutdown
-            | AdviceTarget::ScavengerRecall => {
+            | AdviceTarget::ScavengerRecall
+            | AdviceTarget::FactoryCore => {
                 self.selected_core = true;
                 self.selected_slot = None;
                 self.selected_building = None;

@@ -6,6 +6,9 @@ is the persistent evacuation ledger, permanent per-cycle escalation, the food ra
 population water demand with drought consequences, role-labelled sector awakenings that
 impose distinct machine-awareness pulses, data-driven enemy counter-build profiles, and
 two behavior-changing final specializations for every tower family.
+The campaign now culminates in a touch-started, three-stage AI Vault takeover with a
+locked terminal beacon, persistent operation progress, explicit failure conditions, and
+a distinct victory debrief.
 What follows is the work the design review left open.
 
 ## Immediate improvements
@@ -22,9 +25,6 @@ What follows is the work the design review left open.
 - Deepen the sector role split by making population a managed lever — grow the holdout
   for workforce and evacuation, but every mouth needs life-support machinery that raises
   beacon volume.
-- A real win state: the vault takeover the fiction promises is unimplemented, so a run only
-  ends when the player stops or the holdout dies.
-
 ## Content
 
 - A second and third map / route layout.

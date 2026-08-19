@@ -68,6 +68,12 @@ pub struct SaveData {
     pub survivors_evacuated: u32,
     #[serde(default)]
     pub machine_escalation: f32,
+    #[serde(default)]
+    pub vault_takeover_active: bool,
+    #[serde(default)]
+    pub vault_takeover_progress: f32,
+    #[serde(default)]
+    pub vault_upload_complete: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

@@ -59,6 +59,7 @@ pub struct GameConstants {
     pub placement: PlacementConstants,
     pub particles: ParticleConstants,
     pub gameplay: GameplayConstants,
+    pub vault: VaultConstants,
     pub map: MapConstants,
 }
 
@@ -301,6 +302,13 @@ pub struct ParticleConstants {
 pub struct GameplayConstants {
     pub speed_multiplier: f32,
     pub beacon_start_delay: f32,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct VaultConstants {
+    pub stage_seconds: f32,
+    pub wave_budget_bonus: f32,
+    pub corruption_per_sec: f32,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

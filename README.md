@@ -17,10 +17,11 @@ You do not tell anyone that you were the lead researcher who unlocked the last A
 - Balance food, scrap, morale, population, power, and enemy attention.
 - Keep outside scavenger teams active long enough to matter.
 - Decide when to expand, when to defend, and when to shut the beacon down.
+- Wake every factory wing, seize the AI Vault, and survive its three-stage override.
 
 ## Goal
 
-Reach the vault at the centre and take the AI back. Every section you wake carries you further in, and makes you louder. The campaign is currently open-ended — the takeover itself is not implemented yet, so a run ends when you choose to stop or when the machine goes cold with you inside it.
+Reach the vault at the centre and take the AI back. Every section you wake carries you further in, and makes you louder. Once the whole factory answers, begin the takeover from the factory console. The beacon locks at Terminal Howl through a forced handshake, swarm-control severance, and human override; hold the line until the upload completes, then destroy every machine still inside.
 
 ## Controls
 

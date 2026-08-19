@@ -18,6 +18,7 @@ use crate::engine::map::MapState;
 use crate::engine::population::Population;
 use crate::engine::threat::{ReactionTier, ThreatSignature};
 use crate::engine::tower::{ShotEffect, Tower};
+use crate::engine::vault::VaultTakeover;
 use crate::engine::wave::{WaveManager, WaveTuning};
 use crate::save::{
     SaveData, SavedBuilding, SavedPopulation, SavedResources, SavedSector, SavedSlot, SavedThreat,
@@ -110,6 +111,7 @@ pub struct GameplayState {
     pub beacon_cycles_completed: u32,
     pub cycle_baseline: CycleBaseline,
     pub end_campaign_requested: bool,
+    pub vault_takeover: VaultTakeover,
 
     pub coach: Coach,
     pub show_settings: bool,
@@ -320,6 +322,7 @@ impl GameplayState {
             beacon_cycles_completed: 0,
             cycle_baseline: CycleBaseline::default(),
             end_campaign_requested: false,
+            vault_takeover: VaultTakeover::default(),
 
             // Onboarding shows only until the player has seen it once.
             coach: Coach {
@@ -499,6 +502,18 @@ impl GameplayState {
 
         self.survivors_evacuated = save.survivors_evacuated;
         self.machine_escalation = save.machine_escalation;
+        self.vault_takeover.active = save.vault_takeover_active;
+        self.vault_takeover.progress = save.vault_takeover_progress;
+        self.vault_takeover.upload_complete = save.vault_upload_complete;
+        if self.vault_takeover.active {
+            self.beacon_active = true;
+            self.beacon_phase = BeaconPhase::TerminalHowl;
+            self.between_waves = true;
+            self.wave_timer = self.constants.gameplay.beacon_start_delay;
+            self.beacon_start_difficulty_bonus = self.compute_beacon_start_difficulty_bonus()
+                + self.machine_escalation
+                + self.constants.vault.wave_budget_bonus;
+        }
         let interval = self.constants.evacuation.milestone_interval.max(1);
         self.next_evac_milestone = (self.survivors_evacuated / interval + 1) * interval;
 
@@ -507,7 +522,7 @@ impl GameplayState {
 
     fn build_save_data(&self) -> SaveData {
         SaveData {
-            version: 2,
+            version: 3,
             wave_reached: self.current_wave,
             resources: SavedResources {
                 power: self.resources.power,
@@ -571,6 +586,9 @@ impl GameplayState {
                 .collect(),
             survivors_evacuated: self.survivors_evacuated,
             machine_escalation: self.machine_escalation,
+            vault_takeover_active: self.vault_takeover.active,
+            vault_takeover_progress: self.vault_takeover.progress,
+            vault_upload_complete: self.vault_takeover.upload_complete,
         }
     }
 

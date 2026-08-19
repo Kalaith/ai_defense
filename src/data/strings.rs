@@ -74,6 +74,7 @@ pub struct Strings {
     pub hud: HudStrings,
     pub status: StatusStrings,
     pub beacon: BeaconStrings,
+    pub vault: VaultStrings,
     pub factory_phases: FactoryPhaseStrings,
     pub threat: ThreatStrings,
     pub enemies: EnemyStrings,
@@ -230,6 +231,23 @@ pub struct BeaconStrings {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct VaultStrings {
+    pub title: String,
+    pub ready: String,
+    pub ready_detail: String,
+    pub begin: String,
+    pub locked: String,
+    pub clear_line: String,
+    pub handshake: String,
+    pub severance: String,
+    pub override_stage: String,
+    pub complete: String,
+    /// `{stage}`, `{pct}`.
+    pub progress: String,
+    pub alert: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct BeaconPhaseStrings {
     pub warm_signal: String,
     pub sustained_call: String,
@@ -340,6 +358,7 @@ pub struct ReportStrings {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ResultsStrings {
+    pub title_victory: String,
     pub title_survived: String,
     pub title_lost: String,
     /// `{n}`.
@@ -360,6 +379,7 @@ pub struct ResultsStrings {
     pub surviving: String,
     pub outcome_survived: String,
     pub outcome_lost: String,
+    pub outcome_victory: String,
     pub button: String,
 }
 
@@ -376,6 +396,8 @@ pub struct NotificationStrings {
     pub powered: String,
     /// `{name}`, `{role}`, `{n}`, `{signature}`.
     pub sector_awakened: String,
+    pub vault_takeover_started: String,
+    pub vault_upload_complete: String,
     pub beacon_up: String,
     pub beacon_down: String,
     pub field_secured: String,
@@ -423,6 +445,12 @@ pub struct AlertStrings {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AdviceStrings {
+    pub vault_takeover: String,
+    pub vault_takeover_detail: String,
+    pub vault_takeover_cost: String,
+    pub vault_takeover_risk: String,
+    pub vault_hold: String,
+    pub vault_hold_detail: String,
     pub restore_power: String,
     /// `{n}`.
     pub restore_power_detail: String,

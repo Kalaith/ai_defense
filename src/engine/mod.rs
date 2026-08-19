@@ -7,4 +7,5 @@ pub mod map;
 pub mod population;
 pub mod threat;
 pub mod tower;
+pub mod vault;
 pub mod wave;

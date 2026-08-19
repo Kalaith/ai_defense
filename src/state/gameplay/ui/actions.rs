@@ -298,6 +298,9 @@ impl GameplayState {
     }
 
     pub(crate) fn start_beacon(&mut self) {
+        if self.vault_takeover.active || self.vault_takeover.upload_complete {
+            return;
+        }
         self.beacon_active = true;
         self.shutdown_triggered = false;
         self.between_waves = true;
@@ -329,6 +332,9 @@ impl GameplayState {
     }
 
     pub(crate) fn trigger_shutdown(&mut self) {
+        if self.vault_takeover.active {
+            return;
+        }
         self.shutdown_triggered = true;
         self.beacon_active = false;
         self.beacon_start_difficulty_bonus = 0.0;

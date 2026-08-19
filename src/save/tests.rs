@@ -2,7 +2,7 @@ use super::*;
 
 fn sample_save() -> SaveData {
     SaveData {
-        version: 2,
+        version: 3,
         wave_reached: 7,
         resources: SavedResources {
             power: 42.5,
@@ -47,6 +47,9 @@ fn sample_save() -> SaveData {
         }],
         survivors_evacuated: 25,
         machine_escalation: 0.36,
+        vault_takeover_active: true,
+        vault_takeover_progress: 27.5,
+        vault_upload_complete: false,
     }
 }
 
@@ -83,5 +86,8 @@ fn legacy_save_missing_newer_fields_loads_with_defaults() {
     assert_eq!(restored.buildings, Vec::<SavedBuilding>::new());
     assert_eq!(restored.survivors_evacuated, 0);
     assert_eq!(restored.machine_escalation, 0.0);
+    assert!(!restored.vault_takeover_active);
+    assert_eq!(restored.vault_takeover_progress, 0.0);
+    assert!(!restored.vault_upload_complete);
     assert_eq!(restored.resources.water, 0.0);
 }

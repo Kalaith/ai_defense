@@ -31,6 +31,7 @@ pub struct RunSummary {
     pub factory_online: usize,
     pub population_surviving: u32,
     pub shutdown_triggered: bool,
+    pub campaign_won: bool,
     /// Total survivors the beacon evacuated across the whole campaign — the
     /// headline score. `evacuees_lost` counts those still pending when the
     /// factory fell (a defeat loses the current beacon window's progress).

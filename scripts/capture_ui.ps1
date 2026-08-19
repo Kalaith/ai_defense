@@ -9,7 +9,9 @@
     src/main.rs. `menu` seeds the main menu and `gameplay` seeds a fresh
     gameplay session; `sector` selects a repaired section core so its awakening
     trade-off can be reviewed; `specialization` opens a max-level tower's final
-    branch choice (see Game::begin_capture_scene in src/game.rs).
+    branch choice; `vault` exposes the touch-started final operation and
+    `victory` shows its distinct result (see Game::begin_capture_scene in
+    src/game.rs).
 
 .EXAMPLE
     ./scripts/capture_ui.ps1
@@ -19,6 +21,7 @@ param(
     [string[]]$Scenes = @("menu", "gameplay"),
     [int]$Frames = 150,
     [string]$OutputDir = "docs\verification",
+    [int]$MinBytes = 15000,
     [switch]$SkipBuild
 )
 
@@ -26,4 +29,4 @@ $ErrorActionPreference = "Stop"
 $gameDir = Split-Path -Parent $PSScriptRoot
 $shared = Join-Path (Split-Path -Parent $gameDir) "macroquad-toolkit\scripts\capture_ui.ps1"
 
-& $shared -GameDir $gameDir -Scenes $Scenes -Frames $Frames -OutputDir $OutputDir -SkipBuild:$SkipBuild
+& $shared -GameDir $gameDir -Scenes $Scenes -Frames $Frames -OutputDir $OutputDir -MinBytes $MinBytes -SkipBuild:$SkipBuild

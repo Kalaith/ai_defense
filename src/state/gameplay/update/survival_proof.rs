@@ -46,7 +46,7 @@ impl GameplayState {
                 self.beacon_active = false;
                 self.between_waves = false;
                 return Some(StateTransition::ToResults {
-                    summary: self.build_run_summary(true),
+                    summary: self.build_run_summary(true, false),
                 });
             }
 
@@ -65,7 +65,7 @@ impl GameplayState {
 
             if self.is_game_over() {
                 return Some(StateTransition::ToResults {
-                    summary: self.build_run_summary(false),
+                    summary: self.build_run_summary(false, false),
                 });
             }
         }

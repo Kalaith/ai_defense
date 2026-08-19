@@ -175,12 +175,19 @@ impl GameplayState {
         }
         draw_button_hint(recall_rect, &t.recall_tip, &t.recall_tip_detail);
 
-        let shutdown_state = if self.shutdown_triggered || self.current_wave < 1 || !interactive {
+        let takeover_locked = self.vault_takeover.active || self.vault_takeover.upload_complete;
+        let shutdown_state = if self.shutdown_triggered
+            || self.current_wave < 1
+            || !interactive
+            || takeover_locked
+        {
             ConsoleButtonState::Disabled
         } else {
             ConsoleButtonState::Dangerous
         };
-        let shutdown_label = if self.current_wave < 1 {
+        let shutdown_label = if takeover_locked {
+            &text().vault.locked
+        } else if self.current_wave < 1 {
             &t.shutdown_locked
         } else {
             &t.shutdown

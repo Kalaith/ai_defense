@@ -139,6 +139,21 @@
     }
   },
 
+  "vault": {
+    "title": "VAULT TAKEOVER",
+    "ready": "Every wing answers. The vault is exposed.",
+    "ready_detail": "Begin the override and the beacon locks at Terminal Howl until the AI is severed.",
+    "begin": "BEGIN TAKEOVER",
+    "locked": "BEACON LOCKED",
+    "clear_line": "UPLOAD COMPLETE — CLEAR THE LINE",
+    "handshake": "FORCED HANDSHAKE",
+    "severance": "SEVER SWARM CONTROL",
+    "override_stage": "WRITE HUMAN OVERRIDE",
+    "complete": "CONTROL RESTORED",
+    "progress": "{stage}  ·  {pct}%",
+    "alert": "VAULT TAKEOVER"
+  },
+
   "factory_phases": {
     "dormant_ruin": "Dormant Ruin",
     "stirring_machine": "Stirring Machine",
@@ -215,6 +230,7 @@
   },
 
   "results": {
+    "title_victory": "THE LAST ASSEMBLY ANSWERS",
     "title_survived": "THE WORK STOPS HERE",
     "title_lost": "THE MACHINE WENT COLD",
     "headline": "{n} GOT OUT",
@@ -227,6 +243,7 @@
     "surviving": "Still breathing: {n}",
     "outcome_survived": "You went dark with the vault still sleeping. It waits.",
     "outcome_lost": "The machine went cold with you inside it. The vault sleeps on.",
+    "outcome_victory": "The override holds. Across the dead city, the swarm goes still.",
     "button": "Return to Menu"
   },
 
@@ -237,6 +254,8 @@
     "repaired": "{name} is whole again. It still needs power.",
     "powered": "{name} is drawing. That much closer to the vault.",
     "sector_awakened": "{name} awake — {role}. +{n} {signature}. The machines felt it.",
+    "vault_takeover_started": "The vault is open. The beacon is locked. Hold the line.",
+    "vault_upload_complete": "The override is written. Kill what remains connected.",
     "beacon_up": "The beacon is up. Teams are moving. So are they.",
     "beacon_down": "Beacon down. Nothing new is coming — see off what already is.",
     "field_secured": "Quiet again. Patch the line and get further in.",
@@ -272,6 +291,12 @@
   },
 
   "advice": {
+    "vault_takeover": "Begin Vault Takeover",
+    "vault_takeover_detail": "Open the factory core and start the final override",
+    "vault_takeover_cost": "Cost: beacon locks at Terminal Howl",
+    "vault_takeover_risk": "Risk: +65% assault budget",
+    "vault_hold": "Hold the Vault Link",
+    "vault_hold_detail": "Keep the AI Vault powered until the override finishes",
     "restore_power": "Restore power before building more towers",
     "restore_power_detail": "{n} towers are offline",
     "restore_power_cost": "Cost: repair power systems",

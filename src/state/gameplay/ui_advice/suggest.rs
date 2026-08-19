@@ -18,6 +18,24 @@ impl GameplayState {
         power: &PowerGridSnapshot,
     ) -> SuggestedAction {
         let t = &text().advice;
+        if self.vault_takeover.active || self.vault_takeover.upload_complete {
+            return SuggestedAction {
+                label: t.vault_hold.clone(),
+                detail: t.vault_hold_detail.clone(),
+                cost: t.cost_online.clone(),
+                risk: t.vault_takeover_risk.clone(),
+                target: AdviceTarget::FactoryCore,
+            };
+        }
+        if self.vault_takeover_ready() {
+            return SuggestedAction {
+                label: t.vault_takeover.clone(),
+                detail: t.vault_takeover_detail.clone(),
+                cost: t.vault_takeover_cost.clone(),
+                risk: t.vault_takeover_risk.clone(),
+                target: AdviceTarget::FactoryCore,
+            };
+        }
         // Towers are dark: nothing else matters until the grid is back.
         if power.offline_towers > 0 || (power.net < 0.0 && power.battery <= 0.0) {
             if let Some(idx) = self.best_power_system() {

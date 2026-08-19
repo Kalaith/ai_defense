@@ -7,6 +7,7 @@
 mod beacon_cycle;
 mod survival_proof;
 mod systems;
+mod vault_takeover;
 
 use crate::state::{RunSummary, StateTransition};
 use macroquad::prelude::*;
@@ -18,7 +19,7 @@ impl GameplayState {
     pub fn update(&mut self) -> Option<StateTransition> {
         if self.end_campaign_requested {
             return Some(StateTransition::ToResults {
-                summary: self.build_run_summary(true),
+                summary: self.build_run_summary(true, false),
             });
         }
 
@@ -53,10 +54,17 @@ impl GameplayState {
         self.update_building_boons(dt);
         self.update_population(dt);
         self.update_threat(dt);
+        self.update_vault_takeover(dt);
         self.update_factory();
         self.update_notifications(dt);
         self.update_wave_flash(dt);
         self.update_coach();
+
+        if self.vault_takeover.upload_complete && self.enemies_cleared() {
+            return Some(StateTransition::ToResults {
+                summary: self.build_run_summary(true, true),
+            });
+        }
 
         // Shutdown only resolves once the field is actually clear, so the player
         // still has to survive whatever the beacon already drew in.
@@ -67,7 +75,7 @@ impl GameplayState {
 
         if self.is_game_over() {
             return Some(StateTransition::ToResults {
-                summary: self.build_run_summary(false),
+                summary: self.build_run_summary(false, false),
             });
         }
 
@@ -138,10 +146,12 @@ impl GameplayState {
     }
 
     fn is_game_over(&self) -> bool {
-        self.population.count == 0 || self.factory_integrity <= 0.0
+        self.population.count == 0
+            || self.factory_integrity <= 0.0
+            || (self.vault_takeover.active && !self.factory.is_sector_active("ai_vault"))
     }
 
-    fn build_run_summary(&self, survived: bool) -> RunSummary {
+    fn build_run_summary(&self, survived: bool, campaign_won: bool) -> RunSummary {
         RunSummary {
             waves_survived: self.current_wave,
             beacon_phase: self.beacon_phase.clone(),
@@ -154,7 +164,13 @@ impl GameplayState {
             factory_online: self.factory_online_count(),
             population_surviving: self.population.count,
             shutdown_triggered: survived,
-            survivors_evacuated: self.survivors_evacuated,
+            campaign_won,
+            survivors_evacuated: self.survivors_evacuated
+                + if campaign_won {
+                    self.pending_evacuees.floor() as u32
+                } else {
+                    0
+                },
             // A defeat forfeits the current beacon window's un-banked evacuees.
             evacuees_lost: if survived {
                 0

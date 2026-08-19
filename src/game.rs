@@ -152,7 +152,22 @@ impl Game {
                 gameplay.salvage_report = Some(sample_salvage_report());
                 self.state = GameState::Gameplay(gameplay);
             }
+            "vault" => {
+                let mut gameplay = GameplayState::new(&self.data);
+                gameplay.show_intro = false;
+                gameplay.coach.active = false;
+                for sector in &mut gameplay.factory.sectors {
+                    sector.unlocked = true;
+                    sector.integrity = sector.max_integrity;
+                }
+                gameplay.factory.check_awakening();
+                gameplay.selected_core = true;
+                self.state = GameState::Gameplay(gameplay);
+            }
             "results" => self.state = GameState::Results(ResultsState::new(sample_run_summary())),
+            "victory" => {
+                self.state = GameState::Results(ResultsState::new(sample_victory_summary()))
+            }
             _ => {}
         }
     }
@@ -204,7 +219,27 @@ fn sample_run_summary() -> RunSummary {
         factory_online: 9,
         population_surviving: 12,
         shutdown_triggered: true,
+        campaign_won: false,
         survivors_evacuated: 41,
+        evacuees_lost: 0,
+    }
+}
+
+fn sample_victory_summary() -> RunSummary {
+    RunSummary {
+        waves_survived: 31,
+        beacon_phase: BeaconPhase::TerminalHowl,
+        scavengers_sent: 18,
+        scavengers_returned: 14,
+        scavengers_lost: 4,
+        scavenger_scrap: 1_240.0,
+        scavenger_food: 560.0,
+        scavenger_population: 9,
+        factory_online: 12,
+        population_surviving: 17,
+        shutdown_triggered: true,
+        campaign_won: true,
+        survivors_evacuated: 73,
         evacuees_lost: 0,
     }
 }
