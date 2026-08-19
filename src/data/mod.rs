@@ -214,9 +214,6 @@ pub struct TowerConstants {
     pub subversion_chain_damage_fraction: f32,
     pub commander_death_radius: f32,
     pub commander_death_fraction: f32,
-    pub laser_vs_heavy_mult: f32,
-    pub laser_vs_scout_mult: f32,
-    pub ballistic_vs_heavy_mult: f32,
     /// Heat-signature contribution per tower shot per second (sole feed into
     /// the heat awareness signal — see `ThreatKind::Heat`).
     pub heat_per_shot: f32,
@@ -446,6 +443,44 @@ pub struct EnemyDef {
     pub base_health: f32,
     pub speed: f32,
     pub scrap_reward: f32,
+    #[serde(default)]
+    pub damage_multipliers: DamageMultipliers,
+    pub counter_hint: String,
+}
+
+/// Per-tower damage received by an enemy archetype. Values below one are
+/// resistances; values above one are vulnerabilities.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct DamageMultipliers {
+    pub ballistic: f32,
+    pub laser: f32,
+    pub emp: f32,
+    pub area_denial: f32,
+    pub subversion: f32,
+}
+
+impl DamageMultipliers {
+    pub fn for_tower(&self, tower_type: &TowerType) -> f32 {
+        match tower_type {
+            TowerType::Ballistic => self.ballistic,
+            TowerType::Laser => self.laser,
+            TowerType::Emp => self.emp,
+            TowerType::AreaDenial => self.area_denial,
+            TowerType::Subversion => self.subversion,
+        }
+    }
+}
+
+impl Default for DamageMultipliers {
+    fn default() -> Self {
+        Self {
+            ballistic: 1.0,
+            laser: 1.0,
+            emp: 1.0,
+            area_denial: 1.0,
+            subversion: 1.0,
+        }
+    }
 }
 
 fn default_tier() -> u32 {

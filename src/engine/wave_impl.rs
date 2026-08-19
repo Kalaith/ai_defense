@@ -1,6 +1,6 @@
 //! Wave spawning and progression (refactored).
 
-use crate::data::EnemyDef;
+use crate::data::{DamageMultipliers, EnemyDef};
 use crate::engine::enemy::{Enemy, EnemyTuning, EnemyType};
 use macroquad::prelude::Vec2;
 use std::collections::HashMap;
@@ -55,6 +55,7 @@ pub struct SpawnEntry {
     pub scrap_reward: f32,
     pub spawn_point: Vec2,
     pub path_id: String,
+    pub damage_multipliers: DamageMultipliers,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -147,6 +148,7 @@ impl WaveManager {
                 entry.scrap_reward,
                 self.enemy_tuning.clone(),
                 entry.path_id,
+                entry.damage_multipliers,
             ));
             self.spawn_timer = self.spawn_interval;
         }
@@ -305,6 +307,7 @@ fn push_spawn(
         scrap_reward: def.scrap_reward,
         spawn_point,
         path_id,
+        damage_multipliers: def.damage_multipliers.clone(),
     });
 }
 

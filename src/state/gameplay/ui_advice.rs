@@ -81,6 +81,7 @@ pub struct PowerGridSnapshot {
 #[derive(Clone, Debug)]
 pub struct WavePreviewCard {
     pub counts: Vec<(EnemyType, usize)>,
+    pub counter_hint: Option<String>,
 }
 
 #[derive(Clone, Debug)]
@@ -117,6 +118,14 @@ impl GameplayState {
         let power = self.power_grid_snapshot();
         let wave_preview = self.wave_preview_card();
         let mut alerts = self.build_alerts(&power);
+        if let Some(hint) = &wave_preview.counter_hint {
+            alerts.push(AlertBanner {
+                severity: AlertSeverity::Warning,
+                label: crate::data::strings::text().alerts.counter_build.clone(),
+                detail: hint.clone(),
+                priority: 78,
+            });
+        }
         alerts.sort_by(|a, b| {
             alerts::severity_rank(b.severity)
                 .cmp(&alerts::severity_rank(a.severity))

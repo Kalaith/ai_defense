@@ -32,9 +32,6 @@ pub struct TowerTuning {
     pub subversion_chain_damage_fraction: f32,
     pub commander_death_radius: f32,
     pub commander_death_fraction: f32,
-    pub laser_vs_heavy_mult: f32,
-    pub laser_vs_scout_mult: f32,
-    pub ballistic_vs_heavy_mult: f32,
     pub heat_per_shot: f32,
 }
 
@@ -205,7 +202,10 @@ pub fn tick_towers(
                     hit_any = true;
                     hits += 1;
                     let was_alive = enemy.is_alive;
-                    enemy.take_damage(tower.damage * damage_mult * tuning.area_denial_damage_scale);
+                    enemy.take_damage(
+                        tower.damage * damage_mult * tuning.area_denial_damage_scale,
+                        &tower.tower_type,
+                    );
                     if was_alive && !enemy.is_alive {
                         kills += 1;
                         scrap_earned += enemy.scrap_reward * scrap_mult;
@@ -251,22 +251,10 @@ pub fn tick_towers(
             tower_stats[tower_idx].shots += 1;
             tower_stats[tower_idx].hits += 1;
             let target_pos = enemies[idx].position;
-            let target_type = enemies[idx].enemy_type.clone();
-            let mut damage = tower.damage * damage_mult;
-            if matches!(tower.tower_type, TowerType::Laser) {
-                match target_type {
-                    EnemyType::HeavyUnit => damage *= tuning.laser_vs_heavy_mult,
-                    EnemyType::Scout => damage *= tuning.laser_vs_scout_mult,
-                    _ => {}
-                }
-            } else if matches!(tower.tower_type, TowerType::Ballistic)
-                && matches!(target_type, EnemyType::HeavyUnit)
-            {
-                damage *= tuning.ballistic_vs_heavy_mult;
-            }
+            let damage = tower.damage * damage_mult;
 
             let was_alive = enemies[idx].is_alive;
-            enemies[idx].take_damage(damage);
+            enemies[idx].take_damage(damage, &tower.tower_type);
 
             if matches!(tower.tower_type, TowerType::Emp) {
                 enemies[idx].slowed_timer = enemies[idx].slowed_timer.max(tuning.emp_slow_duration);
@@ -287,7 +275,7 @@ pub fn tick_towers(
                         let dist = (enemy.position - burst_center).length();
                         if dist <= tuning.commander_death_radius {
                             let was_burst_alive = enemy.is_alive;
-                            enemy.take_damage(burst_damage);
+                            enemy.take_damage(burst_damage, &tower.tower_type);
                             if was_burst_alive && !enemy.is_alive {
                                 tower_stats[tower_idx].kills += 1;
                                 scrap_earned += enemy.scrap_reward * scrap_mult;
@@ -309,7 +297,7 @@ pub fn tick_towers(
                         let dist = (enemy.position - chain_center).length();
                         if dist <= tuning.subversion_chain_radius {
                             let was_chain_alive = enemy.is_alive;
-                            enemy.take_damage(chain_damage);
+                            enemy.take_damage(chain_damage, &tower.tower_type);
                             if was_chain_alive && !enemy.is_alive {
                                 tower_stats[tower_idx].kills += 1;
                                 scrap_earned += enemy.scrap_reward * scrap_mult;

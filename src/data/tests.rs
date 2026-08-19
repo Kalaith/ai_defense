@@ -39,6 +39,33 @@ fn embedded_game_data_loads_required_content() {
         );
         assert!(enemy.base_health > 0.0);
         assert!(enemy.speed > 0.0);
+        assert!(
+            !enemy.counter_hint.is_empty(),
+            "enemy {} needs a counter-build hint",
+            enemy.id
+        );
+        for multiplier in [
+            enemy.damage_multipliers.ballistic,
+            enemy.damage_multipliers.laser,
+            enemy.damage_multipliers.emp,
+            enemy.damage_multipliers.area_denial,
+            enemy.damage_multipliers.subversion,
+        ] {
+            assert!(multiplier > 0.0, "enemy multipliers must stay positive");
+        }
+        assert!(
+            [
+                enemy.damage_multipliers.ballistic,
+                enemy.damage_multipliers.laser,
+                enemy.damage_multipliers.emp,
+                enemy.damage_multipliers.area_denial,
+                enemy.damage_multipliers.subversion,
+            ]
+            .iter()
+            .any(|multiplier| (*multiplier - 1.0).abs() >= 0.2),
+            "enemy {} needs a meaningful resistance or weakness",
+            enemy.id
+        );
     }
 
     let building_ids: HashSet<&str> = data

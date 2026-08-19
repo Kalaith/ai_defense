@@ -3,8 +3,8 @@
 The MVP phases (economy/power, tower identity, threat scaling, factory sectors, beacon
 and scavenging, tower upgrades, food pressure, enemy variety, polish) are all built, as
 is the persistent evacuation ledger, permanent per-cycle escalation, the food ratchet,
-population water demand with drought consequences, and role-labelled sector awakenings
-that impose distinct machine-awareness pulses.
+population water demand with drought consequences, role-labelled sector awakenings that
+impose distinct machine-awareness pulses, and data-driven enemy counter-build profiles.
 What follows is the work the design review left open.
 
 ## Immediate improvements
@@ -26,7 +26,6 @@ What follows is the work the design review left open.
 
 ## Combat depth
 
-- 2–3 counter-build enemies that punish a specific tower type, so tower choice is situational.
 - Branching upgrades at max tower level — one identity fork per tower instead of flat +%.
 
 ## Content

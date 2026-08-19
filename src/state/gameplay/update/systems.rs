@@ -111,9 +111,6 @@ impl GameplayState {
             subversion_chain_damage_fraction: self.constants.tower.subversion_chain_damage_fraction,
             commander_death_radius: self.constants.tower.commander_death_radius,
             commander_death_fraction: self.constants.tower.commander_death_fraction,
-            laser_vs_heavy_mult: self.constants.tower.laser_vs_heavy_mult,
-            laser_vs_scout_mult: self.constants.tower.laser_vs_scout_mult,
-            ballistic_vs_heavy_mult: self.constants.tower.ballistic_vs_heavy_mult,
             heat_per_shot: self.constants.tower.heat_per_shot,
         };
 

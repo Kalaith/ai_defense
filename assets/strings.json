@@ -247,6 +247,7 @@
   },
 
   "alerts": {
+    "counter_build": "COUNTER-BUILD",
     "power_failure": "POWER FAILURE",
     "power_failure_detail": "{n} towers offline",
     "power_deficit": "POWER DEFICIT",

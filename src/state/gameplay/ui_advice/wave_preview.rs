@@ -15,8 +15,10 @@ impl GameplayState {
     /// roll of the wave that would come next.
     pub(super) fn wave_preview_card(&self) -> WavePreviewCard {
         if !self.wave_manager.wave_active {
+            let counts = self.wave_preview_counts();
             return WavePreviewCard {
-                counts: self.wave_preview_counts(),
+                counter_hint: self.counter_hint(&counts),
+                counts,
             };
         }
 
@@ -27,7 +29,10 @@ impl GameplayState {
         for entry in &self.wave_manager.spawn_queue {
             bump_enemy_count(&mut counts, entry.enemy_type.clone());
         }
-        WavePreviewCard { counts }
+        WavePreviewCard {
+            counter_hint: self.counter_hint(&counts),
+            counts,
+        }
     }
 
     pub(super) fn wave_preview_counts(&self) -> Vec<(EnemyType, usize)> {
@@ -67,6 +72,18 @@ impl GameplayState {
             &spawn_points,
             &self.wave_adaptation(),
         )
+    }
+
+    /// Surface the most dangerous archetype's counter-build note. Weighting by
+    /// threat value keeps a lone commander or walker from being hidden behind
+    /// a larger number of cheap scouts.
+    fn counter_hint(&self, counts: &[(EnemyType, usize)]) -> Option<String> {
+        self.enemy_defs
+            .iter()
+            .filter(|def| counts.iter().any(|(kind, _)| kind == &def.enemy_type))
+            .max_by_key(|def| def.threat_value)
+            .map(|def| def.counter_hint.clone())
+            .filter(|hint| !hint.is_empty())
     }
 }
 

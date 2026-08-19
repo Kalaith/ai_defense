@@ -100,9 +100,6 @@
     "subversion_chain_damage_fraction": 0.3,
     "commander_death_radius": 150.0,
     "commander_death_fraction": 0.1,
-    "laser_vs_heavy_mult": 1.5,
-    "laser_vs_scout_mult": 0.5,
-    "ballistic_vs_heavy_mult": 0.9,
     "heat_per_shot": 0.01
   },
   "sector": {

@@ -1,5 +1,6 @@
 //! Enemy types, pathing, and behavior.
 
+use crate::data::{DamageMultipliers, TowerType};
 use macroquad::prelude::Vec2;
 use macroquad_toolkit::rng;
 
@@ -30,6 +31,7 @@ pub struct Enemy {
     pub dodge_timer: f32,
     pub tuning: EnemyTuning,
     pub path_id: String,
+    pub damage_multipliers: DamageMultipliers,
 }
 
 impl Enemy {
@@ -41,6 +43,7 @@ impl Enemy {
         scrap_reward: f32,
         tuning: EnemyTuning,
         path_id: String,
+        damage_multipliers: DamageMultipliers,
     ) -> Self {
         Self {
             enemy_type,
@@ -56,16 +59,17 @@ impl Enemy {
             dodge_timer: 0.0,
             tuning,
             path_id,
+            damage_multipliers,
         }
     }
 
-    pub fn take_damage(&mut self, amount: f32) {
+    pub fn take_damage(&mut self, amount: f32, source: &TowerType) {
         if self.enemy_type == EnemyType::Scout && rng::chance(self.tuning.scout_dodge_chance) {
             self.dodge_timer = self.tuning.scout_dodge_duration;
             return;
         }
 
-        self.health -= amount;
+        self.health -= amount * self.damage_multipliers.for_tower(source);
         self.hit_flash_timer = self.tuning.hit_flash_duration;
         if self.health <= 0.0 {
             self.health = 0.0;

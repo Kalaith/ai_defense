@@ -11,6 +11,7 @@ You do not tell anyone that you were the lead researcher who unlocked the last A
 ## Gameplay
 
 - Place towers on powered pads to hold attack routes.
+- Read incoming armor profiles and counter each machine with the right tower family.
 - Clear debris and bring factory sections back online.
 - Balance food, scrap, morale, population, power, and enemy attention.
 - Keep outside scavenger teams active long enough to matter.
@@ -38,4 +39,3 @@ Templates use named placeholders like `{n}` or `{name}`; keep them intact when r
 Playable tower defense and factory-management loop with resource pressure, wave survival, and strategic expansion.
 
 Remaining work is listed in `TODO.md`.
-

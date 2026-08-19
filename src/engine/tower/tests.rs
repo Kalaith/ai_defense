@@ -11,9 +11,6 @@ fn test_tuning() -> TowerTuning {
         subversion_chain_damage_fraction: 0.3,
         commander_death_radius: 150.0,
         commander_death_fraction: 0.1,
-        laser_vs_heavy_mult: 1.5,
-        laser_vs_scout_mult: 0.5,
-        ballistic_vs_heavy_mult: 0.9,
         heat_per_shot: 0.01,
     }
 }
@@ -33,6 +30,7 @@ fn test_enemy(enemy_type: EnemyType, position: Vec2, health: f32) -> Enemy {
             slow_multiplier: 0.5,
         },
         "west".to_string(),
+        crate::data::DamageMultipliers::default(),
     )
 }
 
@@ -115,11 +113,58 @@ fn laser_tower_applies_heavy_unit_multiplier() {
     let tuning = test_tuning();
     let mut towers = vec![ready_tower(TowerType::Laser, vec2(0.0, 0.0), 100.0, 10.0)];
     let mut enemies = vec![test_enemy(EnemyType::HeavyUnit, vec2(5.0, 0.0), 1000.0)];
+    enemies[0].damage_multipliers.laser = 1.5;
 
     tick_towers(&mut towers, &mut enemies, 0.1, 1.0, 1.0, 1.0, 1.0, &tuning);
 
-    let expected_damage = 10.0 * tuning.laser_vs_heavy_mult;
+    let expected_damage = 10.0 * enemies[0].damage_multipliers.laser;
     assert_eq!(enemies[0].health, 1000.0 - expected_damage);
+}
+
+#[test]
+fn reactive_drone_plating_punishes_ballistic_damage() {
+    let mut towers = vec![ready_tower(
+        TowerType::Ballistic,
+        vec2(0.0, 0.0),
+        100.0,
+        20.0,
+    )];
+    let mut enemies = vec![test_enemy(EnemyType::Drone, vec2(5.0, 0.0), 100.0)];
+    enemies[0].damage_multipliers.ballistic = 0.55;
+
+    tick_towers(
+        &mut towers,
+        &mut enemies,
+        0.1,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        &test_tuning(),
+    );
+
+    assert_eq!(enemies[0].health, 89.0);
+}
+
+#[test]
+fn infiltrator_phase_mesh_is_weak_to_emp() {
+    let mut towers = vec![ready_tower(TowerType::Emp, vec2(0.0, 0.0), 100.0, 10.0)];
+    let mut enemies = vec![test_enemy(EnemyType::Saboteur, vec2(5.0, 0.0), 100.0)];
+    enemies[0].damage_multipliers.emp = 1.5;
+
+    tick_towers(
+        &mut towers,
+        &mut enemies,
+        0.1,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        &test_tuning(),
+    );
+
+    assert_eq!(enemies[0].health, 85.0);
+    assert!(enemies[0].slowed_timer > 0.0);
 }
 
 #[test]

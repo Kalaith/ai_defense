@@ -389,6 +389,7 @@ pub struct NotificationStrings {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AlertStrings {
+    pub counter_build: String,
     pub power_failure: String,
     /// `{n}`.
     pub power_failure_detail: String,
