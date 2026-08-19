@@ -2,7 +2,7 @@ use super::*;
 
 fn sample_save() -> SaveData {
     SaveData {
-        version: 3,
+        version: 4,
         wave_reached: 7,
         resources: SavedResources {
             power: 42.5,
@@ -36,6 +36,7 @@ fn sample_save() -> SaveData {
             y: 200.0,
             level: 2,
             specialization_id: Some("rail_driver".to_string()),
+            target_priority: Some("strongest".to_string()),
         }],
         slots: vec![SavedSlot {
             id: "slot_a".to_string(),

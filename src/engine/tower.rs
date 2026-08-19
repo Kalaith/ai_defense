@@ -9,6 +9,48 @@ use macroquad_toolkit::timing::Cooldown;
 /// `TowerDef::tower_type`), and data must never depend on engine (§2.1).
 pub use crate::data::TowerType;
 
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum TargetPriority {
+    #[default]
+    Closest,
+    First,
+    Strongest,
+    Wounded,
+    Fastest,
+}
+
+impl TargetPriority {
+    pub fn next(self) -> Self {
+        match self {
+            Self::Closest => Self::First,
+            Self::First => Self::Strongest,
+            Self::Strongest => Self::Wounded,
+            Self::Wounded => Self::Fastest,
+            Self::Fastest => Self::Closest,
+        }
+    }
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Closest => "closest",
+            Self::First => "first",
+            Self::Strongest => "strongest",
+            Self::Wounded => "wounded",
+            Self::Fastest => "fastest",
+        }
+    }
+
+    pub fn from_str(value: &str) -> Self {
+        match value {
+            "first" => Self::First,
+            "strongest" => Self::Strongest,
+            "wounded" => Self::Wounded,
+            "fastest" => Self::Fastest,
+            _ => Self::Closest,
+        }
+    }
+}
+
 pub struct Tower {
     pub tower_type: TowerType,
     pub tower_id: String,
@@ -24,6 +66,7 @@ pub struct Tower {
     pub color: Color,
     pub specialization_id: Option<String>,
     pub specialization_effect: Option<SpecializationEffect>,
+    pub target_priority: TargetPriority,
 }
 
 #[derive(Clone, Debug)]
@@ -143,6 +186,7 @@ impl Tower {
             color,
             specialization_id: None,
             specialization_effect: None,
+            target_priority: TargetPriority::default(),
         }
     }
 
@@ -259,20 +303,8 @@ pub fn tick_towers(
             continue;
         }
 
-        // Find nearest enemy in range
-        let mut best_idx = None;
-        let mut best_dist = f32::MAX;
         let range = tower.range * range_mult;
-        for (i, enemy) in enemies.iter().enumerate() {
-            if !enemy.is_alive {
-                continue;
-            }
-            let dist = (enemy.position - tower.position).length();
-            if dist <= range && dist < best_dist {
-                best_dist = dist;
-                best_idx = Some(i);
-            }
-        }
+        let best_idx = select_target(tower, enemies, range);
 
         if let Some(idx) = best_idx {
             tower.fire(fire_rate_mult);
@@ -451,6 +483,63 @@ pub fn tick_towers(
         heat_generated,
         death_positions,
         tower_stats,
+    }
+}
+
+fn select_target(tower: &Tower, enemies: &[Enemy], range: f32) -> Option<usize> {
+    let mut best: Option<(usize, f32)> = None;
+    for (idx, enemy) in enemies.iter().enumerate() {
+        if !enemy.is_alive {
+            continue;
+        }
+        let distance = (enemy.position - tower.position).length();
+        if distance > range {
+            continue;
+        }
+        let replace = best
+            .map(|(best_idx, best_distance)| {
+                target_precedes(
+                    tower.target_priority,
+                    enemy,
+                    distance,
+                    &enemies[best_idx],
+                    best_distance,
+                )
+            })
+            .unwrap_or(true);
+        if replace {
+            best = Some((idx, distance));
+        }
+    }
+    best.map(|(idx, _)| idx)
+}
+
+fn target_precedes(
+    priority: TargetPriority,
+    candidate: &Enemy,
+    candidate_distance: f32,
+    current: &Enemy,
+    current_distance: f32,
+) -> bool {
+    match priority {
+        TargetPriority::Closest => candidate_distance < current_distance,
+        TargetPriority::First => {
+            candidate.path_index > current.path_index
+                || (candidate.path_index == current.path_index
+                    && candidate_distance < current_distance)
+        }
+        TargetPriority::Strongest => {
+            candidate.max_health > current.max_health
+                || (candidate.max_health == current.max_health && candidate.health > current.health)
+        }
+        TargetPriority::Wounded => {
+            candidate.health < current.health
+                || (candidate.health == current.health && candidate_distance < current_distance)
+        }
+        TargetPriority::Fastest => {
+            candidate.speed > current.speed
+                || (candidate.speed == current.speed && candidate_distance < current_distance)
+        }
     }
 }
 

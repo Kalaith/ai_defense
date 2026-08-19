@@ -2,6 +2,7 @@
 
 use crate::data::strings::{fill, text};
 use crate::data::GameData;
+use crate::engine::tower::TargetPriority;
 use crate::ui::{self, ConsoleButtonState, ConsoleIcon};
 use macroquad::prelude::*;
 use macroquad_toolkit::colors::dark;
@@ -14,7 +15,9 @@ impl GameplayState {
             Rect::new(rect.x + 14.0, rect.y + 14.0, rect.w * 0.56, rect.h - 28.0),
             idx,
             data,
+            false,
         );
+        self.draw_target_priority_control(rect, idx);
         let Some(tower) = self.towers.get(idx) else {
             return;
         };
@@ -66,6 +69,38 @@ impl GameplayState {
             },
         ) {
             self.upgrade_tower(idx);
+        }
+    }
+
+    fn draw_target_priority_control(&mut self, rect: Rect, tower_idx: usize) {
+        let Some(priority) = self
+            .towers
+            .get(tower_idx)
+            .map(|tower| tower.target_priority)
+        else {
+            return;
+        };
+        let t = &text().panels;
+        let mode = match priority {
+            TargetPriority::Closest => &t.target_closest,
+            TargetPriority::First => &t.target_first,
+            TargetPriority::Strongest => &t.target_strongest,
+            TargetPriority::Wounded => &t.target_wounded,
+            TargetPriority::Fastest => &t.target_fastest,
+        };
+        let label = fill(&t.target_priority, &[("mode", mode)]);
+        if ui::draw_console_button(
+            rect.x + 56.0,
+            rect.y + 84.0,
+            (rect.w * 0.36).min(280.0),
+            28.0,
+            &label,
+            ConsoleButtonState::Affordable,
+        ) {
+            if let Some(tower) = self.towers.get_mut(tower_idx) {
+                tower.target_priority = tower.target_priority.next();
+            }
+            self.autosave();
         }
     }
 
@@ -152,7 +187,13 @@ impl GameplayState {
 
     /// Read-only tower readout, also embedded in the pad context when a pad is
     /// occupied.
-    pub(super) fn draw_tower_context_summary(&self, rect: Rect, idx: usize, data: &GameData) {
+    pub(super) fn draw_tower_context_summary(
+        &self,
+        rect: Rect,
+        idx: usize,
+        data: &GameData,
+        show_activity: bool,
+    ) {
         let Some(tower) = self.towers.get(idx) else {
             return;
         };
@@ -197,21 +238,23 @@ impl GameplayState {
             13.0,
             dark::TEXT_BRIGHT,
         );
-        ui::draw_bounded_text(
-            &fill(
-                &text().panels.tower_wave_stats,
-                &[
-                    ("shots", &stats.shots_this_wave.to_string()),
-                    ("hits", &stats.hits_this_wave.to_string()),
-                    ("kills", &stats.kills_this_wave.to_string()),
-                ],
-            ),
-            rect.x + 48.0,
-            rect.y + 84.0,
-            rect.w - 52.0,
-            12.0,
-            dark::TEXT_DIM,
-        );
+        if show_activity {
+            ui::draw_bounded_text(
+                &fill(
+                    &text().panels.tower_wave_stats,
+                    &[
+                        ("shots", &stats.shots_this_wave.to_string()),
+                        ("hits", &stats.hits_this_wave.to_string()),
+                        ("kills", &stats.kills_this_wave.to_string()),
+                    ],
+                ),
+                rect.x + 48.0,
+                rect.y + 84.0,
+                rect.w - 52.0,
+                12.0,
+                dark::TEXT_DIM,
+            );
+        }
         let covered =
             self.covered_paths_for_range(tower.position, self.effective_tower_range(tower.range));
         let coverage = if covered.is_empty() {
@@ -222,13 +265,15 @@ impl GameplayState {
                 &[("paths", &self.join_path_names(&covered))],
             )
         };
-        ui::draw_bounded_text(
-            &coverage,
-            rect.x + 48.0,
-            rect.y + 104.0,
-            rect.w - 52.0,
-            12.0,
-            dark::ACCENT,
-        );
+        if show_activity {
+            ui::draw_bounded_text(
+                &coverage,
+                rect.x + 48.0,
+                rect.y + 104.0,
+                rect.w - 52.0,
+                12.0,
+                dark::ACCENT,
+            );
+        }
     }
 }

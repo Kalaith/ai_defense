@@ -458,6 +458,10 @@ impl GameplayState {
                         tower.specialize(specialization.id.clone(), specialization.effect);
                     }
                 }
+                if let Some(target_priority) = &saved.target_priority {
+                    tower.target_priority =
+                        crate::engine::tower::TargetPriority::from_str(target_priority);
+                }
                 let tower_idx = self.towers.len();
                 // Link tower back to slot by position
                 for slot in self.map_state.slots.iter_mut() {
@@ -522,7 +526,7 @@ impl GameplayState {
 
     fn build_save_data(&self) -> SaveData {
         SaveData {
-            version: 3,
+            version: 4,
             wave_reached: self.current_wave,
             resources: SavedResources {
                 power: self.resources.power,
@@ -564,6 +568,7 @@ impl GameplayState {
                     y: t.position.y,
                     level: t.level,
                     specialization_id: t.specialization_id.clone(),
+                    target_priority: Some(t.target_priority.as_str().to_string()),
                 })
                 .collect(),
             slots: self

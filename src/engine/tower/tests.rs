@@ -259,6 +259,57 @@ fn passive_specializations_change_tower_geometry_and_rate() {
 }
 
 #[test]
+fn targeting_doctrines_select_the_requested_threat() {
+    let mut tower = ready_tower(TowerType::Ballistic, vec2(0.0, 0.0), 200.0, 10.0);
+    let mut enemies = vec![
+        test_enemy(EnemyType::Scout, vec2(10.0, 0.0), 50.0),
+        test_enemy(EnemyType::HeavyUnit, vec2(30.0, 0.0), 300.0),
+        test_enemy(EnemyType::Drone, vec2(60.0, 0.0), 100.0),
+    ];
+    enemies[0].path_index = 1;
+    enemies[1].path_index = 4;
+    enemies[2].path_index = 2;
+    enemies[0].health = 12.0;
+    enemies[0].speed = 70.0;
+    enemies[2].speed = 120.0;
+
+    tower.target_priority = TargetPriority::Closest;
+    assert_eq!(select_target(&tower, &enemies, tower.range), Some(0));
+    tower.target_priority = TargetPriority::First;
+    assert_eq!(select_target(&tower, &enemies, tower.range), Some(1));
+    tower.target_priority = TargetPriority::Strongest;
+    assert_eq!(select_target(&tower, &enemies, tower.range), Some(1));
+    tower.target_priority = TargetPriority::Wounded;
+    assert_eq!(select_target(&tower, &enemies, tower.range), Some(0));
+    tower.target_priority = TargetPriority::Fastest;
+    assert_eq!(select_target(&tower, &enemies, tower.range), Some(2));
+}
+
+#[test]
+fn targeting_ties_are_stable() {
+    let mut tower = ready_tower(TowerType::Laser, vec2(0.0, 0.0), 200.0, 10.0);
+    let enemies = vec![
+        test_enemy(EnemyType::Drone, vec2(-20.0, 0.0), 100.0),
+        test_enemy(EnemyType::Drone, vec2(20.0, 0.0), 100.0),
+    ];
+
+    for priority in [
+        TargetPriority::Closest,
+        TargetPriority::First,
+        TargetPriority::Strongest,
+        TargetPriority::Wounded,
+        TargetPriority::Fastest,
+    ] {
+        tower.target_priority = priority;
+        assert_eq!(
+            select_target(&tower, &enemies, tower.range),
+            Some(0),
+            "equal targets should keep source order for {priority:?}"
+        );
+    }
+}
+
+#[test]
 fn commander_death_deals_splash_damage_to_nearby_enemies() {
     let tuning = test_tuning();
     let mut towers = vec![ready_tower(

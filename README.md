@@ -12,6 +12,7 @@ You do not tell anyone that you were the lead researcher who unlocked the last A
 
 - Place towers on powered pads to hold attack routes.
 - Read incoming armor profiles and counter each machine with the right tower family.
+- Set each tower to hunt the closest, leading, strongest, wounded, or fastest threat.
 - Take max-level towers into one of two irreversible final assemblies.
 - Clear debris and bring factory sections back online.
 - Balance food, scrap, morale, population, power, and enemy attention.

@@ -125,6 +125,7 @@ impl Game {
                         tower.damage *= gameplay.constants.tower.upgrade_damage_mult;
                         tower.range *= gameplay.constants.tower.upgrade_range_mult;
                     }
+                    tower.target_priority = crate::engine::tower::TargetPriority::Strongest;
                     gameplay.towers.push(tower);
                     gameplay.tower_stats.push(Default::default());
                     gameplay.map_state.slots[0].tower_index = Some(0);

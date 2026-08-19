@@ -116,6 +116,7 @@ impl GameplayState {
                         ),
                         tower_idx,
                         data,
+                        true,
                     );
                     if ui::draw_console_button(
                         rect.x + rect.w - 182.0,

@@ -40,6 +40,5 @@ What follows is the work the design review left open.
 
 ## Testing
 
-- Deterministic wave and tower-targeting tests covering simultaneous enemies, priority ties,
-  and late-wave pressure spikes.
+- Deterministic wave-pressure tests covering simultaneous entrances and late-wave spikes.
 - Scripted scenario replays for common defense builds, to catch balance regressions.

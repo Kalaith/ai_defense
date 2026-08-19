@@ -584,6 +584,13 @@ pub struct PanelStrings {
     pub tower_stats: String,
     /// `{shots}`, `{hits}`, `{kills}`.
     pub tower_wave_stats: String,
+    /// `{mode}`.
+    pub target_priority: String,
+    pub target_closest: String,
+    pub target_first: String,
+    pub target_strongest: String,
+    pub target_wounded: String,
+    pub target_fastest: String,
     pub coverage_none: String,
     /// `{paths}`.
     pub coverage: String,

@@ -118,6 +118,8 @@ pub struct SavedTower {
     pub level: u32,
     #[serde(default)]
     pub specialization_id: Option<String>,
+    #[serde(default)]
+    pub target_priority: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
