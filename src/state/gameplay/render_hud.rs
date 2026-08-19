@@ -48,12 +48,12 @@ impl GameplayState {
         let usable_top_w = (left_w - zone_gap * 2.0).max(1.0);
         let (survival_w, power_w, threat_w) = if usable_top_w < 740.0 {
             (
+                usable_top_w * 0.40,
                 usable_top_w * 0.34,
-                usable_top_w * 0.38,
-                usable_top_w * 0.28,
+                usable_top_w * 0.26,
             )
         } else {
-            let survival_w = (usable_top_w * 0.34).clamp(280.0, 390.0);
+            let survival_w = (usable_top_w * 0.40).clamp(320.0, 430.0);
             let threat_w = (usable_top_w * 0.24).clamp(220.0, 285.0);
             let power_w = (usable_top_w - survival_w - threat_w).max(260.0);
             (survival_w, power_w, threat_w)
@@ -110,7 +110,7 @@ impl GameplayState {
         );
 
         let y = rect.y + 49.0;
-        let col_w = rect.w / 4.0;
+        let col_w = rect.w / 5.0;
         draw_metric_icon(
             ConsoleIcon::People,
             rect.x + 12.0,
@@ -144,8 +144,16 @@ impl GameplayState {
             dark::POSITIVE
         };
         draw_metric_icon(
-            ConsoleIcon::Morale,
+            ConsoleIcon::Water,
             rect.x + col_w * 2.0,
+            y,
+            &t.water,
+            &format!("{:.0}", self.resources.water),
+            dark::TEXT_BRIGHT,
+        );
+        draw_metric_icon(
+            ConsoleIcon::Morale,
+            rect.x + col_w * 3.0,
             y,
             &t.morale,
             &format!("{:.0}%", self.population.morale),
@@ -158,7 +166,7 @@ impl GameplayState {
         };
         draw_metric_icon(
             ConsoleIcon::Health,
-            rect.x + col_w * 3.0,
+            rect.x + col_w * 4.0,
             y,
             &t.health,
             &format!("{:.0}%", self.population.health),

@@ -192,12 +192,21 @@ impl GameplayState {
         // Holding the beacon strains food: the holdout shelters and the factory
         // runs hot. This is the pressure that forces the player up the risk
         // curve — low beacon phases can't feed a growing holdout for long.
-        let consumption_mult = if self.beacon_active {
-            self.constants.population.beacon_food_multiplier
+        let (food_mult, water_mult) = if self.beacon_active {
+            (
+                self.constants.population.beacon_food_multiplier,
+                self.constants.population.beacon_water_multiplier,
+            )
         } else {
-            1.0
+            (1.0, 1.0)
         };
-        self.population.tick(dt, &self.constants, consumption_mult);
+        self.population.tick(
+            dt,
+            &self.constants,
+            food_mult,
+            water_mult,
+            &mut self.resources.water,
+        );
         self.resources.scrap += self.population.productivity(&self.constants)
             * self.constants.economy.productivity_scrap_rate
             * dt;
@@ -207,6 +216,7 @@ impl GameplayState {
         let boon = self.unlocked_building_boon();
         self.resources.scrap += boon.scrap_per_sec * dt;
         self.population.food_supply += boon.food_per_sec * dt;
+        self.resources.water += boon.water_per_sec * dt;
     }
 
     pub(super) fn update_threat(&mut self, dt: f32) {

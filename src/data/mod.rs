@@ -70,6 +70,7 @@ pub struct StartingConstants {
     pub morale: f32,
     pub health: f32,
     pub food_supply: f32,
+    pub water_supply: f32,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -90,8 +91,13 @@ pub struct PopulationConstants {
     /// Consumption multiplier applied while the beacon is active — the holdout
     /// shelters and the factory runs hot, so holding the beacon strains food.
     pub beacon_food_multiplier: f32,
+    pub water_per_person_per_sec: f32,
+    /// Water systems work harder while the beacon is drawing an assault.
+    pub beacon_water_multiplier: f32,
     pub starve_morale_loss_per_sec: f32,
     pub starve_health_loss_per_sec: f32,
+    pub thirst_morale_loss_per_sec: f32,
+    pub thirst_health_loss_per_sec: f32,
     pub recover_morale_per_sec: f32,
     pub recover_health_per_sec: f32,
     pub death_interval_sec: f32,

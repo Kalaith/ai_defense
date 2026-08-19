@@ -76,6 +76,23 @@ impl GameplayState {
             });
         }
 
+        let water_seconds = self.water_seconds_remaining();
+        if water_seconds <= 40.0 {
+            alerts.push(AlertBanner {
+                severity: AlertSeverity::Critical,
+                label: t.water_shortage.clone(),
+                detail: fill(&t.water_detail, &[("secs", &format!("{water_seconds:.0}"))]),
+                priority: 89,
+            });
+        } else if water_seconds <= 90.0 {
+            alerts.push(AlertBanner {
+                severity: AlertSeverity::Warning,
+                label: t.water_low.clone(),
+                detail: fill(&t.water_detail, &[("secs", &format!("{water_seconds:.0}"))]),
+                priority: 74,
+            });
+        }
+
         if self.saboteur_inbound() {
             alerts.push(AlertBanner {
                 severity: AlertSeverity::Critical,
@@ -164,14 +181,39 @@ impl GameplayState {
     /// Seconds of food left at the current net burn, or infinity when
     /// production covers the holdout.
     pub(super) fn food_seconds_remaining(&self) -> f32 {
+        let mult = if self.beacon_active {
+            self.constants.population.beacon_food_multiplier
+        } else {
+            1.0
+        };
         let consumption =
-            self.population.count as f32 * self.constants.population.food_per_person_per_sec;
+            self.population.count as f32 * self.constants.population.food_per_person_per_sec * mult;
         let production = self.unlocked_building_boon().food_per_sec;
         let net = consumption - production;
         if net <= 0.0 {
             f32::INFINITY
         } else {
             self.population.food_supply / net
+        }
+    }
+
+    /// Seconds of water left at the current net burn, or infinity when active
+    /// reclamation covers the holdout.
+    pub(super) fn water_seconds_remaining(&self) -> f32 {
+        let mult = if self.beacon_active {
+            self.constants.population.beacon_water_multiplier
+        } else {
+            1.0
+        };
+        let consumption = self.population.count as f32
+            * self.constants.population.water_per_person_per_sec
+            * mult;
+        let production = self.unlocked_building_boon().water_per_sec;
+        let net = consumption - production;
+        if net <= 0.0 {
+            f32::INFINITY
+        } else {
+            self.resources.water / net
         }
     }
 

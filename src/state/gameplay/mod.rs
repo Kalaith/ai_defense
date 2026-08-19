@@ -129,6 +129,7 @@ pub struct Resources {
     pub power: f32,
     pub scrap: f32,
     pub data_cores: u32,
+    pub water: f32,
 }
 
 /// Cumulative run totals captured when a beacon cycle starts, so the
@@ -255,6 +256,7 @@ impl GameplayState {
                 power: data.constants.starting.power,
                 scrap: data.constants.starting.scrap,
                 data_cores: 0,
+                water: data.constants.starting.water_supply,
             },
             current_wave: 0,
             paused: false,
@@ -365,6 +367,11 @@ impl GameplayState {
             power: save.resources.power,
             scrap: save.resources.scrap,
             data_cores: save.resources.data_cores,
+            water: if save.version < 2 {
+                data.constants.starting.water_supply
+            } else {
+                save.resources.water
+            },
         };
 
         self.population.count = save.population.count;
@@ -483,13 +490,13 @@ impl GameplayState {
 
     fn build_save_data(&self) -> SaveData {
         SaveData {
-            version: 1,
+            version: 2,
             wave_reached: self.current_wave,
             resources: SavedResources {
                 power: self.resources.power,
                 scrap: self.resources.scrap,
                 data_cores: self.resources.data_cores,
-                water: 0.0,
+                water: self.resources.water,
             },
             population: SavedPopulation {
                 count: self.population.count,

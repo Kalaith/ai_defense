@@ -2,7 +2,8 @@
 
 The MVP phases (economy/power, tower identity, threat scaling, factory sectors, beacon
 and scavenging, tower upgrades, food pressure, enemy variety, polish) are all built, as
-is the persistent evacuation ledger, permanent per-cycle escalation, and the food ratchet.
+is the persistent evacuation ledger, permanent per-cycle escalation, the food ratchet,
+and population water demand with drought consequences.
 What follows is the work the design review left open.
 
 ## Immediate improvements
@@ -16,9 +17,6 @@ What follows is the work the design review left open.
 
 ## Stakes and the meta-loop
 
-- Make water a real demand: the population consumes it, running dry kills people. Today
-  water is produced and costs beacon volume but nothing ever draws on it — a dead stake,
-  and the cheapest way to land the "grow louder just to keep your own people breathing" axis.
 - Split the factory into life-support vs. military/economy sectors and make population a
   managed lever — grow the holdout for workforce and evacuation, but every mouth needs
   food/water buildings that raise beacon volume.

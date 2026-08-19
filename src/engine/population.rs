@@ -31,21 +31,44 @@ impl Population {
         self.count as f32 * morale_factor * health_factor
     }
 
-    /// `consumption_mult` scales food draw for the current situation (e.g. the
-    /// holdout eats faster while the beacon is active and under assault).
-    pub fn tick(&mut self, dt: f32, constants: &GameConstants, consumption_mult: f32) {
-        let consumption = self.count as f32
+    /// Advance the holdout's food and water demand. Water lives in the shared
+    /// resource ledger because factory buildings produce it directly.
+    pub fn tick(
+        &mut self,
+        dt: f32,
+        constants: &GameConstants,
+        food_consumption_mult: f32,
+        water_consumption_mult: f32,
+        water_supply: &mut f32,
+    ) {
+        let food_consumption = self.count as f32
             * constants.population.food_per_person_per_sec
-            * consumption_mult
+            * food_consumption_mult
             * dt;
-        if consumption > 0.0 {
-            self.food_supply = (self.food_supply - consumption).max(0.0);
+        let water_consumption = self.count as f32
+            * constants.population.water_per_person_per_sec
+            * water_consumption_mult
+            * dt;
+        if food_consumption > 0.0 {
+            self.food_supply = (self.food_supply - food_consumption).max(0.0);
+        }
+        if water_consumption > 0.0 {
+            *water_supply = (*water_supply - water_consumption).max(0.0);
         }
 
-        if self.food_supply <= 0.0 {
+        let starving = self.food_supply <= 0.0;
+        let thirsty = *water_supply <= 0.0;
+
+        if starving {
             self.morale -= constants.population.starve_morale_loss_per_sec * dt;
             self.health -= constants.population.starve_health_loss_per_sec * dt;
+        }
+        if thirsty {
+            self.morale -= constants.population.thirst_morale_loss_per_sec * dt;
+            self.health -= constants.population.thirst_health_loss_per_sec * dt;
+        }
 
+        if starving || thirsty {
             if self.health < constants.population.death_health_threshold && self.count > 0 {
                 self.death_timer += dt;
                 while self.death_timer >= constants.population.death_interval_sec && self.count > 0
@@ -68,3 +91,6 @@ impl Population {
         self.health = self.health.clamp(0.0, 100.0);
     }
 }
+
+#[cfg(test)]
+mod tests;

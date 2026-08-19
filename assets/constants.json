@@ -5,7 +5,8 @@
     "scrap": 75.0,
     "morale": 50.0,
     "health": 80.0,
-    "food_supply": 100.0
+    "food_supply": 100.0,
+    "water_supply": 100.0
   },
   "economy": {
     "power_cap": 200.0,
@@ -18,8 +19,12 @@
     "food_consumption_per_person": 1.0,
     "food_per_person_per_sec": 0.03,
     "beacon_food_multiplier": 1.2,
+    "water_per_person_per_sec": 0.05,
+    "beacon_water_multiplier": 1.35,
     "starve_morale_loss_per_sec": 2.0,
     "starve_health_loss_per_sec": 1.0,
+    "thirst_morale_loss_per_sec": 3.0,
+    "thirst_health_loss_per_sec": 2.0,
     "recover_morale_per_sec": 1.0,
     "recover_health_per_sec": 0.5,
     "death_interval_sec": 5.0,

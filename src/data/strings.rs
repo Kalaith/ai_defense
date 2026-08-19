@@ -145,6 +145,7 @@ pub struct HudStrings {
     /// `{count}`, `{max}`.
     pub pop_value: String,
     pub food: String,
+    pub water: String,
     pub morale: String,
     pub health: String,
     pub power_grid: String,
@@ -396,6 +397,10 @@ pub struct AlertStrings {
     pub food_low: String,
     /// `{secs}` — shared by both food alerts.
     pub food_detail: String,
+    pub water_shortage: String,
+    pub water_low: String,
+    /// `{secs}` — shared by both water alerts.
+    pub water_detail: String,
     pub infiltrator: String,
     pub infiltrator_detail: String,
     pub team_at_risk: String,

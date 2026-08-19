@@ -2,7 +2,7 @@ use super::*;
 
 fn sample_save() -> SaveData {
     SaveData {
-        version: 1,
+        version: 2,
         wave_reached: 7,
         resources: SavedResources {
             power: 42.5,

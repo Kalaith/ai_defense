@@ -50,8 +50,8 @@ impl GameplayState {
 
         self.update_combat(dt);
         self.update_power(dt);
-        self.update_population(dt);
         self.update_building_boons(dt);
+        self.update_population(dt);
         self.update_threat(dt);
         self.update_factory();
         self.update_notifications(dt);

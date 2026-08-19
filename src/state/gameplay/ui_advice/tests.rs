@@ -30,11 +30,12 @@ fn objective_falls_back_to_tower_when_repairs_are_not_affordable() {
 }
 
 #[test]
-fn alert_builder_emits_power_and_food_thresholds() {
+fn alert_builder_emits_power_food_and_water_thresholds() {
     let data = GameData::load();
     let mut state = GameplayState::new(&data);
     state.resources.power = 0.0;
     state.population.food_supply = 1.0;
+    state.resources.water = 1.0;
     state.towers.push(crate::engine::tower::Tower::new(
         crate::engine::tower::TowerType::Ballistic,
         "ballistic_turret".to_string(),
@@ -52,6 +53,7 @@ fn alert_builder_emits_power_and_food_thresholds() {
 
     assert!(advice.alerts.iter().any(|a| a.label == "POWER FAILURE"));
     assert!(advice.alerts.iter().any(|a| a.label == "FOOD SHORTAGE"));
+    assert!(advice.alerts.iter().any(|a| a.label == "WATER SHORTAGE"));
 }
 
 #[test]
