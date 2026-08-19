@@ -91,6 +91,8 @@ pub struct SavedPopulation {
     pub morale: f32,
     pub health: f32,
     pub food_supply: f32,
+    #[serde(default)]
+    pub workforce_policy: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

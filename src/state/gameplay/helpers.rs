@@ -74,6 +74,23 @@ pub fn apply_upgrade_levels(tower: &mut Tower, level: u32, constants: &crate::da
 }
 
 impl GameplayState {
+    pub fn shelter_capacity(&self) -> u32 {
+        let active = self.factory_online_count() as u32;
+        self.constants.population.shelter_base
+            + active * self.constants.population.shelter_per_active_sector
+            + if self.factory.is_sector_active("logistics_hub") {
+                self.constants.population.shelter_logistics_bonus
+            } else {
+                0
+            }
+    }
+
+    pub fn overcrowded_population(&self) -> u32 {
+        self.population
+            .count
+            .saturating_sub(self.shelter_capacity())
+    }
+
     pub fn is_tower_unlocked(&self, tower_id: &str) -> bool {
         match self.unlocks.towers.get(tower_id) {
             Some(rule) => self.unlock_requires_met(&rule.requires),

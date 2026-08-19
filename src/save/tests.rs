@@ -2,7 +2,7 @@ use super::*;
 
 fn sample_save() -> SaveData {
     SaveData {
-        version: 4,
+        version: 5,
         wave_reached: 7,
         resources: SavedResources {
             power: 42.5,
@@ -15,6 +15,7 @@ fn sample_save() -> SaveData {
             morale: 0.6,
             health: 0.9,
             food_supply: 22.0,
+            workforce_policy: Some("salvage".to_string()),
         },
         threat: SavedThreat {
             energy: 3.0,
@@ -91,4 +92,5 @@ fn legacy_save_missing_newer_fields_loads_with_defaults() {
     assert_eq!(restored.vault_takeover_progress, 0.0);
     assert!(!restored.vault_upload_complete);
     assert_eq!(restored.resources.water, 0.0);
+    assert_eq!(restored.population.workforce_policy, None);
 }

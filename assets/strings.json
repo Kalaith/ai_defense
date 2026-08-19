@@ -287,7 +287,9 @@
     "machine_watching": "MACHINE WATCHING",
     "awareness_detail": "{pct}% threat",
     "factory_damage": "FACTORY DAMAGE",
-    "factory_damage_detail": "{pct}% integrity"
+    "factory_damage_detail": "{pct}% integrity",
+    "overcrowded": "SHELTER OVER CAPACITY",
+    "overcrowded_detail": "{n} people lack bunks · capacity {capacity}"
   },
 
   "advice": {
@@ -338,6 +340,22 @@
     "purpose_income": "Increase resource income",
     "purpose_turn_online": "Turn repaired machinery online",
     "purpose_next_damaged": "Repair the next damaged system"
+  },
+
+  "workforce": {
+    "title": "HOLDOUT WORK SHIFT",
+    "subtitle": "{count}/{capacity} people sheltered · choose where every able hand goes",
+    "hud_button": "SHIFT: {mode}",
+    "sustain": "SUSTAIN",
+    "sustain_detail": "Stretch stores: -28% food/water use, -30% scrap output, -8% tower damage.",
+    "balanced": "BALANCED",
+    "balanced_detail": "Split crews evenly. Normal consumption, scrap output, and tower damage.",
+    "salvage": "SALVAGE",
+    "salvage_detail": "Strip the ruins: +55% workforce scrap, +25% supply use, +0.18 noise/s.",
+    "defense": "DEFENSE",
+    "defense_detail": "Man every gun: +20% tower damage, -25% workforce scrap, +15% supply use.",
+    "active": "{mode} — ACTIVE",
+    "close": "KEEP CURRENT SHIFT"
   },
 
   "boon": {

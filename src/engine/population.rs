@@ -2,12 +2,75 @@
 
 use crate::data::GameConstants;
 
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum WorkforcePolicy {
+    Sustain,
+    #[default]
+    Balanced,
+    Salvage,
+    Defense,
+}
+
+impl WorkforcePolicy {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Sustain => "sustain",
+            Self::Balanced => "balanced",
+            Self::Salvage => "salvage",
+            Self::Defense => "defense",
+        }
+    }
+
+    pub fn from_str(value: &str) -> Self {
+        match value {
+            "sustain" => Self::Sustain,
+            "salvage" => Self::Salvage,
+            "defense" => Self::Defense,
+            _ => Self::Balanced,
+        }
+    }
+
+    pub fn consumption_mult(self, constants: &GameConstants) -> f32 {
+        match self {
+            Self::Sustain => constants.population.workforce.sustain_consumption_mult,
+            Self::Balanced => 1.0,
+            Self::Salvage => constants.population.workforce.salvage_consumption_mult,
+            Self::Defense => constants.population.workforce.defense_consumption_mult,
+        }
+    }
+
+    pub fn productivity_mult(self, constants: &GameConstants) -> f32 {
+        match self {
+            Self::Sustain => constants.population.workforce.sustain_productivity_mult,
+            Self::Balanced => 1.0,
+            Self::Salvage => constants.population.workforce.salvage_productivity_mult,
+            Self::Defense => constants.population.workforce.defense_productivity_mult,
+        }
+    }
+
+    pub fn tower_damage_mult(self, constants: &GameConstants) -> f32 {
+        match self {
+            Self::Sustain => constants.population.workforce.sustain_damage_mult,
+            Self::Defense => constants.population.workforce.defense_damage_mult,
+            Self::Balanced | Self::Salvage => 1.0,
+        }
+    }
+
+    pub fn noise_per_sec(self, constants: &GameConstants) -> f32 {
+        match self {
+            Self::Salvage => constants.population.workforce.salvage_noise_per_sec,
+            Self::Sustain | Self::Balanced | Self::Defense => 0.0,
+        }
+    }
+}
+
 pub struct Population {
     pub count: u32,
     pub morale: f32,
     pub health: f32,
     pub food_supply: f32,
     pub death_timer: f32,
+    pub workforce_policy: WorkforcePolicy,
 }
 
 impl Population {
@@ -18,6 +81,7 @@ impl Population {
             health: constants.starting.health,
             food_supply: constants.starting.food_supply,
             death_timer: 0.0,
+            workforce_policy: WorkforcePolicy::default(),
         }
     }
 
@@ -89,6 +153,19 @@ impl Population {
 
         self.morale = self.morale.clamp(0.0, 100.0);
         self.health = self.health.clamp(0.0, 100.0);
+    }
+
+    pub fn apply_overcrowding(&mut self, excess: u32, dt: f32, constants: &GameConstants) {
+        if excess == 0 {
+            return;
+        }
+        self.morale = (self.morale
+            - excess as f32
+                * constants
+                    .population
+                    .overcrowding_morale_loss_per_person_per_sec
+                * dt)
+            .max(0.0);
     }
 }
 

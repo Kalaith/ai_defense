@@ -16,6 +16,7 @@ You do not tell anyone that you were the lead researcher who unlocked the last A
 - Take max-level towers into one of two irreversible final assemblies.
 - Clear debris and bring factory sections back online.
 - Balance food, scrap, morale, population, power, and enemy attention.
+- Assign the holdout to sustain, balanced, salvage, or defense shifts as shelter fills.
 - Keep outside scavenger teams active long enough to matter.
 - Decide when to expand, when to defend, and when to shut the beacon down.
 - Wake every factory wing, seize the AI Vault, and survive its three-stage override.

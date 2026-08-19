@@ -86,6 +86,7 @@ pub struct Strings {
     pub notifications: NotificationStrings,
     pub alerts: AlertStrings,
     pub advice: AdviceStrings,
+    pub workforce: WorkforceStrings,
     pub boon: BoonStrings,
     pub panels: PanelStrings,
     pub build_panel: BuildPanelStrings,
@@ -441,6 +442,29 @@ pub struct AlertStrings {
     pub factory_damage: String,
     /// `{pct}`.
     pub factory_damage_detail: String,
+    pub overcrowded: String,
+    /// `{n}`, `{capacity}`.
+    pub overcrowded_detail: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct WorkforceStrings {
+    pub title: String,
+    /// `{count}`, `{capacity}`.
+    pub subtitle: String,
+    /// `{mode}`.
+    pub hud_button: String,
+    pub sustain: String,
+    pub sustain_detail: String,
+    pub balanced: String,
+    pub balanced_detail: String,
+    pub salvage: String,
+    pub salvage_detail: String,
+    pub defense: String,
+    pub defense_detail: String,
+    /// `{mode}`.
+    pub active: String,
+    pub close: String,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

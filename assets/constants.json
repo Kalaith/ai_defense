@@ -32,7 +32,23 @@
     "low_morale_productivity": 0.25,
     "recover_morale_threshold": 50.0,
     "recover_health_threshold": 80.0,
-    "death_health_threshold": 20.0
+    "death_health_threshold": 20.0,
+    "shelter_base": 10,
+    "shelter_per_active_sector": 2,
+    "shelter_logistics_bonus": 6,
+    "overcrowding_consumption_per_person": 0.08,
+    "overcrowding_morale_loss_per_person_per_sec": 0.06,
+    "workforce": {
+      "sustain_consumption_mult": 0.72,
+      "sustain_productivity_mult": 0.70,
+      "sustain_damage_mult": 0.92,
+      "salvage_consumption_mult": 1.25,
+      "salvage_productivity_mult": 1.55,
+      "salvage_noise_per_sec": 0.18,
+      "defense_consumption_mult": 1.15,
+      "defense_productivity_mult": 0.75,
+      "defense_damage_mult": 1.20
+    }
   },
   "waves": {
     "interval_seconds": 15.0,

@@ -32,6 +32,11 @@ impl GameplayState {
             return;
         }
 
+        if self.show_workforce {
+            self.draw_workforce_overlay();
+            return;
+        }
+
         // When the salvage report modal is up, freeze the build UI behind it and
         // let only the modal take input.
         if self.salvage_report.is_some() {

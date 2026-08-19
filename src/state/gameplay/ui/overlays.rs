@@ -3,8 +3,9 @@
 
 use crate::data::strings::{fill, text};
 use crate::engine::map::BuildingState;
+use crate::engine::population::WorkforcePolicy;
 use crate::state::gameplay::GameplayState;
-use crate::ui;
+use crate::ui::{self, ConsoleButtonState};
 use macroquad::prelude::*;
 use macroquad_toolkit::colors::dark;
 use macroquad_toolkit::ui::{button, draw_text_centered, draw_ui_text, TextStyle};
@@ -15,6 +16,119 @@ fn centered(text: &str, center_x: f32, baseline_y: f32, font_size: f32, color: C
 }
 
 impl GameplayState {
+    pub fn draw_workforce_overlay(&mut self) {
+        let sw = screen_width();
+        let sh = screen_height();
+        draw_rectangle(0.0, 0.0, sw, sh, Color::new(0.0, 0.0, 0.0, 0.72));
+
+        let panel_w = 700.0_f32.min(sw - 32.0);
+        let panel_h = 470.0_f32.min(sh - 32.0);
+        let panel_x = (sw - panel_w) * 0.5;
+        let panel_y = (sh - panel_h) * 0.5;
+        let surface = macroquad_toolkit::ui::SurfaceStyle::new(Color::new(0.04, 0.06, 0.07, 0.99))
+            .with_border(1.8, Color::new(0.20, 0.62, 0.58, 0.95));
+        macroquad_toolkit::ui::draw_surface(
+            Rect::new(panel_x, panel_y, panel_w, panel_h),
+            &surface,
+        );
+
+        let t = &text().workforce;
+        let cx = panel_x + panel_w * 0.5;
+        centered(&t.title, cx, panel_y + 42.0, 25.0, dark::POSITIVE);
+        centered(
+            &fill(
+                &t.subtitle,
+                &[
+                    ("count", &self.population.count.to_string()),
+                    ("capacity", &self.shelter_capacity().to_string()),
+                ],
+            ),
+            cx,
+            panel_y + 68.0,
+            13.0,
+            dark::TEXT_DIM,
+        );
+
+        let options = [
+            (
+                WorkforcePolicy::Sustain,
+                t.sustain.as_str(),
+                t.sustain_detail.as_str(),
+            ),
+            (
+                WorkforcePolicy::Balanced,
+                t.balanced.as_str(),
+                t.balanced_detail.as_str(),
+            ),
+            (
+                WorkforcePolicy::Salvage,
+                t.salvage.as_str(),
+                t.salvage_detail.as_str(),
+            ),
+            (
+                WorkforcePolicy::Defense,
+                t.defense.as_str(),
+                t.defense_detail.as_str(),
+            ),
+        ];
+        let mut chosen = None;
+        let row_x = panel_x + 28.0;
+        let row_w = panel_w - 56.0;
+        let mut row_y = panel_y + 88.0;
+        for (policy, name, detail) in options {
+            let selected = self.population.workforce_policy == policy;
+            ui::draw_console_panel(
+                Rect::new(row_x, row_y, row_w, 68.0),
+                if selected {
+                    Color::new(0.20, 0.62, 0.58, 0.78)
+                } else {
+                    Color::new(0.16, 0.30, 0.31, 0.72)
+                },
+            );
+            draw_ui_text(name, row_x + 14.0, row_y + 24.0, 16.0, dark::TEXT_BRIGHT);
+            ui::draw_bounded_text(
+                detail,
+                row_x + 14.0,
+                row_y + 47.0,
+                row_w - 214.0,
+                12.0,
+                dark::TEXT_DIM,
+            );
+            let label = if selected {
+                fill(&t.active, &[("mode", name)])
+            } else {
+                name.to_string()
+            };
+            if ui::draw_console_button(
+                row_x + row_w - 184.0,
+                row_y + 15.0,
+                166.0,
+                38.0,
+                &label,
+                if selected {
+                    ConsoleButtonState::Disabled
+                } else {
+                    ConsoleButtonState::Recommended
+                },
+            ) && !selected
+            {
+                chosen = Some(policy);
+            }
+            row_y += 75.0;
+        }
+
+        if let Some(policy) = chosen {
+            self.population.workforce_policy = policy;
+            self.show_workforce = false;
+            self.autosave();
+            return;
+        }
+
+        if button(cx - 130.0, panel_y + panel_h - 50.0, 260.0, 34.0, &t.close) {
+            self.show_workforce = false;
+        }
+    }
+
     /// Opening premise card for a fresh campaign. Handles its own Begin button.
     pub fn draw_intro(&mut self) {
         if !self.show_intro {

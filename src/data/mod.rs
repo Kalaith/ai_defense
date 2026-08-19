@@ -107,6 +107,25 @@ pub struct PopulationConstants {
     pub recover_morale_threshold: f32,
     pub recover_health_threshold: f32,
     pub death_health_threshold: f32,
+    pub shelter_base: u32,
+    pub shelter_per_active_sector: u32,
+    pub shelter_logistics_bonus: u32,
+    pub overcrowding_consumption_per_person: f32,
+    pub overcrowding_morale_loss_per_person_per_sec: f32,
+    pub workforce: WorkforceConstants,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct WorkforceConstants {
+    pub sustain_consumption_mult: f32,
+    pub sustain_productivity_mult: f32,
+    pub sustain_damage_mult: f32,
+    pub salvage_consumption_mult: f32,
+    pub salvage_productivity_mult: f32,
+    pub salvage_noise_per_sec: f32,
+    pub defense_consumption_mult: f32,
+    pub defense_productivity_mult: f32,
+    pub defense_damage_mult: f32,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

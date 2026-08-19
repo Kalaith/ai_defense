@@ -10,8 +10,8 @@
     gameplay session; `sector` selects a repaired section core so its awakening
     trade-off can be reviewed; `specialization` opens a max-level tower's final
     branch choice; `vault` exposes the touch-started final operation and
-    `victory` shows its distinct result (see Game::begin_capture_scene in
-    src/game.rs).
+    `victory` shows its distinct result; `workforce` opens the holdout shift
+    planner in an overcrowded state (see Game::begin_capture_scene in src/game.rs).
 
 .EXAMPLE
     ./scripts/capture_ui.ps1

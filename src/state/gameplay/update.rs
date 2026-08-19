@@ -27,7 +27,7 @@ impl GameplayState {
 
         // The intro card and salvage report freeze the sim; each handles its own
         // buttons during draw.
-        if self.show_intro || self.salvage_report.is_some() {
+        if self.show_intro || self.show_workforce || self.salvage_report.is_some() {
             return None;
         }
 
@@ -93,7 +93,9 @@ impl GameplayState {
 
     fn handle_input(&mut self) {
         if is_key_pressed(KeyCode::Escape) {
-            if self.show_settings {
+            if self.show_workforce {
+                self.show_workforce = false;
+            } else if self.show_settings {
                 self.show_settings = false;
             } else if self.placing_tower.is_some() {
                 self.placing_tower = None;

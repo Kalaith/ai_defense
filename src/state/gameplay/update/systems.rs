@@ -82,11 +82,16 @@ impl GameplayState {
     }
 
     pub(super) fn update_combat(&mut self, dt: f32) {
-        let damage_mult = if self.factory.is_sector_active("assembly_hall") {
+        let sector_damage_mult = if self.factory.is_sector_active("assembly_hall") {
             self.constants.sector.bonus_damage_mult
         } else {
             1.0
         };
+        let damage_mult = sector_damage_mult
+            * self
+                .population
+                .workforce_policy
+                .tower_damage_mult(&self.constants);
         let fire_rate_mult = if self.factory.is_sector_active("robotics_bay") {
             self.constants.sector.bonus_fire_rate_mult
         } else {
@@ -189,7 +194,7 @@ impl GameplayState {
         // Holding the beacon strains food: the holdout shelters and the factory
         // runs hot. This is the pressure that forces the player up the risk
         // curve — low beacon phases can't feed a growing holdout for long.
-        let (food_mult, water_mult) = if self.beacon_active {
+        let (beacon_food_mult, beacon_water_mult) = if self.beacon_active {
             (
                 self.constants.population.beacon_food_multiplier,
                 self.constants.population.beacon_water_multiplier,
@@ -197,15 +202,33 @@ impl GameplayState {
         } else {
             (1.0, 1.0)
         };
+        let workforce_mult = self
+            .population
+            .workforce_policy
+            .consumption_mult(&self.constants);
+        let excess = self.overcrowded_population();
+        let overcrowding_mult = (1.0
+            + excess as f32
+                * self
+                    .constants
+                    .population
+                    .overcrowding_consumption_per_person)
+            .min(2.5);
         self.population.tick(
             dt,
             &self.constants,
-            food_mult,
-            water_mult,
+            beacon_food_mult * workforce_mult * overcrowding_mult,
+            beacon_water_mult * workforce_mult * overcrowding_mult,
             &mut self.resources.water,
         );
+        self.population
+            .apply_overcrowding(excess, dt, &self.constants);
         self.resources.scrap += self.population.productivity(&self.constants)
             * self.constants.economy.productivity_scrap_rate
+            * self
+                .population
+                .workforce_policy
+                .productivity_mult(&self.constants)
             * dt;
     }
 
@@ -240,6 +263,12 @@ impl GameplayState {
         if building_threat > 0.0 {
             self.threat.add_noise(building_threat * dt);
         }
+        self.threat.add_noise(
+            self.population
+                .workforce_policy
+                .noise_per_sec(&self.constants)
+                * dt,
+        );
         self.threat.add_energy(power_gen * energy_rate * dt);
         self.threat.add_territory(territory_rate * dt);
         if research_active {

@@ -169,6 +169,14 @@ impl Game {
             "victory" => {
                 self.state = GameState::Results(ResultsState::new(sample_victory_summary()))
             }
+            "workforce" => {
+                let mut gameplay = GameplayState::new(&self.data);
+                gameplay.show_intro = false;
+                gameplay.coach.active = false;
+                gameplay.population.count = gameplay.shelter_capacity() + 4;
+                gameplay.show_workforce = true;
+                self.state = GameState::Gameplay(gameplay);
+            }
             _ => {}
         }
     }

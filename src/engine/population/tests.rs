@@ -66,3 +66,30 @@ fn beacon_pressure_accelerates_water_use() {
 
     assert!(active_water < quiet_water);
 }
+
+#[test]
+fn workforce_policies_have_distinct_tradeoffs() {
+    let constants = crate::data::loader::load_constants();
+    let balanced = WorkforcePolicy::Balanced;
+    let sustain = WorkforcePolicy::Sustain;
+    let salvage = WorkforcePolicy::Salvage;
+    let defense = WorkforcePolicy::Defense;
+
+    assert!(sustain.consumption_mult(&constants) < balanced.consumption_mult(&constants));
+    assert!(salvage.productivity_mult(&constants) > balanced.productivity_mult(&constants));
+    assert!(defense.tower_damage_mult(&constants) > balanced.tower_damage_mult(&constants));
+    assert!(salvage.noise_per_sec(&constants) > balanced.noise_per_sec(&constants));
+}
+
+#[test]
+fn overcrowding_erodes_morale_without_directly_killing_people() {
+    let constants = crate::data::loader::load_constants();
+    let mut population = Population::new(&constants);
+    let starting_morale = population.morale;
+    let starting_count = population.count;
+
+    population.apply_overcrowding(3, 10.0, &constants);
+
+    assert!(population.morale < starting_morale);
+    assert_eq!(population.count, starting_count);
+}

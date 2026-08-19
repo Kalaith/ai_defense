@@ -5,7 +5,9 @@ and scavenging, tower upgrades, food pressure, enemy variety, polish) are all bu
 is the persistent evacuation ledger, permanent per-cycle escalation, the food ratchet,
 population water demand with drought consequences, role-labelled sector awakenings that
 impose distinct machine-awareness pulses, data-driven enemy counter-build profiles, and
-two behavior-changing final specializations for every tower family.
+two behavior-changing final specializations for every tower family. Population is now a
+managed workforce with four shift doctrines, expanding shelter capacity, and explicit
+overcrowding pressure.
 The campaign now culminates in a touch-started, three-stage AI Vault takeover with a
 locked terminal beacon, persistent operation progress, explicit failure conditions, and
 a distinct victory debrief.
@@ -22,9 +24,6 @@ What follows is the work the design review left open.
 
 ## Stakes and the meta-loop
 
-- Deepen the sector role split by making population a managed lever — grow the holdout
-  for workforce and evacuation, but every mouth needs life-support machinery that raises
-  beacon volume.
 ## Content
 
 - A second and third map / route layout.

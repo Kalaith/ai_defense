@@ -93,6 +93,22 @@ impl GameplayState {
             });
         }
 
+        let overcrowded = self.overcrowded_population();
+        if overcrowded > 0 {
+            alerts.push(AlertBanner {
+                severity: AlertSeverity::Warning,
+                label: t.overcrowded.clone(),
+                detail: fill(
+                    &t.overcrowded_detail,
+                    &[
+                        ("n", &overcrowded.to_string()),
+                        ("capacity", &self.shelter_capacity().to_string()),
+                    ],
+                ),
+                priority: 80,
+            });
+        }
+
         if self.saboteur_inbound() {
             alerts.push(AlertBanner {
                 severity: AlertSeverity::Critical,
@@ -186,8 +202,10 @@ impl GameplayState {
         } else {
             1.0
         };
-        let consumption =
-            self.population.count as f32 * self.constants.population.food_per_person_per_sec * mult;
+        let consumption = self.population.count as f32
+            * self.constants.population.food_per_person_per_sec
+            * mult
+            * self.population_pressure_mult();
         let production = self.unlocked_building_boon().food_per_sec;
         let net = consumption - production;
         if net <= 0.0 {
@@ -207,7 +225,8 @@ impl GameplayState {
         };
         let consumption = self.population.count as f32
             * self.constants.population.water_per_person_per_sec
-            * mult;
+            * mult
+            * self.population_pressure_mult();
         let production = self.unlocked_building_boon().water_per_sec;
         let net = consumption - production;
         if net <= 0.0 {
@@ -228,6 +247,21 @@ impl GameplayState {
             BeaconPhase::TerminalHowl => 70.0,
         };
         (next - self.beacon_strength).max(0.0)
+    }
+
+    fn population_pressure_mult(&self) -> f32 {
+        let workforce = self
+            .population
+            .workforce_policy
+            .consumption_mult(&self.constants);
+        let crowding = (1.0
+            + self.overcrowded_population() as f32
+                * self
+                    .constants
+                    .population
+                    .overcrowding_consumption_per_person)
+            .min(2.5);
+        workforce * crowding
     }
 }
 

@@ -5,6 +5,7 @@ mod beacon_panel;
 
 use crate::data::strings::{fill, text};
 use crate::data::GameData;
+use crate::engine::population::WorkforcePolicy;
 use crate::ui::{self, ConsoleButtonState, ConsoleIcon};
 use macroquad::prelude::*;
 use macroquad_toolkit::colors::dark;
@@ -90,24 +91,42 @@ impl GameplayState {
         self.draw_beacon_panel(Rect::new(beacon_x, margin, beacon_w, hud_h - margin * 1.4));
     }
 
-    fn draw_survival_zone(&self, rect: Rect) {
+    fn draw_survival_zone(&mut self, rect: Rect) {
         ui::draw_console_panel(rect, Color::new(0.18, 0.38, 0.36, 0.82));
         let t = &text().hud;
         ui::draw_console_header(
             rect.x + 12.0,
             rect.y + 18.0,
             &t.survival,
-            "",
+            self.factory.phase.label(),
             dark::POSITIVE,
         );
-        ui::draw_bounded_text(
-            self.factory.phase.label(),
-            rect.x + rect.w - 112.0,
-            rect.y + 18.0,
-            100.0,
-            10.0,
-            dark::TEXT_DIM,
-        );
+        let workforce = &text().workforce;
+        let mode = match self.population.workforce_policy {
+            WorkforcePolicy::Sustain => &workforce.sustain,
+            WorkforcePolicy::Balanced => &workforce.balanced,
+            WorkforcePolicy::Salvage => &workforce.salvage,
+            WorkforcePolicy::Defense => &workforce.defense,
+        };
+        let workforce_interactive = !self.show_intro
+            && !self.show_workforce
+            && self.salvage_report.is_none()
+            && !self.paused;
+        if ui::draw_console_button(
+            rect.x + rect.w - 142.0,
+            rect.y + 8.0,
+            130.0,
+            24.0,
+            &fill(&workforce.hud_button, &[("mode", mode)]),
+            if workforce_interactive {
+                ConsoleButtonState::Affordable
+            } else {
+                ConsoleButtonState::Disabled
+            },
+        ) && workforce_interactive
+        {
+            self.show_workforce = true;
+        }
 
         let y = rect.y + 49.0;
         let col_w = rect.w / 5.0;
@@ -120,10 +139,7 @@ impl GameplayState {
                 &t.pop_value,
                 &[
                     ("count", &self.population.count.to_string()),
-                    (
-                        "max",
-                        &(self.constants.starting.population + 12).to_string(),
-                    ),
+                    ("max", &self.shelter_capacity().to_string()),
                 ],
             ),
             dark::TEXT_BRIGHT,

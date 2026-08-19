@@ -15,7 +15,7 @@ use crate::engine::beacon::BeaconPhase;
 use crate::engine::enemy::EnemyTuning;
 use crate::engine::factory::Factory;
 use crate::engine::map::MapState;
-use crate::engine::population::Population;
+use crate::engine::population::{Population, WorkforcePolicy};
 use crate::engine::threat::{ReactionTier, ThreatSignature};
 use crate::engine::tower::{ShotEffect, Tower};
 use crate::engine::vault::VaultTakeover;
@@ -117,6 +117,7 @@ pub struct GameplayState {
     pub show_settings: bool,
     pub settings: crate::save::Settings,
     pub show_intro: bool,
+    pub show_workforce: bool,
 
     pub upgrade_defs: Vec<UpgradeDef>,
     pub beacon_start_difficulty_bonus: f32,
@@ -333,6 +334,7 @@ impl GameplayState {
             settings,
             // Fresh runs open on the premise card; continuing a save skips it.
             show_intro: true,
+            show_workforce: false,
 
             upgrade_defs: data.upgrade_defs.clone(),
             beacon_start_difficulty_bonus: 0.0,
@@ -381,6 +383,12 @@ impl GameplayState {
         self.population.morale = save.population.morale;
         self.population.health = save.population.health;
         self.population.food_supply = save.population.food_supply;
+        self.population.workforce_policy = save
+            .population
+            .workforce_policy
+            .as_deref()
+            .map(WorkforcePolicy::from_str)
+            .unwrap_or_default();
 
         self.threat.energy = save.threat.energy;
         self.threat.heat = save.threat.heat;
@@ -526,7 +534,7 @@ impl GameplayState {
 
     fn build_save_data(&self) -> SaveData {
         SaveData {
-            version: 4,
+            version: 5,
             wave_reached: self.current_wave,
             resources: SavedResources {
                 power: self.resources.power,
@@ -539,6 +547,7 @@ impl GameplayState {
                 morale: self.population.morale,
                 health: self.population.health,
                 food_supply: self.population.food_supply,
+                workforce_policy: Some(self.population.workforce_policy.as_str().to_string()),
             },
             threat: SavedThreat {
                 energy: self.threat.energy,
