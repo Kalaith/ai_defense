@@ -10,6 +10,7 @@ use macroquad_toolkit::ui::{draw_ui_text, measure_ui_text};
 pub struct ResultsState {
     pub summary: RunSummary,
     menu_clicked: bool,
+    victory_texture: Option<Texture2D>,
 }
 
 impl ResultsState {
@@ -17,6 +18,7 @@ impl ResultsState {
         Self {
             summary,
             menu_clicked: false,
+            victory_texture: load_victory_texture(),
         }
     }
 
@@ -29,10 +31,32 @@ impl ResultsState {
     }
 
     pub fn draw(&mut self) {
+        if self.summary.campaign_won {
+            draw_victory_background(self.victory_texture.as_ref());
+        }
         let t = &text().results;
         let center_x = screen_width() / 2.0;
         let center_y = screen_height() / 2.0;
         let report_top = (center_y - 70.0).max(150.0);
+
+        if self.summary.campaign_won {
+            let panel_w = 720.0_f32.min(screen_width() - 32.0);
+            draw_rectangle(
+                center_x - panel_w * 0.5,
+                report_top - 108.0,
+                panel_w,
+                445.0_f32.min(screen_height() - report_top + 100.0),
+                Color::new(0.015, 0.025, 0.028, 0.74),
+            );
+            draw_rectangle_lines(
+                center_x - panel_w * 0.5,
+                report_top - 108.0,
+                panel_w,
+                445.0_f32.min(screen_height() - report_top + 100.0),
+                1.5,
+                Color::new(0.22, 0.72, 0.68, 0.72),
+            );
+        }
 
         let title = if self.summary.campaign_won {
             &t.title_victory
@@ -69,6 +93,43 @@ impl ResultsState {
         if button(btn_x, y + 20.0, btn_w, 45.0, &t.button) {
             self.menu_clicked = true;
         }
+    }
+}
+
+fn load_victory_texture() -> Option<Texture2D> {
+    let image = Image::from_file_with_format(
+        include_bytes!("../../assets/victory_background.png"),
+        Some(ImageFormat::Png),
+    )
+    .ok()?;
+    let texture = Texture2D::from_image(&image);
+    texture.set_filter(FilterMode::Linear);
+    Some(texture)
+}
+
+fn draw_victory_background(texture: Option<&Texture2D>) {
+    let w = screen_width();
+    let h = screen_height();
+    if let Some(texture) = texture {
+        let scale = (w / texture.width()).max(h / texture.height());
+        let draw_w = texture.width() * scale;
+        let draw_h = texture.height() * scale;
+        draw_texture_ex(
+            texture,
+            (w - draw_w) * 0.5,
+            (h - draw_h) * 0.5,
+            WHITE,
+            DrawTextureParams {
+                dest_size: Some(vec2(draw_w, draw_h)),
+                ..Default::default()
+            },
+        );
+    }
+    draw_rectangle(0.0, 0.0, w, h, Color::new(0.0, 0.0, 0.0, 0.18));
+    let mut y = 0.0;
+    while y < h {
+        draw_line(0.0, y, w, y, 1.0, Color::new(0.7, 1.0, 0.96, 0.018));
+        y += 5.0;
     }
 }
 
