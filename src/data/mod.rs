@@ -460,9 +460,13 @@ fn default_threat_value() -> u32 {
 pub struct SectorData {
     pub id: String,
     pub name: String,
+    pub role: String,
+    pub core_building: Option<String>,
     pub starts_unlocked: bool,
     pub max_integrity: f32,
     pub base_power_cost: f32,
+    pub awakening_signature: crate::engine::threat::ThreatKind,
+    pub awakening_threat: f32,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

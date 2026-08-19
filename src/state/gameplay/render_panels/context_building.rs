@@ -20,6 +20,22 @@ impl GameplayState {
         let threat = building.threat_per_sec;
         let benefit = self.boon_text(&building.boon);
         let icon = ui::icon_for_boon(&building.boon, threat);
+        let sector = self.factory.sector_for_core(&building.id);
+        let sector_benefit = sector.map(|sector| {
+            fill(
+                &text().panels.wakes_sector,
+                &[("name", &sector.name), ("role", &sector.role)],
+            )
+        });
+        let sector_risk = sector.filter(|sector| !sector.unlocked).map(|sector| {
+            fill(
+                &text().panels.awakening_risk,
+                &[
+                    ("n", &format!("{:.0}", sector.awakening_threat)),
+                    ("signature", sector.awakening_signature.label()),
+                ],
+            )
+        });
 
         ui::draw_icon(icon, rect.x + 14.0, rect.y + 18.0, 38.0, dark::ACCENT);
         ui::draw_console_header(
@@ -37,7 +53,7 @@ impl GameplayState {
         };
         ui::draw_status_pill(rect.x + 62.0, rect.y + 43.0, status_label, status_color);
         ui::draw_bounded_text(
-            &fill(&text().panels.benefit, &[("text", &benefit)]),
+            &sector_benefit.unwrap_or_else(|| fill(&text().panels.benefit, &[("text", &benefit)])),
             rect.x + 62.0,
             rect.y + 76.0,
             rect.w * 0.42,
@@ -45,7 +61,9 @@ impl GameplayState {
             dark::TEXT_BRIGHT,
         );
         ui::draw_bounded_text(
-            &fill(&text().panels.risk_noise, &[("n", &format!("{threat:.2}"))]),
+            &sector_risk.unwrap_or_else(|| {
+                fill(&text().panels.risk_noise, &[("n", &format!("{threat:.2}"))])
+            }),
             rect.x + 62.0,
             rect.y + 98.0,
             rect.w * 0.42,

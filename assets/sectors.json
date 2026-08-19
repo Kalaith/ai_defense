@@ -2,43 +2,67 @@
   {
     "id": "power_core",
     "name": "Power Core",
+    "role": "Grid",
+    "core_building": null,
     "starts_unlocked": true,
     "max_integrity": 100.0,
-    "base_power_cost": 0.0
+    "base_power_cost": 0.0,
+    "awakening_signature": "energy",
+    "awakening_threat": 0.0
   },
   {
     "id": "assembly_hall",
     "name": "Assembly Hall",
-    "starts_unlocked": true,
+    "role": "Defense",
+    "core_building": "building_10",
+    "starts_unlocked": false,
     "max_integrity": 80.0,
-    "base_power_cost": 10.0
+    "base_power_cost": 10.0,
+    "awakening_signature": "heat",
+    "awakening_threat": 12.0
   },
   {
     "id": "research_lab",
     "name": "Research Lab",
+    "role": "Research",
+    "core_building": "building_13",
     "starts_unlocked": false,
     "max_integrity": 60.0,
-    "base_power_cost": 15.0
+    "base_power_cost": 15.0,
+    "awakening_signature": "data",
+    "awakening_threat": 15.0
   },
   {
     "id": "robotics_bay",
     "name": "Robotics Bay",
+    "role": "Defense",
+    "core_building": "building_12",
     "starts_unlocked": false,
     "max_integrity": 70.0,
-    "base_power_cost": 20.0
+    "base_power_cost": 20.0,
+    "awakening_signature": "energy",
+    "awakening_threat": 16.0
   },
   {
     "id": "ai_vault",
     "name": "AI Vault",
+    "role": "Vault",
+    "core_building": "building_08",
     "starts_unlocked": false,
     "max_integrity": 50.0,
-    "base_power_cost": 30.0
+    "base_power_cost": 30.0,
+    "awakening_signature": "corruption",
+    "awakening_threat": 30.0
   },
   {
     "id": "logistics_hub",
     "name": "Logistics Hub",
+    "role": "Life Support",
+    "core_building": "building_11",
     "starts_unlocked": false,
     "max_integrity": 90.0,
-    "base_power_cost": 8.0
+    "base_power_cost": 8.0,
+    "awakening_signature": "noise",
+    "awakening_threat": 10.0
   }
 ]

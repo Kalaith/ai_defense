@@ -374,6 +374,8 @@ pub struct NotificationStrings {
     pub repaired: String,
     /// `{name}`.
     pub powered: String,
+    /// `{name}`, `{role}`, `{n}`, `{signature}`.
+    pub sector_awakened: String,
     pub beacon_up: String,
     pub beacon_down: String,
     pub field_secured: String,
@@ -498,6 +500,10 @@ pub struct PanelStrings {
     pub benefit: String,
     /// `{n}`.
     pub risk_noise: String,
+    /// `{name}`, `{role}`.
+    pub wakes_sector: String,
+    /// `{n}`, `{signature}`.
+    pub awakening_risk: String,
     pub factory_console: String,
     pub factory_console_subtitle: String,
     /// `{n}`.

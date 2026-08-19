@@ -420,6 +420,14 @@ impl GameplayState {
             }
         }
         self.map_state.rebuild_unlocks();
+        let powered_cores: Vec<String> = self
+            .map_state
+            .buildings
+            .iter()
+            .filter(|building| building.is_active())
+            .map(|building| building.id.clone())
+            .collect();
+        self.factory.sync_unlocked_cores(&powered_cores);
 
         self.towers.clear();
         self.tower_stats.clear();

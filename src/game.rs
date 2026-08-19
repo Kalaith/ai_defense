@@ -71,6 +71,34 @@ impl Game {
                 gameplay.show_intro = false;
                 self.state = GameState::Gameplay(gameplay);
             }
+            "sector" => {
+                let mut gameplay = GameplayState::new(&self.data);
+                gameplay.show_intro = false;
+                gameplay.coach.active = false;
+                for core in ["building_01", "building_02", "building_09"] {
+                    if let Some(building) = gameplay
+                        .map_state
+                        .buildings
+                        .iter_mut()
+                        .find(|building| building.id == core)
+                    {
+                        building.state = crate::engine::map::BuildingState::Powered;
+                    }
+                }
+                gameplay.map_state.update_section_visibility();
+                if let Some(idx) = gameplay
+                    .map_state
+                    .buildings
+                    .iter()
+                    .position(|building| building.id == "building_10")
+                {
+                    gameplay.map_state.buildings[idx].state =
+                        crate::engine::map::BuildingState::Repaired;
+                    gameplay.selected_building = Some(idx);
+                    gameplay.resources.scrap = 180.0;
+                }
+                self.state = GameState::Gameplay(gameplay);
+            }
             "intro" => {
                 let mut gameplay = GameplayState::new(&self.data);
                 gameplay.show_intro = true;

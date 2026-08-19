@@ -2,6 +2,7 @@
 
 use crate::data::strings::text;
 use crate::data::{EconomyConstants, SectorData, UpgradeDef};
+use crate::engine::threat::ThreatKind;
 
 #[derive(Clone, Debug)]
 pub enum FactoryPhase {
@@ -27,10 +28,24 @@ impl FactoryPhase {
 
 pub struct Sector {
     pub id: String,
+    pub name: String,
+    pub role: String,
+    pub core_building: Option<String>,
     pub unlocked: bool,
     pub integrity: f32,
     pub max_integrity: f32,
     pub power_cost: f32,
+    pub awakening_signature: ThreatKind,
+    pub awakening_threat: f32,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct SectorAwakening {
+    pub id: String,
+    pub name: String,
+    pub role: String,
+    pub signature: ThreatKind,
+    pub threat: f32,
 }
 
 pub struct Factory {
@@ -55,10 +70,15 @@ impl Factory {
             .iter()
             .map(|sd| Sector {
                 id: sd.id.clone(),
+                name: sd.name.clone(),
+                role: sd.role.clone(),
+                core_building: sd.core_building.clone(),
                 unlocked: sd.starts_unlocked,
                 integrity: sd.max_integrity,
                 max_integrity: sd.max_integrity,
                 power_cost: sd.base_power_cost,
+                awakening_signature: sd.awakening_signature,
+                awakening_threat: sd.awakening_threat,
             })
             .collect();
     }
@@ -75,6 +95,48 @@ impl Factory {
         self.sectors
             .iter()
             .any(|s| s.id == id && s.unlocked && s.integrity > 0.0)
+    }
+
+    pub fn sector_for_core(&self, building_id: &str) -> Option<&Sector> {
+        self.sectors
+            .iter()
+            .find(|sector| sector.core_building.as_deref() == Some(building_id))
+    }
+
+    /// Wake the sector controlled by a powered map core. The returned event is
+    /// emitted only once, so loading or clicking an already-live core cannot
+    /// repeatedly apply its awareness pulse.
+    pub fn unlock_from_core(&mut self, building_id: &str) -> Option<SectorAwakening> {
+        let sector = self
+            .sectors
+            .iter_mut()
+            .find(|sector| sector.core_building.as_deref() == Some(building_id))?;
+        if sector.unlocked {
+            return None;
+        }
+        sector.unlocked = true;
+        let event = SectorAwakening {
+            id: sector.id.clone(),
+            name: sector.name.clone(),
+            role: sector.role.clone(),
+            signature: sector.awakening_signature,
+            threat: sector.awakening_threat,
+        };
+        self.check_awakening();
+        Some(event)
+    }
+
+    /// Reconcile old saves that contain powered section cores but predate
+    /// automatic sector awakening. This deliberately applies no threat pulse.
+    pub fn sync_unlocked_cores(&mut self, powered_buildings: &[String]) {
+        for sector in &mut self.sectors {
+            if let Some(core) = &sector.core_building {
+                if powered_buildings.iter().any(|id| id == core) {
+                    sector.unlocked = true;
+                }
+            }
+        }
+        self.check_awakening();
     }
 
     pub fn power_generation(&self, economy: &EconomyConstants) -> f32 {
@@ -164,3 +226,6 @@ impl Factory {
         total
     }
 }
+
+#[cfg(test)]
+mod tests;

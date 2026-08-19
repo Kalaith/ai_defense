@@ -2,6 +2,7 @@
 
 use crate::data::strings::text;
 use crate::engine::enemy::EnemyType;
+use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug)]
 pub enum ReactionTier {
@@ -26,7 +27,8 @@ impl ReactionTier {
 /// The six machine-awareness signatures the factory emits. Which one is loudest
 /// is surfaced to the player and biases what the machines send (see
 /// `preferred_enemy`), so *how* you run the factory shapes the assault.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum ThreatKind {
     Energy,
     Heat,
@@ -134,6 +136,17 @@ impl ThreatSignature {
 
     pub fn add_territory(&mut self, amount: f32) {
         self.territory += amount;
+    }
+
+    pub fn add_kind(&mut self, kind: ThreatKind, amount: f32) {
+        match kind {
+            ThreatKind::Energy => self.add_energy(amount),
+            ThreatKind::Heat => self.add_heat(amount),
+            ThreatKind::Data => self.add_data(amount),
+            ThreatKind::Corruption => self.add_corruption(amount),
+            ThreatKind::Noise => self.add_noise(amount),
+            ThreatKind::Territory => self.add_territory(amount),
+        }
     }
 
     /// The loudest signature and its value — what is currently drawing the most

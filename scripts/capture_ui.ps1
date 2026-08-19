@@ -7,7 +7,8 @@
     debug exe and drives it through the env-var capture hook
     (LAST_ASSEMBLY_CAPTURE_*) provided by macroquad_toolkit::capture in
     src/main.rs. `menu` seeds the main menu and `gameplay` seeds a fresh
-    gameplay session (see Game::begin_capture_scene in src/game.rs).
+    gameplay session; `sector` selects a repaired section core so its awakening
+    trade-off can be reviewed (see Game::begin_capture_scene in src/game.rs).
 
 .EXAMPLE
     ./scripts/capture_ui.ps1

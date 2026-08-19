@@ -3,7 +3,8 @@
 The MVP phases (economy/power, tower identity, threat scaling, factory sectors, beacon
 and scavenging, tower upgrades, food pressure, enemy variety, polish) are all built, as
 is the persistent evacuation ledger, permanent per-cycle escalation, the food ratchet,
-and population water demand with drought consequences.
+population water demand with drought consequences, and role-labelled sector awakenings
+that impose distinct machine-awareness pulses.
 What follows is the work the design review left open.
 
 ## Immediate improvements
@@ -17,10 +18,9 @@ What follows is the work the design review left open.
 
 ## Stakes and the meta-loop
 
-- Split the factory into life-support vs. military/economy sectors and make population a
-  managed lever — grow the holdout for workforce and evacuation, but every mouth needs
-  food/water buildings that raise beacon volume.
-- Tie sector unlocks to explicit threat trade-offs rather than a flat scrap cost.
+- Deepen the sector role split by making population a managed lever — grow the holdout
+  for workforce and evacuation, but every mouth needs life-support machinery that raises
+  beacon volume.
 - A real win state: the vault takeover the fiction promises is unimplemented, so a run only
   ends when the player stops or the holdout dies.
 
