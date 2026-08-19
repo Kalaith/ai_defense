@@ -35,6 +35,7 @@ fn sample_save() -> SaveData {
             x: 100.0,
             y: 200.0,
             level: 2,
+            specialization_id: Some("rail_driver".to_string()),
         }],
         slots: vec![SavedSlot {
             id: "slot_a".to_string(),

@@ -28,6 +28,22 @@ fn embedded_game_data_loads_required_content() {
         );
         assert!(tower.cost_scrap >= 0.0);
         assert!(tower.base_range > 0.0);
+        assert_eq!(
+            tower.specializations.len(),
+            2,
+            "tower {} needs exactly two final branches",
+            tower.id
+        );
+        let mut branch_ids = HashSet::new();
+        for branch in &tower.specializations {
+            assert!(
+                branch_ids.insert(&branch.id),
+                "duplicate branch {}",
+                branch.id
+            );
+            assert!(branch.cost_scrap > 0.0);
+            assert!(!branch.description.is_empty());
+        }
     }
 
     let mut enemy_ids = HashSet::new();

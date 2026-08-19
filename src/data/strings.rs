@@ -541,6 +541,11 @@ pub struct PanelStrings {
     pub covers_routes: String,
     pub requires_research: String,
     pub max_level: String,
+    pub choose_specialization: String,
+    /// `{name}`, `{n}`.
+    pub specialize: String,
+    /// `{name}`.
+    pub specialized: String,
     /// `{n}`.
     pub upgrade: String,
     /// `{name}`, `{level}`.

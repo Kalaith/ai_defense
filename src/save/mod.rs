@@ -110,6 +110,8 @@ pub struct SavedTower {
     pub x: f32,
     pub y: f32,
     pub level: u32,
+    #[serde(default)]
+    pub specialization_id: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

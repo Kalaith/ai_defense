@@ -9,7 +9,23 @@
     "base_damage": 10.0,
     "base_range": 150.0,
     "fire_rate": 1.5,
-    "description": "Standard kinetic turret. Reliable against light units."
+    "description": "Standard kinetic turret. Reliable against light units.",
+    "specializations": [
+      {
+        "id": "rail_driver",
+        "name": "Rail Driver",
+        "description": "Punches through enemy resistance",
+        "cost_scrap": 90.0,
+        "effect": "ArmorPiercing"
+      },
+      {
+        "id": "twin_feed",
+        "name": "Twin Feed",
+        "description": "Fires 75% faster",
+        "cost_scrap": 80.0,
+        "effect": "RapidFire"
+      }
+    ]
   },
   {
     "id": "laser_emitter",
@@ -21,7 +37,23 @@
     "base_damage": 12.0,
     "base_range": 200.0,
     "fire_rate": 0.8,
-    "description": "High-energy beam. Effective against armored targets."
+    "description": "High-energy beam. Effective against armored targets.",
+    "specializations": [
+      {
+        "id": "prism_lance",
+        "name": "Prism Lance",
+        "description": "Chains half damage into a nearby target",
+        "cost_scrap": 110.0,
+        "effect": "ChainBeam"
+      },
+      {
+        "id": "cutoff_beam",
+        "name": "Cutoff Beam",
+        "description": "Executes machines below half integrity",
+        "cost_scrap": 100.0,
+        "effect": "Execute"
+      }
+    ]
   },
   {
     "id": "emp_pylon",
@@ -33,7 +65,23 @@
     "base_damage": 3.0,
     "base_range": 120.0,
     "fire_rate": 0.5,
-    "description": "Disables machine units briefly. Low damage, high disruption."
+    "description": "Disables machine units briefly. Low damage, high disruption.",
+    "specializations": [
+      {
+        "id": "deep_lockdown",
+        "name": "Deep Lockdown",
+        "description": "Slows its target for 150% longer",
+        "cost_scrap": 90.0,
+        "effect": "DeepSlow"
+      },
+      {
+        "id": "arc_pulse",
+        "name": "Arc Pulse",
+        "description": "Disrupts every machine near its target",
+        "cost_scrap": 105.0,
+        "effect": "ArcPulse"
+      }
+    ]
   },
   {
     "id": "flak_field",
@@ -45,7 +93,23 @@
     "base_damage": 5.0,
     "base_range": 100.0,
     "fire_rate": 2.0,
-    "description": "Shrapnel cloud damages all enemies in range."
+    "description": "Shrapnel cloud damages all enemies in range.",
+    "specializations": [
+      {
+        "id": "wide_burst",
+        "name": "Wide Burst",
+        "description": "Expands the field radius by 45%",
+        "cost_scrap": 100.0,
+        "effect": "WideField"
+      },
+      {
+        "id": "tungsten_storm",
+        "name": "Tungsten Storm",
+        "description": "Shrapnel deals 75% more damage",
+        "cost_scrap": 110.0,
+        "effect": "Shredder"
+      }
+    ]
   },
   {
     "id": "signal_jammer",
@@ -57,6 +121,22 @@
     "base_damage": 6.0,
     "base_range": 180.0,
     "fire_rate": 0.3,
-    "description": "Corrupts enemy coordination. Kills trigger chain damage nearby."
+    "description": "Corrupts enemy coordination. Kills trigger chain damage nearby.",
+    "specializations": [
+      {
+        "id": "viral_cascade",
+        "name": "Viral Cascade",
+        "description": "Death chains spread farther and hit harder",
+        "cost_scrap": 120.0,
+        "effect": "ViralCascade"
+      },
+      {
+        "id": "command_breaker",
+        "name": "Command Breaker",
+        "description": "Deals 125% bonus damage to Command Nodes",
+        "cost_scrap": 115.0,
+        "effect": "CommandBreaker"
+      }
+    ]
   }
 ]

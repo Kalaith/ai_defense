@@ -446,6 +446,15 @@ impl GameplayState {
                     def.color(),
                 );
                 helpers::apply_upgrade_levels(&mut tower, saved.level, &self.constants);
+                if let Some(specialization_id) = &saved.specialization_id {
+                    if let Some(specialization) = def
+                        .specializations
+                        .iter()
+                        .find(|specialization| &specialization.id == specialization_id)
+                    {
+                        tower.specialize(specialization.id.clone(), specialization.effect);
+                    }
+                }
                 let tower_idx = self.towers.len();
                 // Link tower back to slot by position
                 for slot in self.map_state.slots.iter_mut() {
@@ -539,6 +548,7 @@ impl GameplayState {
                     x: t.position.x,
                     y: t.position.y,
                     level: t.level,
+                    specialization_id: t.specialization_id.clone(),
                 })
                 .collect(),
             slots: self

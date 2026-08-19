@@ -22,15 +22,26 @@ impl GameplayState {
             self.factory
                 .upgrade_effect("max_tower_level_bonus", &self.upgrade_defs) as u32;
         let max_level = self.constants.tower.upgrade_max_level + max_level_bonus;
-        let upgrade_cost = tower.base_scrap_cost * tower.level as f32;
         let has_research = self.factory.is_sector_active("research_lab");
+        if tower.level >= max_level || tower.specialization_id.is_some() {
+            let tower_id = tower.tower_id.clone();
+            let specialization_id = tower.specialization_id.clone();
+            self.draw_specialization_choices(
+                rect,
+                idx,
+                &tower_id,
+                specialization_id.as_deref(),
+                has_research,
+                data,
+            );
+            return;
+        }
+        let upgrade_cost = tower.base_scrap_cost * tower.level as f32;
         let can_upgrade =
             has_research && tower.level < max_level && self.resources.scrap >= upgrade_cost;
 
         let label = if !has_research {
             text().panels.requires_research.clone()
-        } else if tower.level >= max_level {
-            text().panels.max_level.clone()
         } else if can_upgrade {
             fill(
                 &text().panels.upgrade,
@@ -55,6 +66,87 @@ impl GameplayState {
             },
         ) {
             self.upgrade_tower(idx);
+        }
+    }
+
+    fn draw_specialization_choices(
+        &mut self,
+        rect: Rect,
+        tower_idx: usize,
+        tower_id: &str,
+        selected_id: Option<&str>,
+        has_research: bool,
+        data: &GameData,
+    ) {
+        let Some(def) = data.tower_def_by_id(tower_id) else {
+            return;
+        };
+        if let Some(selected_id) = selected_id {
+            let name = def
+                .specializations
+                .iter()
+                .find(|branch| branch.id == selected_id)
+                .map(|branch| branch.name.as_str())
+                .unwrap_or(selected_id);
+            ui::draw_console_button(
+                rect.x + rect.w - 260.0,
+                rect.y + 58.0,
+                244.0,
+                44.0,
+                &fill(&text().panels.specialized, &[("name", name)]),
+                ConsoleButtonState::Disabled,
+            );
+            return;
+        }
+
+        ui::draw_bounded_text(
+            &text().panels.choose_specialization,
+            rect.x + rect.w - 344.0,
+            rect.y + 28.0,
+            328.0,
+            12.0,
+            dark::WARNING,
+        );
+        let mut clicked = None;
+        for (column, branch) in def.specializations.iter().take(2).enumerate() {
+            let x = rect.x + rect.w - 344.0 + column as f32 * 168.0;
+            let can = has_research && self.resources.scrap >= branch.cost_scrap;
+            let label = if has_research {
+                fill(
+                    &text().panels.specialize,
+                    &[
+                        ("name", &branch.name.to_uppercase()),
+                        ("n", &format!("{:.0}", branch.cost_scrap)),
+                    ],
+                )
+            } else {
+                text().panels.requires_research.clone()
+            };
+            if ui::draw_console_button(
+                x,
+                rect.y + 40.0,
+                160.0,
+                40.0,
+                &label,
+                if can {
+                    ConsoleButtonState::Recommended
+                } else {
+                    ConsoleButtonState::Disabled
+                },
+            ) {
+                clicked = Some(branch.id.clone());
+            }
+            ui::draw_bounded_text(
+                &branch.description,
+                x + 4.0,
+                rect.y + 101.0,
+                152.0,
+                10.0,
+                dark::TEXT_DIM,
+            );
+        }
+        if let Some(id) = clicked {
+            self.specialize_tower(tower_idx, &id, data);
         }
     }
 

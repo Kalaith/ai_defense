@@ -99,6 +99,39 @@ impl Game {
                 }
                 self.state = GameState::Gameplay(gameplay);
             }
+            "specialization" => {
+                let mut gameplay = GameplayState::new(&self.data);
+                gameplay.show_intro = false;
+                gameplay.coach.active = false;
+                gameplay.factory.unlock_from_core("building_13");
+                gameplay.resources.scrap = 500.0;
+                if let (Some(def), Some(slot)) = (
+                    self.data.tower_def_by_id("ballistic_turret"),
+                    gameplay.map_state.slots.first(),
+                ) {
+                    let mut tower = crate::engine::tower::Tower::new(
+                        def.tower_type.clone(),
+                        def.id.clone(),
+                        slot.position,
+                        def.base_range,
+                        def.base_damage,
+                        def.fire_rate,
+                        def.cost_power,
+                        def.cost_scrap,
+                        def.color(),
+                    );
+                    for _ in 1..gameplay.constants.tower.upgrade_max_level {
+                        tower.level += 1;
+                        tower.damage *= gameplay.constants.tower.upgrade_damage_mult;
+                        tower.range *= gameplay.constants.tower.upgrade_range_mult;
+                    }
+                    gameplay.towers.push(tower);
+                    gameplay.tower_stats.push(Default::default());
+                    gameplay.map_state.slots[0].tower_index = Some(0);
+                    gameplay.selected_tower = Some(0);
+                }
+                self.state = GameState::Gameplay(gameplay);
+            }
             "intro" => {
                 let mut gameplay = GameplayState::new(&self.data);
                 gameplay.show_intro = true;

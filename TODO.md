@@ -4,7 +4,8 @@ The MVP phases (economy/power, tower identity, threat scaling, factory sectors, 
 and scavenging, tower upgrades, food pressure, enemy variety, polish) are all built, as
 is the persistent evacuation ledger, permanent per-cycle escalation, the food ratchet,
 population water demand with drought consequences, role-labelled sector awakenings that
-impose distinct machine-awareness pulses, and data-driven enemy counter-build profiles.
+impose distinct machine-awareness pulses, data-driven enemy counter-build profiles, and
+two behavior-changing final specializations for every tower family.
 What follows is the work the design review left open.
 
 ## Immediate improvements
@@ -23,10 +24,6 @@ What follows is the work the design review left open.
   beacon volume.
 - A real win state: the vault takeover the fiction promises is unimplemented, so a run only
   ends when the player stops or the holdout dies.
-
-## Combat depth
-
-- Branching upgrades at max tower level — one identity fork per tower instead of flat +%.
 
 ## Content
 

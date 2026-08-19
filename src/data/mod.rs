@@ -401,7 +401,7 @@ pub enum TowerType {
     Subversion,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 pub enum EnemyType {
     Scout,
@@ -423,6 +423,32 @@ pub struct TowerDef {
     pub base_range: f32,
     pub fire_rate: f32,
     pub description: String,
+    #[serde(default)]
+    pub specializations: Vec<TowerSpecializationDef>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct TowerSpecializationDef {
+    pub id: String,
+    pub name: String,
+    pub description: String,
+    pub cost_scrap: f32,
+    pub effect: SpecializationEffect,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "PascalCase")]
+pub enum SpecializationEffect {
+    ArmorPiercing,
+    RapidFire,
+    ChainBeam,
+    Execute,
+    DeepSlow,
+    ArcPulse,
+    WideField,
+    Shredder,
+    ViralCascade,
+    CommandBreaker,
 }
 
 impl TowerDef {

@@ -1,5 +1,6 @@
 //! Tower placement, targeting, and combat.
 
+use crate::data::SpecializationEffect;
 use crate::engine::enemy::{Enemy, EnemyType};
 use macroquad::prelude::{Color, Vec2};
 use macroquad_toolkit::timing::Cooldown;
@@ -21,6 +22,8 @@ pub struct Tower {
     pub power_drain: f32,
     pub base_scrap_cost: f32,
     pub color: Color,
+    pub specialization_id: Option<String>,
+    pub specialization_effect: Option<SpecializationEffect>,
 }
 
 #[derive(Clone, Debug)]
@@ -138,6 +141,8 @@ impl Tower {
             power_drain,
             base_scrap_cost,
             color,
+            specialization_id: None,
+            specialization_effect: None,
         }
     }
 
@@ -158,6 +163,19 @@ impl Tower {
 
     pub fn color(&self) -> macroquad::prelude::Color {
         self.color
+    }
+
+    pub fn specialize(&mut self, id: String, effect: SpecializationEffect) {
+        if self.specialization_id.is_some() {
+            return;
+        }
+        match effect {
+            SpecializationEffect::RapidFire => self.fire_rate *= 1.75,
+            SpecializationEffect::WideField => self.range *= 1.45,
+            _ => {}
+        }
+        self.specialization_id = Some(id);
+        self.specialization_effect = Some(effect);
     }
 }
 
@@ -202,8 +220,19 @@ pub fn tick_towers(
                     hit_any = true;
                     hits += 1;
                     let was_alive = enemy.is_alive;
+                    let specialization_mult = if matches!(
+                        tower.specialization_effect,
+                        Some(SpecializationEffect::Shredder)
+                    ) {
+                        1.75
+                    } else {
+                        1.0
+                    };
                     enemy.take_damage(
-                        tower.damage * damage_mult * tuning.area_denial_damage_scale,
+                        tower.damage
+                            * damage_mult
+                            * tuning.area_denial_damage_scale
+                            * specialization_mult,
                         &tower.tower_type,
                     );
                     if was_alive && !enemy.is_alive {
@@ -251,13 +280,104 @@ pub fn tick_towers(
             tower_stats[tower_idx].shots += 1;
             tower_stats[tower_idx].hits += 1;
             let target_pos = enemies[idx].position;
-            let damage = tower.damage * damage_mult;
+            let mut damage = tower.damage * damage_mult;
+            if matches!(
+                tower.specialization_effect,
+                Some(SpecializationEffect::Execute)
+            ) && enemies[idx].health <= enemies[idx].max_health * 0.5
+            {
+                damage *= 1.75;
+            }
+            if matches!(
+                tower.specialization_effect,
+                Some(SpecializationEffect::CommandBreaker)
+            ) && enemies[idx].enemy_type == EnemyType::Commander
+            {
+                damage *= 2.25;
+            }
 
             let was_alive = enemies[idx].is_alive;
-            enemies[idx].take_damage(damage, &tower.tower_type);
+            enemies[idx].take_damage_with_resistance(
+                damage,
+                &tower.tower_type,
+                matches!(
+                    tower.specialization_effect,
+                    Some(SpecializationEffect::ArmorPiercing)
+                ),
+            );
 
             if matches!(tower.tower_type, TowerType::Emp) {
-                enemies[idx].slowed_timer = enemies[idx].slowed_timer.max(tuning.emp_slow_duration);
+                let slow_duration = if matches!(
+                    tower.specialization_effect,
+                    Some(SpecializationEffect::DeepSlow)
+                ) {
+                    tuning.emp_slow_duration * 2.5
+                } else {
+                    tuning.emp_slow_duration
+                };
+                enemies[idx].slowed_timer = enemies[idx].slowed_timer.max(slow_duration);
+            }
+
+            if matches!(
+                tower.specialization_effect,
+                Some(SpecializationEffect::ChainBeam)
+            ) {
+                let second = enemies
+                    .iter()
+                    .enumerate()
+                    .filter(|(other_idx, enemy)| *other_idx != idx && enemy.is_alive)
+                    .filter_map(|(other_idx, enemy)| {
+                        let dist = (enemy.position - target_pos).length();
+                        (dist <= 100.0).then_some((other_idx, dist))
+                    })
+                    .min_by(|a, b| a.1.total_cmp(&b.1))
+                    .map(|(other_idx, _)| other_idx);
+                if let Some(other_idx) = second {
+                    let was_second_alive = enemies[other_idx].is_alive;
+                    let second_pos = enemies[other_idx].position;
+                    enemies[other_idx].take_damage(damage * 0.5, &tower.tower_type);
+                    tower_stats[tower_idx].hits += 1;
+                    effects.push(ShotEffect::line(
+                        target_pos,
+                        second_pos,
+                        tower.color(),
+                        tuning.shot_ttl,
+                    ));
+                    if was_second_alive && !enemies[other_idx].is_alive {
+                        tower_stats[tower_idx].kills += 1;
+                        scrap_earned += enemies[other_idx].scrap_reward * scrap_mult;
+                        death_positions.push(second_pos);
+                    }
+                }
+            }
+
+            if matches!(
+                tower.specialization_effect,
+                Some(SpecializationEffect::ArcPulse)
+            ) {
+                for (other_idx, enemy) in enemies.iter_mut().enumerate() {
+                    if other_idx == idx || !enemy.is_alive {
+                        continue;
+                    }
+                    if (enemy.position - target_pos).length() > 80.0 {
+                        continue;
+                    }
+                    let was_other_alive = enemy.is_alive;
+                    enemy.take_damage(damage * 0.25, &tower.tower_type);
+                    enemy.slowed_timer = enemy.slowed_timer.max(tuning.emp_slow_duration);
+                    tower_stats[tower_idx].hits += 1;
+                    if was_other_alive && !enemy.is_alive {
+                        tower_stats[tower_idx].kills += 1;
+                        scrap_earned += enemy.scrap_reward * scrap_mult;
+                        death_positions.push(enemy.position);
+                    }
+                }
+                effects.push(ShotEffect::pulse(
+                    target_pos,
+                    80.0,
+                    tower.color(),
+                    tuning.shot_ttl,
+                ));
             }
 
             if was_alive && !enemies[idx].is_alive {
@@ -286,16 +406,23 @@ pub fn tick_towers(
                 }
 
                 if matches!(tower.tower_type, TowerType::Subversion) {
+                    let cascade = matches!(
+                        tower.specialization_effect,
+                        Some(SpecializationEffect::ViralCascade)
+                    );
                     let chain_damage = enemies[idx].max_health
                         * tuning.subversion_chain_damage_fraction
-                        * damage_mult;
+                        * damage_mult
+                        * if cascade { 1.6 } else { 1.0 };
                     let chain_center = enemies[idx].position;
+                    let chain_radius =
+                        tuning.subversion_chain_radius * if cascade { 1.6 } else { 1.0 };
                     for enemy in enemies.iter_mut() {
                         if !enemy.is_alive {
                             continue;
                         }
                         let dist = (enemy.position - chain_center).length();
-                        if dist <= tuning.subversion_chain_radius {
+                        if dist <= chain_radius {
                             let was_chain_alive = enemy.is_alive;
                             enemy.take_damage(chain_damage, &tower.tower_type);
                             if was_chain_alive && !enemy.is_alive {

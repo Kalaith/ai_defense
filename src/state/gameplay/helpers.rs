@@ -338,6 +338,9 @@ impl GameplayState {
         let Some(tower) = self.towers.get_mut(idx) else {
             return;
         };
+        if tower.specialization_id.is_some() {
+            return;
+        }
         if tower.level >= max_level {
             return;
         }
@@ -352,5 +355,44 @@ impl GameplayState {
         tower.level += 1;
         tower.damage *= self.constants.tower.upgrade_damage_mult;
         tower.range *= self.constants.tower.upgrade_range_mult;
+    }
+
+    pub fn specialize_tower(
+        &mut self,
+        idx: usize,
+        specialization_id: &str,
+        data: &crate::data::GameData,
+    ) {
+        if !self.factory.is_sector_active("research_lab") {
+            return;
+        }
+        let max_level = self.constants.tower.upgrade_max_level
+            + self
+                .factory
+                .upgrade_effect("max_tower_level_bonus", &self.upgrade_defs) as u32;
+        let Some(tower) = self.towers.get(idx) else {
+            return;
+        };
+        if tower.level < max_level || tower.specialization_id.is_some() {
+            return;
+        }
+        let Some(specialization) = data
+            .tower_def_by_id(&tower.tower_id)
+            .and_then(|def| {
+                def.specializations
+                    .iter()
+                    .find(|specialization| specialization.id == specialization_id)
+            })
+            .cloned()
+        else {
+            return;
+        };
+        if self.resources.scrap < specialization.cost_scrap {
+            return;
+        }
+        self.resources.scrap -= specialization.cost_scrap;
+        if let Some(tower) = self.towers.get_mut(idx) {
+            tower.specialize(specialization.id, specialization.effect);
+        }
     }
 }

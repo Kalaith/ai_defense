@@ -64,12 +64,27 @@ impl Enemy {
     }
 
     pub fn take_damage(&mut self, amount: f32, source: &TowerType) {
+        self.take_damage_with_resistance(amount, source, false);
+    }
+
+    pub fn take_damage_with_resistance(
+        &mut self,
+        amount: f32,
+        source: &TowerType,
+        bypass_resistance: bool,
+    ) {
         if self.enemy_type == EnemyType::Scout && rng::chance(self.tuning.scout_dodge_chance) {
             self.dodge_timer = self.tuning.scout_dodge_duration;
             return;
         }
 
-        self.health -= amount * self.damage_multipliers.for_tower(source);
+        let multiplier = self.damage_multipliers.for_tower(source);
+        let effective_multiplier = if bypass_resistance {
+            multiplier.max(1.0)
+        } else {
+            multiplier
+        };
+        self.health -= amount * effective_multiplier;
         self.hit_flash_timer = self.tuning.hit_flash_duration;
         if self.health <= 0.0 {
             self.health = 0.0;

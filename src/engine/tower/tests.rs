@@ -168,6 +168,97 @@ fn infiltrator_phase_mesh_is_weak_to_emp() {
 }
 
 #[test]
+fn rail_driver_bypasses_ballistic_resistance() {
+    let mut tower = ready_tower(TowerType::Ballistic, vec2(0.0, 0.0), 100.0, 20.0);
+    tower.specialize(
+        "rail_driver".to_string(),
+        SpecializationEffect::ArmorPiercing,
+    );
+    let mut towers = vec![tower];
+    let mut enemies = vec![test_enemy(EnemyType::Drone, vec2(5.0, 0.0), 100.0)];
+    enemies[0].damage_multipliers.ballistic = 0.5;
+
+    tick_towers(
+        &mut towers,
+        &mut enemies,
+        0.1,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        &test_tuning(),
+    );
+
+    assert_eq!(enemies[0].health, 80.0);
+}
+
+#[test]
+fn prism_lance_chains_into_a_second_target() {
+    let mut tower = ready_tower(TowerType::Laser, vec2(0.0, 0.0), 100.0, 20.0);
+    tower.specialize("prism_lance".to_string(), SpecializationEffect::ChainBeam);
+    let mut towers = vec![tower];
+    let mut enemies = vec![
+        test_enemy(EnemyType::Drone, vec2(5.0, 0.0), 100.0),
+        test_enemy(EnemyType::Drone, vec2(15.0, 0.0), 100.0),
+    ];
+
+    let result = tick_towers(
+        &mut towers,
+        &mut enemies,
+        0.1,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        &test_tuning(),
+    );
+
+    assert_eq!(enemies[0].health, 80.0);
+    assert_eq!(enemies[1].health, 90.0);
+    assert_eq!(result.tower_stats[0].hits, 2);
+}
+
+#[test]
+fn arc_pulse_slows_nearby_targets() {
+    let mut tower = ready_tower(TowerType::Emp, vec2(0.0, 0.0), 100.0, 10.0);
+    tower.specialize("arc_pulse".to_string(), SpecializationEffect::ArcPulse);
+    let mut towers = vec![tower];
+    let mut enemies = vec![
+        test_enemy(EnemyType::Drone, vec2(5.0, 0.0), 100.0),
+        test_enemy(EnemyType::Drone, vec2(25.0, 0.0), 100.0),
+    ];
+
+    tick_towers(
+        &mut towers,
+        &mut enemies,
+        0.1,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        &test_tuning(),
+    );
+
+    assert!(enemies[0].slowed_timer > 0.0);
+    assert!(enemies[1].slowed_timer > 0.0);
+    assert!(enemies[1].health < enemies[1].max_health);
+}
+
+#[test]
+fn passive_specializations_change_tower_geometry_and_rate() {
+    let mut rapid = ready_tower(TowerType::Ballistic, vec2(0.0, 0.0), 100.0, 10.0);
+    let base_rate = rapid.fire_rate;
+    rapid.specialize("twin_feed".to_string(), SpecializationEffect::RapidFire);
+
+    let mut wide = ready_tower(TowerType::AreaDenial, vec2(0.0, 0.0), 100.0, 10.0);
+    let base_range = wide.range;
+    wide.specialize("wide_burst".to_string(), SpecializationEffect::WideField);
+
+    assert_eq!(rapid.fire_rate, base_rate * 1.75);
+    assert_eq!(wide.range, base_range * 1.45);
+}
+
+#[test]
 fn commander_death_deals_splash_damage_to_nearby_enemies() {
     let tuning = test_tuning();
     let mut towers = vec![ready_tower(
