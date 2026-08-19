@@ -17,7 +17,7 @@ use crate::engine::factory::Factory;
 use crate::engine::map::MapState;
 use crate::engine::population::{Population, WorkforcePolicy};
 use crate::engine::threat::{ReactionTier, ThreatSignature};
-use crate::engine::tower::{ShotEffect, Tower};
+use crate::engine::tower::{ShotEffect, TargetPriority, Tower};
 use crate::engine::vault::VaultTakeover;
 use crate::engine::wave::{WaveManager, WaveTuning};
 use crate::save::{
@@ -29,7 +29,7 @@ use macroquad::prelude::{vec2, Vec2};
 use macroquad_toolkit::camera::{Camera2D as ToolkitCamera2D, Camera2DConfig, CameraBounds};
 
 pub struct GameplayState {
-    pub assets: GameplayAssets,
+    pub assets: Option<GameplayAssets>,
     pub constants: GameConstants,
     pub factory: Factory,
     pub wave_manager: WaveManager,
@@ -230,7 +230,7 @@ impl GameplayState {
         };
         let autosave_enabled = settings.autosave;
 
-        Self {
+        let mut state = Self {
             assets: GameplayAssets::load(),
             constants,
             factory,
@@ -357,6 +357,46 @@ impl GameplayState {
                     ..Default::default()
                 },
             ),
+        };
+        state.seed_starting_defense(data);
+        state
+    }
+
+    fn seed_starting_defense(&mut self, data: &GameData) {
+        for (tower_id, slot_id, priority) in [
+            ("ballistic_turret", "slot_01", TargetPriority::First),
+            ("laser_emitter", "slot_02", TargetPriority::Strongest),
+        ] {
+            let Some(def) = data.tower_def_by_id(tower_id) else {
+                continue;
+            };
+            let Some(slot_idx) = self
+                .map_state
+                .slots
+                .iter()
+                .position(|slot| slot.id == slot_id)
+            else {
+                continue;
+            };
+            if self.map_state.slots[slot_idx].tower_index.is_some() {
+                continue;
+            }
+            let mut tower = Tower::new(
+                def.tower_type.clone(),
+                def.id.clone(),
+                self.map_state.slots[slot_idx].position,
+                def.base_range,
+                def.base_damage,
+                def.fire_rate,
+                def.cost_power,
+                def.cost_scrap,
+                def.color(),
+            );
+            tower.target_priority = priority;
+            let tower_idx = self.towers.len();
+            self.towers.push(tower);
+            self.tower_stats.push(TowerUiStats::default());
+            self.map_state.slots[slot_idx].tower_index = Some(tower_idx);
         }
     }
 
@@ -627,3 +667,6 @@ impl GameplayState {
         let _ = self.build_save_data().save();
     }
 }
+
+#[cfg(test)]
+mod tests;

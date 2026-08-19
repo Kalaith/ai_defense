@@ -11,11 +11,14 @@ fn scripted_defense_can_survive_ten_waves() {
             let (dom, dom_val) = state.threat.dominant();
             assert!(
                 summary.shutdown_triggered,
-                "defeat instead of shutdown: wave {}, pop {}, integrity {:.1}, food {:.1}, awareness {:.1}, loudest {} {:.1}",
+                "defeat instead of shutdown: wave {}, pop {}, integrity {:.1}, food {:.1}, water {:.1}, towers {}, scrap {:.1}, awareness {:.1}, loudest {} {:.1}",
                 summary.waves_survived,
                 summary.population_surviving,
                 state.factory_integrity,
                 state.population.food_supply,
+                state.resources.water,
+                state.towers.len(),
+                state.resources.scrap,
                 state.threat.awareness_level(),
                 dom.label(),
                 dom_val,

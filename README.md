@@ -11,6 +11,7 @@ You do not tell anyone that you were the lead researcher who unlocked the last A
 ## Gameplay
 
 - Place towers on powered pads to hold attack routes.
+- Begin with a Ballistic Turret and Laser Emitter, then add EMP disruption to the line.
 - Read incoming armor profiles and counter each machine with the right tower family.
 - Set each tower to hunt the closest, leading, strongest, wounded, or fastest threat.
 - Take max-level towers into one of two irreversible final assemblies.

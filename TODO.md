@@ -19,8 +19,6 @@ What follows is the work the design review left open.
 - Finish the tile-map graphics: replace placeholder icons with proper tile, tower, and
   enemy visuals. The complete production checklist, dimensions, palette, and state
   requirements are in [`docs/TILE_MAP_ASSET_REQUIREMENTS.md`](docs/TILE_MAP_ASSET_REQUIREMENTS.md).
-- Improve the opening balance and tutorial: one starting tower is insufficient, but the
-  tutorial only explains that option. Start with or introduce multiple turrets.
 
 ## Stakes and the meta-loop
 

@@ -81,7 +81,7 @@ impl GameplayState {
             );
         }
 
-        if self.towers.is_empty() {
+        if self.towers.len() < 3 {
             if let Some(def) = data.tower_def_by_id("ballistic_turret") {
                 if self.resources.scrap >= def.cost_scrap {
                     return SuggestedAction {

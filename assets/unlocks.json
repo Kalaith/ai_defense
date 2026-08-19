@@ -1,8 +1,8 @@
 {
   "towers": {
     "ballistic_turret": { "requires": [] },
-    "laser_emitter": { "requires": ["building_13"] },
-    "emp_pylon": { "requires": ["building_12"] },
+    "laser_emitter": { "requires": [] },
+    "emp_pylon": { "requires": [] },
     "flak_field": { "requires": ["building_11"] },
     "signal_jammer": { "requires": ["building_08"] }
   },

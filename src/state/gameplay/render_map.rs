@@ -49,7 +49,11 @@ impl GameplayState {
             let level = tower.level.saturating_sub(1).min(2) as usize;
             let frame = level * 5 + column;
             draw_frame(
-                &self.assets.towers,
+                &self
+                    .assets
+                    .as_ref()
+                    .expect("rendering requires gameplay assets")
+                    .towers,
                 frame,
                 vec2(64.0, 64.0),
                 tower.position,
@@ -155,7 +159,11 @@ impl GameplayState {
             }
             let frame = ((get_time() * 8.0) as usize) % 4;
             draw_frame(
-                &self.assets.enemies[asset],
+                &self
+                    .assets
+                    .as_ref()
+                    .expect("rendering requires gameplay assets")
+                    .enemies[asset],
                 frame,
                 frame_size,
                 enemy.position,

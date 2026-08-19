@@ -69,6 +69,7 @@ impl Game {
                 // Skip the first-run premise card so the capture shows the
                 // actual factory floor instead of a modal.
                 gameplay.show_intro = false;
+                gameplay.coach.active = false;
                 self.state = GameState::Gameplay(gameplay);
             }
             "sector" => {

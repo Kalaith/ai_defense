@@ -229,7 +229,7 @@ impl GameplayState {
                 .buildings
                 .iter()
                 .any(|b| b.state == BuildingState::Powered),
-            2 => !self.towers.is_empty(),
+            2 => self.towers.len() >= 3,
             _ => self.beacon_active,
         };
         if done {

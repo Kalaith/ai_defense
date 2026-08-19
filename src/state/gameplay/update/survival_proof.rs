@@ -3,6 +3,7 @@
 
 use crate::data::GameData;
 use crate::engine::map::SlotState;
+use crate::engine::population::WorkforcePolicy;
 use crate::state::StateTransition;
 
 use super::super::GameplayState;
@@ -18,6 +19,19 @@ impl GameplayState {
         // The proof exercises combat math over the full route; progressive
         // disclosure would truncate enemy paths at the revealed frontier.
         self.map_state.reveal_all_sections();
+        self.population.workforce_policy = WorkforcePolicy::Defense;
+        // Establish the minimum sustainable life-support loop before raising
+        // the beacon. The proof is meant to validate combat balance, not prove
+        // that a scripted commander can ignore the water system indefinitely.
+        if let Some(water_idx) = self
+            .map_state
+            .buildings
+            .iter()
+            .position(|building| building.id == "building_02")
+        {
+            self.repair_building(water_idx);
+            self.power_building(water_idx);
+        }
     }
 
     /// Advance the scripted run by a batch of fixed steps, returning a result
@@ -75,8 +89,6 @@ impl GameplayState {
 
     fn keep_building_survival_proof_defense(&mut self, data: &GameData) {
         const BUILD_PLAN: &[(&str, &str)] = &[
-            ("ballistic_turret", "slot_01"),
-            ("ballistic_turret", "slot_02"),
             ("ballistic_turret", "slot_03"),
             ("ballistic_turret", "slot_04"),
             ("ballistic_turret", "slot_05"),

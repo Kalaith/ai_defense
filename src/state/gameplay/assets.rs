@@ -95,6 +95,7 @@ pub struct GameplayAssets {
     pub machines: [Texture2D; 9],
 }
 
+#[cfg(not(test))]
 fn texture(bytes: &[u8]) -> Texture2D {
     let image = Image::from_file_with_format(bytes, Some(ImageFormat::Png))
         .expect("embedded gameplay texture must be valid PNG");
@@ -104,8 +105,9 @@ fn texture(bytes: &[u8]) -> Texture2D {
 }
 
 impl GameplayAssets {
-    pub fn load() -> Self {
-        Self {
+    #[cfg(not(test))]
+    pub fn load() -> Option<Self> {
+        Some(Self {
             tiles: texture(include_bytes!("../../../assets/map/factory_tiles.png")),
             pads: texture(include_bytes!("../../../assets/map/tower_pads.png")),
             core: texture(include_bytes!("../../../assets/buildings/factory_core.png")),
@@ -146,7 +148,15 @@ impl GameplayAssets {
                     "../../../assets/buildings/research_core.png"
                 )),
             ],
-        }
+        })
+    }
+
+    /// Simulation tests do not create a Macroquad graphics context. Keeping
+    /// GPU assets absent there lets them exercise the actual gameplay state
+    /// instead of failing during texture upload before their first assertion.
+    #[cfg(test)]
+    pub fn load() -> Option<Self> {
+        None
     }
 }
 

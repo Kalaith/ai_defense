@@ -21,7 +21,11 @@ impl GameplayState {
                 let variant =
                     FLOOR_VARIANTS[((x / 64 + y / 64 * 3) as usize) % FLOOR_VARIANTS.len()];
                 draw_texture_ex(
-                    &self.assets.tiles,
+                    &self
+                        .assets
+                        .as_ref()
+                        .expect("rendering requires gameplay assets")
+                        .tiles,
                     x as f32,
                     y as f32,
                     WHITE,
@@ -208,7 +212,11 @@ impl GameplayState {
             let _hovered = hovered_slot == Some(idx);
             let pad = slot.position;
             draw_slot_pad(
-                &self.assets.pads,
+                &self
+                    .assets
+                    .as_ref()
+                    .expect("rendering requires gameplay assets")
+                    .pads,
                 pad,
                 slot.state,
                 slot.opens_entrance.is_some(),
@@ -251,7 +259,11 @@ impl GameplayState {
                 vec2(76.0, 58.0)
             };
             draw_frame(
-                &self.assets.machines[machine_index(&building.building_type)],
+                &self
+                    .assets
+                    .as_ref()
+                    .expect("rendering requires gameplay assets")
+                    .machines[machine_index(&building.building_type)],
                 frame,
                 vec2(128.0, 96.0),
                 building.position,
@@ -295,7 +307,11 @@ impl GameplayState {
     pub(super) fn draw_factory_core(&self) {
         let core = self.map_state.factory_core;
         draw_frame(
-            &self.assets.core,
+            &self
+                .assets
+                .as_ref()
+                .expect("rendering requires gameplay assets")
+                .core,
             if self
                 .map_state
                 .buildings
