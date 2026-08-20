@@ -16,9 +16,10 @@ What follows is the work the design review left open.
 ## Immediate improvements
 
 - Improve the intro story; parts are unclear and do not make sense.
-- Finish the tile-map graphics: replace placeholder icons with proper tile, tower, and
-  enemy visuals. The complete production checklist, dimensions, palette, and state
-  requirements are in [`docs/TILE_MAP_ASSET_REQUIREMENTS.md`](docs/TILE_MAP_ASSET_REQUIREMENTS.md).
+- Finish the remaining tile-map art polish: add the four depth-band motif sets and
+  the final ability-state overlay pass. The production checklist, dimensions,
+  palette, state requirements, and new depth/ability contract are in
+  [`docs/TILE_MAP_ASSET_REQUIREMENTS.md`](docs/TILE_MAP_ASSET_REQUIREMENTS.md).
 
 ## Stakes and the meta-loop
 
@@ -27,12 +28,14 @@ What follows is the work the design review left open.
 - A second and third map / route layout.
 - Mission structure with the escalating framings from the design doc (start-under-assault,
   multi-beacon).
+- Optional depth directives that let a player trade production, route control, or
+  evacuation capacity at each newly reached band.
 
 ## Presentation
 
 - Audio, from zero: phase-driven beacon hum, breach alarm, tower fire, sector power-up.
-- Awakening visuals — rust giving way to glow as sections wake, and UI distortion at high
-  corruption.
+- Awakening visuals — rust giving way to glow as sections wake, UI distortion at high
+  corruption, and stronger band-specific framing as the factory opens inward.
 - One line of context on the beacon button naming the trade the player is about to make.
 
 ## Testing

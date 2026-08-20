@@ -35,7 +35,9 @@ impl GameplayState {
         for (idx, tower) in self.towers.iter().enumerate() {
             let mut col = tower.color();
             if !tower.is_active {
-                col = Color::new(col.r, col.g, col.b, 0.5);
+                col = Color::new(col.r, col.g, col.b, 0.42);
+            } else if tower.is_disabled() {
+                col = Color::new(0.72, 0.22, 0.86, 0.52);
             }
             let radius = self.constants.ui.tower_base_radius
                 + (tower.level.saturating_sub(1) as f32) * self.constants.ui.tower_level_radius_inc;
@@ -65,6 +67,15 @@ impl GameplayState {
                     &text().map.selected_tower,
                     tower.position + vec2(20.0, -24.0),
                     Color::new(0.45, 0.9, 1.0, 1.0),
+                );
+            }
+            if tower.is_disabled() {
+                draw_circle_lines(
+                    tower.position.x,
+                    tower.position.y,
+                    radius + 8.0,
+                    2.0,
+                    Color::new(0.86, 0.22, 0.92, 0.82),
                 );
             }
         }
@@ -170,6 +181,16 @@ impl GameplayState {
                 sprite_size,
                 col,
             );
+
+            if enemy.is_shielded() {
+                draw_circle_lines(
+                    enemy.position.x,
+                    enemy.position.y,
+                    sprite_size.x * 0.43,
+                    2.0,
+                    Color::new(1.0, 0.24, 0.18, 0.74),
+                );
+            }
 
             let bar_w = radius * 3.0;
             let bar_h = 3.0;

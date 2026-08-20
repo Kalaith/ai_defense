@@ -99,11 +99,19 @@
   "enemy": {
     "scout_dodge_chance": 0.2,
     "scout_dodge_duration": 0.12,
+    "scout_report_interval": 5.5,
     "hit_flash_duration": 0.1,
     "saboteur_skip_chance": 0.3,
+    "saboteur_strike_interval": 5.0,
+    "saboteur_disable_duration": 2.4,
+    "saboteur_disable_range": 88.0,
     "slow_multiplier": 0.5,
     "commander_aura_radius": 150.0,
-    "commander_aura_speed_mult": 1.25
+    "commander_aura_speed_mult": 1.25,
+    "commander_pulse_interval": 7.5,
+    "commander_shield_duration": 2.0,
+    "commander_shield_radius": 118.0,
+    "commander_shield_multiplier": 0.78
   },
   "tower": {
     "upgrade_max_level": 3,

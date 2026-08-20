@@ -98,7 +98,7 @@ impl GameplayState {
             rect.x + 12.0,
             rect.y + 18.0,
             &t.survival,
-            self.factory.phase.label(),
+            &self.depth_readout(),
             dark::POSITIVE,
         );
         let workforce = &text().workforce;
@@ -128,7 +128,10 @@ impl GameplayState {
             self.show_workforce = true;
         }
 
-        let y = rect.y + 49.0;
+        // Leave a full text line below the depth/phase subtitle. The compact
+        // survival card otherwise lets the new depth readout collide with the
+        // POP and FOOD labels at the smallest supported HUD width.
+        let y = rect.y + 54.0;
         let col_w = rect.w / 5.0;
         draw_metric_icon(
             ConsoleIcon::People,

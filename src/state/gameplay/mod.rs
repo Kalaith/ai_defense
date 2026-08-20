@@ -124,6 +124,11 @@ pub struct GameplayState {
     pub unlocks: crate::data::UnlocksDef,
     pub enemy_defs: Vec<EnemyDef>,
 
+    /// Highest map band reached. This is derived from progressive section
+    /// visibility and is kept here only so a new depth can announce itself
+    /// once instead of every frame.
+    pub last_depth_level: u32,
+
     // Camera
     pub camera: ToolkitCamera2D,
 }
@@ -217,6 +222,7 @@ impl GameplayState {
 
         let mut factory = Factory::new();
         factory.init_sectors(&data.sector_defs);
+        let initial_depth = map_state.deepest_visible_depth();
 
         let threat = ThreatSignature::new();
         let last_reaction_tier = threat.reaction_tier(&data.constants.threat);
@@ -241,9 +247,15 @@ impl GameplayState {
                 enemy_tuning: EnemyTuning {
                     scout_dodge_chance: data.constants.enemy.scout_dodge_chance,
                     scout_dodge_duration: data.constants.enemy.scout_dodge_duration,
+                    scout_report_interval: data.constants.enemy.scout_report_interval,
                     hit_flash_duration: data.constants.enemy.hit_flash_duration,
                     saboteur_skip_chance: data.constants.enemy.saboteur_skip_chance,
+                    saboteur_strike_interval: data.constants.enemy.saboteur_strike_interval,
                     slow_multiplier: data.constants.enemy.slow_multiplier,
+                    commander_pulse_interval: data.constants.enemy.commander_pulse_interval,
+                    commander_shield_duration: data.constants.enemy.commander_shield_duration,
+                    commander_shield_radius: data.constants.enemy.commander_shield_radius,
+                    commander_shield_multiplier: data.constants.enemy.commander_shield_multiplier,
                 },
                 wave_budget_base: data.constants.waves.budget_base,
                 wave_budget_per_wave: data.constants.waves.budget_per_wave,
@@ -340,6 +352,7 @@ impl GameplayState {
             beacon_start_difficulty_bonus: 0.0,
             unlocks: data.unlocks.clone(),
             enemy_defs: data.enemy_defs.clone(),
+            last_depth_level: initial_depth,
 
             camera: ToolkitCamera2D::with_config(
                 view_center,
@@ -532,9 +545,15 @@ impl GameplayState {
             enemy_tuning: EnemyTuning {
                 scout_dodge_chance: self.constants.enemy.scout_dodge_chance,
                 scout_dodge_duration: self.constants.enemy.scout_dodge_duration,
+                scout_report_interval: self.constants.enemy.scout_report_interval,
                 hit_flash_duration: self.constants.enemy.hit_flash_duration,
                 saboteur_skip_chance: self.constants.enemy.saboteur_skip_chance,
+                saboteur_strike_interval: self.constants.enemy.saboteur_strike_interval,
                 slow_multiplier: self.constants.enemy.slow_multiplier,
+                commander_pulse_interval: self.constants.enemy.commander_pulse_interval,
+                commander_shield_duration: self.constants.enemy.commander_shield_duration,
+                commander_shield_radius: self.constants.enemy.commander_shield_radius,
+                commander_shield_multiplier: self.constants.enemy.commander_shield_multiplier,
             },
             wave_budget_base: self.constants.waves.budget_base,
             wave_budget_per_wave: self.constants.waves.budget_per_wave,
@@ -665,6 +684,45 @@ impl GameplayState {
             return;
         }
         let _ = self.build_save_data().save();
+    }
+
+    pub(crate) fn factory_depth(&self) -> u32 {
+        self.map_state.deepest_visible_depth()
+    }
+
+    /// Deeper wings expose more of the machine's old routing network. The
+    /// extra assault budget is small, visible, and paid back by the production
+    /// multiplier below once the player keeps those wings online.
+    pub(crate) fn depth_assault_bonus(&self) -> f32 {
+        if self.survival_proof_active {
+            return 0.0;
+        }
+        self.factory_depth().saturating_sub(1) as f32 * 0.035
+    }
+
+    pub(crate) fn depth_production_multiplier(&self) -> f32 {
+        if self.survival_proof_active {
+            return 1.0;
+        }
+        1.0 + self.factory_depth().saturating_sub(1) as f32 * 0.025
+    }
+
+    pub(crate) fn depth_readout(&self) -> String {
+        let depth = self.factory_depth();
+        let name = crate::data::strings::text()
+            .map
+            .depth_names
+            .get(depth.saturating_sub(1) as usize)
+            .map(String::as_str)
+            .unwrap_or("DEEP FACTORY");
+        format!(
+            "{} · {}",
+            crate::data::strings::fill(
+                &crate::data::strings::text().map.depth_label,
+                &[("n", &format!("{depth:02}")), ("name", name)],
+            ),
+            self.factory.phase.label()
+        )
     }
 }
 

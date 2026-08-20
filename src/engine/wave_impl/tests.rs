@@ -10,9 +10,15 @@ fn test_tuning(data: &GameData) -> WaveTuning {
         enemy_tuning: EnemyTuning {
             scout_dodge_chance: data.constants.enemy.scout_dodge_chance,
             scout_dodge_duration: data.constants.enemy.scout_dodge_duration,
+            scout_report_interval: data.constants.enemy.scout_report_interval,
             hit_flash_duration: data.constants.enemy.hit_flash_duration,
             saboteur_skip_chance: data.constants.enemy.saboteur_skip_chance,
+            saboteur_strike_interval: data.constants.enemy.saboteur_strike_interval,
             slow_multiplier: data.constants.enemy.slow_multiplier,
+            commander_pulse_interval: data.constants.enemy.commander_pulse_interval,
+            commander_shield_duration: data.constants.enemy.commander_shield_duration,
+            commander_shield_radius: data.constants.enemy.commander_shield_radius,
+            commander_shield_multiplier: data.constants.enemy.commander_shield_multiplier,
         },
         wave_budget_base: data.constants.waves.budget_base,
         wave_budget_per_wave: data.constants.waves.budget_per_wave,
@@ -89,6 +95,92 @@ fn generated_wave_queues_enemies_across_active_spawn_points() {
         .spawn_queue
         .iter()
         .any(|entry| entry.path_id == "north"));
+}
+
+#[test]
+fn commander_pulse_shields_nearby_escort() {
+    let data = GameData::load();
+    let mut manager = WaveManager::new(test_tuning(&data));
+    let tuning = manager.enemy_tuning.clone();
+    let mut commander = Enemy::new(
+        EnemyType::Commander,
+        vec2(10.0, 10.0),
+        100.0,
+        0.0,
+        1.0,
+        tuning.clone(),
+        "west".to_string(),
+        Default::default(),
+    );
+    commander.ability_timer = 0.0;
+    let escort = Enemy::new(
+        EnemyType::Drone,
+        vec2(40.0, 10.0),
+        100.0,
+        0.0,
+        1.0,
+        tuning,
+        "west".to_string(),
+        Default::default(),
+    );
+    manager.enemies = vec![commander, escort];
+    manager.wave_active = true;
+
+    let paths = std::collections::HashMap::from([(
+        "west".to_string(),
+        vec![vec2(10.0, 10.0), vec2(500.0, 10.0)],
+    )]);
+    let event = manager.tick(0.1, &paths);
+
+    assert!(matches!(event, WaveEvent::CommanderPulse { .. }));
+    assert!(manager.enemies[1].is_shielded());
+}
+
+#[test]
+fn scout_reports_and_saboteurs_strike_on_independent_timers() {
+    let data = GameData::load();
+    let mut manager = WaveManager::new(test_tuning(&data));
+    let tuning = manager.enemy_tuning.clone();
+    let mut scout = Enemy::new(
+        EnemyType::Scout,
+        vec2(10.0, 10.0),
+        20.0,
+        0.0,
+        1.0,
+        tuning.clone(),
+        "west".to_string(),
+        Default::default(),
+    );
+    scout.ability_timer = 0.0;
+    manager.enemies.push(scout);
+    manager.wave_active = true;
+    let paths = std::collections::HashMap::from([(
+        "west".to_string(),
+        vec![vec2(10.0, 10.0), vec2(500.0, 10.0)],
+    )]);
+    assert!(matches!(
+        manager.tick(0.1, &paths),
+        WaveEvent::ScoutReport { .. }
+    ));
+
+    manager.enemies.clear();
+    let mut saboteur = Enemy::new(
+        EnemyType::Saboteur,
+        vec2(10.0, 10.0),
+        20.0,
+        0.0,
+        1.0,
+        tuning,
+        "west".to_string(),
+        Default::default(),
+    );
+    saboteur.ability_timer = 0.0;
+    manager.enemies.push(saboteur);
+    manager.wave_active = true;
+    assert!(matches!(
+        manager.tick(0.1, &paths),
+        WaveEvent::SaboteurStrike { .. }
+    ));
 }
 
 #[test]

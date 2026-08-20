@@ -1594,6 +1594,7 @@
     {
       "id": "section_1_intake",
       "label": "Intake & Scrap Processing",
+      "depth": 1,
       "core_building": "building_01",
       "buildings": [
         "building_01"
@@ -1618,6 +1619,7 @@
     {
       "id": "section_2_water",
       "label": "Water Filtration",
+      "depth": 1,
       "core_building": "building_02",
       "buildings": [
         "building_02"
@@ -1636,6 +1638,7 @@
     {
       "id": "section_3_power_spine",
       "label": "Power Distribution Spine",
+      "depth": 1,
       "core_building": "building_09",
       "buildings": [
         "building_09"
@@ -1654,6 +1657,7 @@
     {
       "id": "section_4_assembly",
       "label": "Assembly Hall",
+      "depth": 2,
       "core_building": "building_10",
       "buildings": [
         "building_10"
@@ -1677,6 +1681,7 @@
     {
       "id": "section_5_logistics",
       "label": "Logistics Hub",
+      "depth": 2,
       "core_building": "building_11",
       "buildings": [
         "building_11"
@@ -1698,6 +1703,7 @@
     {
       "id": "section_6_hydroponics",
       "label": "Hydroponics & Population",
+      "depth": 2,
       "core_building": "building_03",
       "buildings": [
         "building_03",
@@ -1721,6 +1727,7 @@
     {
       "id": "section_7_robotics",
       "label": "Robotics Bay",
+      "depth": 3,
       "core_building": "building_12",
       "buildings": [
         "building_12"
@@ -1741,6 +1748,7 @@
     {
       "id": "section_8_research",
       "label": "Research Core",
+      "depth": 3,
       "core_building": "building_13",
       "buildings": [
         "building_13"
@@ -1759,6 +1767,7 @@
     {
       "id": "section_9_ai_vault",
       "label": "AI Vault",
+      "depth": 4,
       "core_building": "building_08",
       "buildings": [
         "building_08",
@@ -1782,6 +1791,7 @@
     {
       "id": "section_10_heart",
       "label": "Factory Heart",
+      "depth": 4,
       "core_building": "factory_core",
       "buildings": [],
       "slots": [

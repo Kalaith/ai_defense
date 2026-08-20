@@ -42,8 +42,9 @@ impl GameplayState {
         }
 
         let force_commander = self.beacon_phase == BeaconPhase::TerminalHowl;
-        let budget_multiplier =
-            self.constants.waves.budget_multiplier + self.beacon_start_difficulty_bonus;
+        let budget_multiplier = self.constants.waves.budget_multiplier
+            + self.beacon_start_difficulty_bonus
+            + self.depth_assault_bonus();
         let adaptation = self.wave_adaptation();
         self.wave_manager.generate_wave(
             self.current_wave,
@@ -76,9 +77,67 @@ impl GameplayState {
 
         match self.wave_manager.tick(dt, &paths) {
             WaveEvent::EnemyReachedEnd { enemy_type } => self.handle_breach(enemy_type),
+            WaveEvent::ScoutReport { position } => {
+                self.shot_effects
+                    .push(crate::engine::tower::ShotEffect::pulse(
+                        position,
+                        18.0,
+                        Color::new(0.9, 0.3, 0.22, 0.8),
+                        self.constants.tower.shot_ttl * 4.0,
+                    ));
+                self.threat
+                    .add_noise(self.constants.threat.noise_scout_breach * 0.55);
+                self.push_notification(
+                    crate::data::strings::text()
+                        .notifications
+                        .scout_report
+                        .clone(),
+                );
+            }
+            WaveEvent::SaboteurStrike { position } => self.handle_saboteur_strike(position),
+            WaveEvent::CommanderPulse { position, radius } => {
+                self.shot_effects
+                    .push(crate::engine::tower::ShotEffect::pulse(
+                        position,
+                        radius,
+                        Color::new(0.95, 0.2, 0.18, 0.9),
+                        self.constants.tower.shot_ttl * 5.0,
+                    ));
+            }
             WaveEvent::WaveComplete => self.handle_wave_complete(),
             WaveEvent::None => {}
         }
+    }
+
+    fn handle_saboteur_strike(&mut self, position: Vec2) {
+        let target = self
+            .towers
+            .iter()
+            .enumerate()
+            .filter(|(_, tower)| tower.is_active && !tower.is_disabled())
+            .map(|(idx, tower)| (idx, (tower.position - position).length()))
+            .filter(|(_, distance)| *distance <= self.constants.enemy.saboteur_disable_range)
+            .min_by(|a, b| a.1.total_cmp(&b.1))
+            .map(|(idx, _)| idx);
+
+        let Some(target) = target else {
+            return;
+        };
+        let tower_position = self.towers[target].position;
+        self.towers[target].disable_for(self.constants.enemy.saboteur_disable_duration);
+        self.shot_effects
+            .push(crate::engine::tower::ShotEffect::pulse(
+                tower_position,
+                24.0,
+                Color::new(0.75, 0.22, 0.92, 0.95),
+                self.constants.tower.shot_ttl * 7.0,
+            ));
+        self.push_notification(
+            crate::data::strings::text()
+                .notifications
+                .tower_sabotaged
+                .clone(),
+        );
     }
 
     pub(super) fn update_combat(&mut self, dt: f32) {
@@ -234,9 +293,10 @@ impl GameplayState {
 
     pub(super) fn update_building_boons(&mut self, dt: f32) {
         let boon = self.unlocked_building_boon();
-        self.resources.scrap += boon.scrap_per_sec * dt;
-        self.population.food_supply += boon.food_per_sec * dt;
-        self.resources.water += boon.water_per_sec * dt;
+        let depth_mult = self.depth_production_multiplier();
+        self.resources.scrap += boon.scrap_per_sec * depth_mult * dt;
+        self.population.food_supply += boon.food_per_sec * depth_mult * dt;
+        self.resources.water += boon.water_per_sec * depth_mult * dt;
     }
 
     pub(super) fn update_threat(&mut self, dt: f32) {
@@ -295,6 +355,21 @@ impl GameplayState {
         self.factory.check_awakening();
         self.recalc_factory_integrity();
         self.map_state.update_section_visibility();
+        let depth = self.factory_depth();
+        if depth > self.last_depth_level {
+            self.last_depth_level = depth;
+            self.push_notification(crate::data::strings::fill(
+                &crate::data::strings::text().notifications.depth_reached,
+                &[("n", &depth.to_string())],
+            ));
+            self.shot_effects
+                .push(crate::engine::tower::ShotEffect::pulse(
+                    self.map_state.factory_core,
+                    160.0,
+                    Color::new(0.18, 0.85, 0.68, 0.8),
+                    self.constants.tower.shot_ttl * 8.0,
+                ));
+        }
         self.sync_camera_bounds();
     }
 

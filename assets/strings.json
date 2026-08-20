@@ -262,7 +262,10 @@
     "evac_milestone": "{n} clear of this place. None of them know what you did.",
     "team_lost": "A team is not answering. Do not wait on them.",
     "team_returned": "A team made it back: +{scrap} scrap, +{food} food, +{pop} people",
-    "scout_breach": "A scout got past. It has seen enough to report."
+    "scout_breach": "A scout got past. It has seen enough to report.",
+    "scout_report": "Scout report transmitted. The next assault has your shape.",
+    "tower_sabotaged": "SABOTEUR STRIKE — a tower is offline",
+    "depth_reached": "DEPTH {n} REACHED // SYSTEMS ONLINE"
   },
 
   "alerts": {
@@ -455,6 +458,8 @@
     "opens_this_route": "OPENS THIS ROUTE",
     "selected_tower": "SELECTED TOWER",
     "factory": "FACTORY",
+    "depth_label": "D{n} · {name}",
+    "depth_names": ["OUTER RING", "PRODUCTION SPINE", "VAULT APPROACH", "HEART CHAMBER"],
     "node_labels": {
       "scrap_converter": "SCRAP",
       "water_reclaimer": "WATER",

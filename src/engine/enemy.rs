@@ -12,9 +12,15 @@ pub use crate::data::EnemyType;
 pub struct EnemyTuning {
     pub scout_dodge_chance: f32,
     pub scout_dodge_duration: f32,
+    pub scout_report_interval: f32,
     pub hit_flash_duration: f32,
     pub saboteur_skip_chance: f32,
+    pub saboteur_strike_interval: f32,
     pub slow_multiplier: f32,
+    pub commander_pulse_interval: f32,
+    pub commander_shield_duration: f32,
+    pub commander_shield_radius: f32,
+    pub commander_shield_multiplier: f32,
 }
 
 pub struct Enemy {
@@ -29,6 +35,8 @@ pub struct Enemy {
     pub slowed_timer: f32,
     pub hit_flash_timer: f32,
     pub dodge_timer: f32,
+    pub ability_timer: f32,
+    pub shield_timer: f32,
     pub tuning: EnemyTuning,
     pub path_id: String,
     pub damage_multipliers: DamageMultipliers,
@@ -57,6 +65,8 @@ impl Enemy {
             slowed_timer: 0.0,
             hit_flash_timer: 0.0,
             dodge_timer: 0.0,
+            ability_timer: initial_ability_timer(&enemy_type, &tuning),
+            shield_timer: 0.0,
             tuning,
             path_id,
             damage_multipliers,
@@ -79,12 +89,17 @@ impl Enemy {
         }
 
         let multiplier = self.damage_multipliers.for_tower(source);
-        let effective_multiplier = if bypass_resistance {
+        let resistance_multiplier = if bypass_resistance {
             multiplier.max(1.0)
         } else {
             multiplier
         };
-        self.health -= amount * effective_multiplier;
+        let shield_multiplier = if self.shield_timer > 0.0 {
+            self.tuning.commander_shield_multiplier
+        } else {
+            1.0
+        };
+        self.health -= amount * resistance_multiplier * shield_multiplier;
         self.hit_flash_timer = self.tuning.hit_flash_duration;
         if self.health <= 0.0 {
             self.health = 0.0;
@@ -99,6 +114,29 @@ impl Enemy {
         if self.dodge_timer > 0.0 {
             self.dodge_timer = (self.dodge_timer - dt).max(0.0);
         }
+        if self.ability_timer > 0.0 {
+            self.ability_timer = (self.ability_timer - dt).max(0.0);
+        }
+        if self.shield_timer > 0.0 {
+            self.shield_timer = (self.shield_timer - dt).max(0.0);
+        }
+    }
+
+    pub fn is_shielded(&self) -> bool {
+        self.shield_timer > 0.0
+    }
+
+    pub fn use_ability(&mut self) -> bool {
+        if self.ability_timer > 0.0 {
+            return false;
+        }
+        self.ability_timer = match self.enemy_type {
+            EnemyType::Scout => self.tuning.scout_report_interval,
+            EnemyType::Saboteur => self.tuning.saboteur_strike_interval,
+            EnemyType::Commander => self.tuning.commander_pulse_interval,
+            EnemyType::Drone | EnemyType::HeavyUnit => return false,
+        };
+        true
     }
 
     pub fn move_along_path(&mut self, path: &[Vec2], dt: f32, speed_multiplier: f32) -> bool {
@@ -129,5 +167,14 @@ impl Enemy {
         }
 
         false
+    }
+}
+
+fn initial_ability_timer(enemy_type: &EnemyType, tuning: &EnemyTuning) -> f32 {
+    match enemy_type {
+        EnemyType::Scout => tuning.scout_report_interval * 0.65,
+        EnemyType::Saboteur => tuning.saboteur_strike_interval * 0.55,
+        EnemyType::Commander => tuning.commander_pulse_interval * 0.75,
+        EnemyType::Drone | EnemyType::HeavyUnit => f32::MAX,
     }
 }

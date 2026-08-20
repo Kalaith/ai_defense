@@ -60,6 +60,7 @@ pub struct Tower {
     pub damage: f32,
     pub fire_rate: f32,
     pub cooldown: f32,
+    pub disabled_timer: f32,
     pub is_active: bool,
     pub power_drain: f32,
     pub base_scrap_cost: f32,
@@ -180,6 +181,7 @@ impl Tower {
             damage,
             fire_rate,
             cooldown: 0.0,
+            disabled_timer: 0.0,
             is_active: true,
             power_drain,
             base_scrap_cost,
@@ -191,7 +193,7 @@ impl Tower {
     }
 
     pub fn can_fire(&self) -> bool {
-        self.is_active && self.cooldown <= 0.0
+        self.is_active && self.disabled_timer <= 0.0 && self.cooldown <= 0.0
     }
 
     pub fn fire(&mut self, fire_rate_mult: f32) {
@@ -203,6 +205,17 @@ impl Tower {
         if self.cooldown > 0.0 {
             self.cooldown -= dt;
         }
+        if self.disabled_timer > 0.0 {
+            self.disabled_timer = (self.disabled_timer - dt).max(0.0);
+        }
+    }
+
+    pub fn disable_for(&mut self, duration: f32) {
+        self.disabled_timer = self.disabled_timer.max(duration);
+    }
+
+    pub fn is_disabled(&self) -> bool {
+        self.disabled_timer > 0.0
     }
 
     pub fn color(&self) -> macroquad::prelude::Color {

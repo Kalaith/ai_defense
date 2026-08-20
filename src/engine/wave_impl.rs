@@ -8,6 +8,9 @@ use std::collections::HashMap;
 pub enum WaveEvent {
     None,
     EnemyReachedEnd { enemy_type: EnemyType },
+    ScoutReport { position: Vec2 },
+    SaboteurStrike { position: Vec2 },
+    CommanderPulse { position: Vec2, radius: f32 },
     WaveComplete,
 }
 
@@ -28,6 +31,7 @@ pub struct WaveManager {
     pub threat_health_mult_per_awareness: f32,
     pub tier_2_awareness: f32,
     pub tier_3_awareness: f32,
+    pub enemy_abilities_enabled: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -95,7 +99,12 @@ impl WaveManager {
             threat_health_mult_per_awareness: tuning.threat_health_mult_per_awareness,
             tier_2_awareness: tuning.tier_2_awareness,
             tier_3_awareness: tuning.tier_3_awareness,
+            enemy_abilities_enabled: true,
         }
+    }
+
+    pub fn set_enemy_abilities_enabled(&mut self, enabled: bool) {
+        self.enemy_abilities_enabled = enabled;
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -154,6 +163,9 @@ impl WaveManager {
         }
 
         let mut reached_end = None;
+        let mut scout_report = None;
+        let mut saboteur_strike = None;
+        let mut commander_pulse = None;
         let commander_positions: Vec<Vec2> = self
             .enemies
             .iter()
@@ -166,6 +178,18 @@ impl WaveManager {
                 continue;
             }
             enemy.tick_timers(dt);
+
+            if self.enemy_abilities_enabled && enemy.is_alive && enemy.use_ability() {
+                match enemy.enemy_type {
+                    EnemyType::Scout => scout_report = Some(enemy.position),
+                    EnemyType::Saboteur => saboteur_strike = Some(enemy.position),
+                    EnemyType::Commander => {
+                        let pulse_radius = self.enemy_tuning.commander_shield_radius;
+                        commander_pulse = Some((enemy.position, pulse_radius));
+                    }
+                    EnemyType::Drone | EnemyType::HeavyUnit => {}
+                }
+            }
 
             let mut speed_mult = 1.0;
             if enemy.enemy_type != EnemyType::Commander {
@@ -194,8 +218,28 @@ impl WaveManager {
             }
         }
 
+        if let Some((pulse_center, pulse_radius)) = commander_pulse {
+            for ally in &mut self.enemies {
+                if ally.is_alive && (ally.position - pulse_center).length() <= pulse_radius {
+                    ally.shield_timer = ally
+                        .shield_timer
+                        .max(self.enemy_tuning.commander_shield_duration);
+                }
+            }
+        }
+
         if let Some(enemy_type) = reached_end {
             return WaveEvent::EnemyReachedEnd { enemy_type };
+        }
+
+        if let Some((position, radius)) = commander_pulse {
+            return WaveEvent::CommanderPulse { position, radius };
+        }
+        if let Some(position) = saboteur_strike {
+            return WaveEvent::SaboteurStrike { position };
+        }
+        if let Some(position) = scout_report {
+            return WaveEvent::ScoutReport { position };
         }
 
         if self.spawn_queue.is_empty() && self.enemies.iter().all(|e| !e.is_alive) {

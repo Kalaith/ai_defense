@@ -1,7 +1,7 @@
 //! The main circuit-board map render: PCB background, section backplates,
 //! traces, enemy routes, tower slots, buildings, and the factory core.
 
-use crate::data::strings::text;
+use crate::data::strings::{fill, text};
 use crate::engine::map::{BuildingState, MapPath, SlotState, TraceNode};
 use macroquad::prelude::*;
 use macroquad_toolkit::colors::dark;
@@ -66,9 +66,91 @@ impl GameplayState {
     /// yet. Now only the *next* locked section renders — as an anonymous
     /// teaser — and everything further out is simply absent until revealed.
     pub(super) fn draw_sections_and_corridors(&self) {
-        // The floor and live enemy lanes are the map's visual structure. The
-        // old section slabs and motif overlays obscured both, especially when
-        // the camera was framed tightly around the starting wing.
+        let sections = self.map_state.section_render_info();
+        let mut visible = sections.iter().filter(|section| section.visible);
+        let mut previous: Option<Rect> = None;
+        for section in visible.by_ref() {
+            let pad = 42.0;
+            let rect = Rect::new(
+                (section.min.x - pad).max(0.0),
+                (section.min.y - pad).max(0.0),
+                (section.max.x - section.min.x + pad * 2.0).max(80.0),
+                (section.max.y - section.min.y + pad * 2.0).max(80.0),
+            );
+            let accent = depth_accent(section.depth);
+            draw_rectangle(
+                rect.x,
+                rect.y,
+                rect.w,
+                rect.h,
+                Color::new(accent.r, accent.g, accent.b, 0.045),
+            );
+            draw_rectangle_lines(
+                rect.x,
+                rect.y,
+                rect.w,
+                rect.h,
+                1.5,
+                Color::new(accent.r, accent.g, accent.b, 0.22),
+            );
+            draw_line(
+                rect.x,
+                rect.y,
+                rect.x + rect.w.min(250.0),
+                rect.y,
+                3.0,
+                Color::new(accent.r, accent.g, accent.b, 0.5),
+            );
+
+            let depth_name = text()
+                .map
+                .depth_names
+                .get(section.depth.saturating_sub(1) as usize)
+                .map(String::as_str)
+                .unwrap_or("DEEP FACTORY");
+            let label = fill(
+                &text().map.depth_label,
+                &[
+                    ("n", &format!("{:02}", section.depth)),
+                    ("name", depth_name),
+                ],
+            );
+            draw_ui_text(
+                &label,
+                rect.x + 12.0,
+                rect.y + 18.0,
+                10.0,
+                Color::new(accent.r, accent.g, accent.b, 0.78),
+            );
+            draw_ui_text(
+                &section.label,
+                rect.x + 12.0,
+                rect.y + 34.0,
+                14.0,
+                Color::new(0.78, 0.86, 0.82, 0.48),
+            );
+            draw_depth_motif(rect, section.depth, accent);
+
+            if let Some(previous) = previous {
+                let a = vec2(
+                    previous.x + previous.w + 34.0,
+                    previous.y + previous.h * 0.5,
+                );
+                let b = vec2(
+                    rect.x - 34.0,
+                    (rect.y + rect.h * 0.5).clamp(0.0, self.map_state.map_size.y),
+                );
+                draw_line(
+                    a.x,
+                    a.y,
+                    b.x,
+                    b.y,
+                    2.0,
+                    Color::new(accent.r, accent.g, accent.b, 0.16),
+                );
+            }
+            previous = Some(rect);
+        }
     }
 
     fn trace_node_pos(&self, node: &TraceNode) -> Vec2 {
@@ -403,6 +485,120 @@ fn draw_slot_pad(
         SlotState::Cleared => {}
         SlotState::Powered => {
             let _ = has_tower;
+        }
+    }
+}
+
+fn depth_accent(depth: u32) -> Color {
+    match depth {
+        1 => Color::new(0.24, 0.72, 0.62, 1.0),
+        2 => Color::new(0.26, 0.64, 0.9, 1.0),
+        3 => Color::new(0.72, 0.5, 0.92, 1.0),
+        _ => Color::new(0.96, 0.42, 0.28, 1.0),
+    }
+}
+
+/// Small schematic marks make the four depth bands feel like different
+/// industrial environments while leaving the existing tiles and routes legible.
+fn draw_depth_motif(rect: Rect, depth: u32, color: Color) {
+    let alpha = 0.16;
+    match depth {
+        1 => {
+            let mut x = rect.x + 26.0;
+            while x < rect.x + rect.w - 20.0 {
+                draw_line(
+                    x,
+                    rect.y + rect.h - 24.0,
+                    x + 18.0,
+                    rect.y + rect.h - 24.0,
+                    2.0,
+                    Color::new(color.r, color.g, color.b, alpha),
+                );
+                draw_circle(
+                    x + 22.0,
+                    rect.y + rect.h - 24.0,
+                    3.0,
+                    Color::new(color.r, color.g, color.b, alpha + 0.1),
+                );
+                x += 54.0;
+            }
+        }
+        2 => {
+            let mut y = rect.y + 54.0;
+            while y < rect.y + rect.h - 18.0 {
+                draw_line(
+                    rect.x + rect.w - 54.0,
+                    y,
+                    rect.x + rect.w - 24.0,
+                    y,
+                    3.0,
+                    Color::new(color.r, color.g, color.b, alpha),
+                );
+                draw_line(
+                    rect.x + rect.w - 42.0,
+                    y - 8.0,
+                    rect.x + rect.w - 42.0,
+                    y + 8.0,
+                    1.0,
+                    Color::new(color.r, color.g, color.b, alpha),
+                );
+                y += 42.0;
+            }
+        }
+        3 => {
+            let center = vec2(rect.x + rect.w - 52.0, rect.y + 54.0);
+            for spoke in 0..6 {
+                let angle = spoke as f32 * std::f32::consts::TAU / 6.0;
+                let end = center + vec2(angle.cos(), angle.sin()) * 24.0;
+                draw_line(
+                    center.x,
+                    center.y,
+                    end.x,
+                    end.y,
+                    2.0,
+                    Color::new(color.r, color.g, color.b, alpha),
+                );
+            }
+            draw_circle_lines(
+                center.x,
+                center.y,
+                12.0,
+                1.5,
+                Color::new(color.r, color.g, color.b, alpha + 0.1),
+            );
+        }
+        _ => {
+            let center = vec2(rect.x + rect.w - 56.0, rect.y + rect.h - 50.0);
+            draw_circle_lines(
+                center.x,
+                center.y,
+                28.0,
+                2.0,
+                Color::new(color.r, color.g, color.b, alpha + 0.1),
+            );
+            draw_circle_lines(
+                center.x,
+                center.y,
+                11.0,
+                2.0,
+                Color::new(color.r, color.g, color.b, alpha + 0.2),
+            );
+            draw_line(
+                center.x - 36.0,
+                center.y,
+                center.x + 36.0,
+                center.y,
+                1.0,
+                Color::new(color.r, color.g, color.b, alpha),
+            );
+            draw_line(
+                center.x,
+                center.y - 36.0,
+                center.x,
+                center.y + 36.0,
+                1.0,
+                Color::new(color.r, color.g, color.b, alpha),
+            );
         }
     }
 }

@@ -25,9 +25,15 @@ fn test_enemy(enemy_type: EnemyType, position: Vec2, health: f32) -> Enemy {
         EnemyTuning {
             scout_dodge_chance: 0.0,
             scout_dodge_duration: 0.0,
+            scout_report_interval: 5.0,
             hit_flash_duration: 0.1,
             saboteur_skip_chance: 0.0,
+            saboteur_strike_interval: 4.0,
             slow_multiplier: 0.5,
+            commander_pulse_interval: 6.0,
+            commander_shield_duration: 3.0,
+            commander_shield_radius: 100.0,
+            commander_shield_multiplier: 0.6,
         },
         "west".to_string(),
         crate::data::DamageMultipliers::default(),
@@ -46,6 +52,18 @@ fn ready_tower(tower_type: TowerType, position: Vec2, range: f32, damage: f32) -
         10.0,
         Color::new(1.0, 1.0, 1.0, 1.0),
     )
+}
+
+#[test]
+fn commander_shield_reduces_damage_until_the_pulse_expires() {
+    let mut enemy = test_enemy(EnemyType::Drone, vec2(0.0, 0.0), 100.0);
+    enemy.shield_timer = 1.0;
+    enemy.take_damage(10.0, &TowerType::Ballistic);
+    assert!((enemy.health - 94.0).abs() < 0.01);
+
+    enemy.shield_timer = 0.0;
+    enemy.take_damage(10.0, &TowerType::Ballistic);
+    assert!((enemy.health - 84.0).abs() < 0.01);
 }
 
 #[test]

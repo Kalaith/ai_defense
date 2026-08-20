@@ -408,6 +408,10 @@ pub struct NotificationStrings {
     /// `{scrap}`, `{food}`, `{pop}`.
     pub team_returned: String,
     pub scout_breach: String,
+    pub scout_report: String,
+    pub tower_sabotaged: String,
+    /// `{n}`.
+    pub depth_reached: String,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -664,6 +668,9 @@ pub struct MapStrings {
     pub opens_this_route: String,
     pub selected_tower: String,
     pub factory: String,
+    /// `{n}`, `{name}`.
+    pub depth_label: String,
+    pub depth_names: Vec<String>,
     /// Short glyph text drawn on machine nodes, keyed by building type.
     pub node_labels: HashMap<String, String>,
     pub node_fallback: String,

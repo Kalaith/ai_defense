@@ -20,6 +20,10 @@ You do not tell anyone that you were the lead researcher who unlocked the last A
 - Assign the holdout to sustain, balanced, salvage, or defense shifts as shelter fills.
 - Keep outside scavenger teams active long enough to matter.
 - Decide when to expand, when to defend, and when to shut the beacon down.
+- Push through four visible factory depths; deeper production pays more but
+  broadcasts a larger assault signature.
+- Read scout reports, disable saboteurs before they reach a tower, and break
+  commander shield pulses with focused fire.
 - Wake every factory wing, seize the AI Vault, and survive its three-stage override.
 
 ## Goal
@@ -41,6 +45,6 @@ Templates use named placeholders like `{n}` or `{name}`; keep them intact when r
 
 ## Current Scope
 
-Playable tower defense and factory-management loop with resource pressure, wave survival, and strategic expansion.
+Playable tower defense and factory-management loop with resource pressure, wave survival, strategic expansion, four factory depth bands, and enemy field abilities.
 
 Remaining work is listed in `TODO.md`.

@@ -237,7 +237,58 @@ command machine. Shared exposed cables and enemy-red control lights unify the fa
 - [ ] Assets render with nearest-neighbour filtering and no texture bleeding.
 - [ ] The title-screen palette and gameplay-map palette feel like the same factory world.
 - [ ] Verification captures replace the current gameplay image in `docs/verification/`
-  once the art is integrated.
+once the art is integrated.
+
+## 7. Factory depth bands and readable systems art
+
+The factory is now presented as four connected depth bands rather than one flat
+board. The section data assigns each wing to a band, and the renderer adds a
+restrained schematic frame and motif behind the live tile art. These overlays
+are presentation scaffolding, not replacement sprites: routes, pads, machines,
+and enemies must remain readable above them.
+
+| Depth | Band | Visual language | Gameplay signal |
+| ---: | --- | --- | --- |
+| 01 | Outer Ring | scrap conveyors, intake rails, oxidised teal framing | baseline pressure; the first repairs establish the foothold |
+| 02 | Production Spine | bus bars, loading tracks, blue-green service marks | production improves as the frontier expands, but the assault budget rises |
+| 03 | Vault Approach | robotics sockets, violet data rings, shielded cable runs | commander and saboteur handling becomes the priority |
+| 04 | Heart Chamber | concentric control rings, hostile orange-red fault marks | the final approach is the loudest and most valuable factory state |
+
+Depth presentation requirements:
+
+- Each band needs a distinct silhouette or floor motif that remains legible in
+  grayscale and at the game's minimum camera zoom.
+- Band framing must use low-alpha lines and corner marks; never cover a route,
+  pad, health bar, or machine sprite with a solid slab.
+- The HUD must show the current depth and factory phase together. A newly
+  reached depth should create one short-lived notification and a single core
+  wake-up pulse, not a repeating alert.
+- Depth progression is derived from revealed sections. Art and UI must not
+  imply access to a deeper band before its frontier is powered.
+
+## 8. Enemy ability readability
+
+Enemy sheets remain free of baked status graphics. Ability states are drawn by
+the runtime so the same art works across every depth band:
+
+- Scouts emit a small red report pulse and a compact notification when they
+  transmit a route report. The pulse is positional, not a full-screen flash.
+- Saboteurs emit a violet strike pulse at the tower they disable. Disabled
+  towers retain their silhouette but lose power colour and show a violet ring.
+- Commanders emit a red-orange pulse around their shield radius. Shielded
+  escorts receive a thin hostile ring, while their existing hit flash and
+  health bars remain unchanged.
+
+Ability art acceptance:
+
+- Each ability can be understood from the world-space effect and a short text
+  notification without relying on keyboard input or colour alone.
+- Effects are short-lived, nearest-neighbour-friendly geometric overlays with
+  no text baked into the sprite sheets.
+- The player can still counter every ability with visible tower placement,
+  targeting priorities, EMP slow, and power restoration controls.
+- A proof-mode replay may disable ability pressure to keep its deterministic
+  combat-balance contract, but ordinary runs must use the live ability system.
 
 ## Delivery total
 

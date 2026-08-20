@@ -145,20 +145,19 @@ pub struct MapState {
 #[derive(Clone, Debug)]
 pub struct SectionRenderInfo {
     pub label: String,
+    pub depth: u32,
     pub core_building: String,
-    pub unlock_entrance: Option<String>,
     pub min: Vec2,
     pub max: Vec2,
-    pub index: usize,
     pub visible: bool,
 }
 
 pub struct MapSection {
     pub label: String,
+    pub depth: u32,
     pub core_building: String,
     pub buildings: Vec<String>,
     pub slots: Vec<String>,
-    pub unlock_entrance: Option<String>,
     pub visible_at_start: bool,
     pub visible: bool,
 }
@@ -257,10 +256,10 @@ impl MapState {
             building_sections.insert(def.core_building.clone(), idx);
             result.push(MapSection {
                 label: def.label.clone(),
+                depth: def.depth,
                 core_building: def.core_building.clone(),
                 buildings: def.buildings.clone(),
                 slots: def.slots.clone(),
-                unlock_entrance: def.unlock_entrance.clone(),
                 visible_at_start: def.visible_at_start,
                 visible: def.visible_at_start,
             });
@@ -328,7 +327,7 @@ impl MapState {
 
     pub fn section_render_info(&self) -> Vec<SectionRenderInfo> {
         let mut result = Vec::new();
-        for (idx, section) in self.sections.iter().enumerate() {
+        for section in &self.sections {
             let mut min = Vec2::new(f32::MAX, f32::MAX);
             let mut max = Vec2::new(f32::MIN, f32::MIN);
 
@@ -356,11 +355,10 @@ impl MapState {
 
             result.push(SectionRenderInfo {
                 label: section.label.clone(),
+                depth: section.depth,
                 core_building: section.core_building.clone(),
-                unlock_entrance: section.unlock_entrance.clone(),
                 min,
                 max,
-                index: idx,
                 visible: section.visible,
             });
         }
@@ -414,6 +412,18 @@ impl MapState {
         } else {
             max_x
         }
+    }
+
+    /// The deepest factory band the player can currently see. This is derived
+    /// from the map's progressive disclosure, so every newly powered wing
+    /// advances the campaign's depth without creating a second unlock ledger.
+    pub fn deepest_visible_depth(&self) -> u32 {
+        self.sections
+            .iter()
+            .filter(|section| section.visible)
+            .map(|section| section.depth)
+            .max()
+            .unwrap_or(1)
     }
 
     fn build_path(path: PathDef, unlocked_entrances: &HashSet<String>) -> MapPath {

@@ -215,11 +215,19 @@ pub struct ThreatConstants {
 pub struct EnemyConstants {
     pub scout_dodge_chance: f32,
     pub scout_dodge_duration: f32,
+    pub scout_report_interval: f32,
     pub hit_flash_duration: f32,
     pub saboteur_skip_chance: f32,
+    pub saboteur_strike_interval: f32,
+    pub saboteur_disable_duration: f32,
+    pub saboteur_disable_range: f32,
     pub slow_multiplier: f32,
     pub commander_aura_radius: f32,
     pub commander_aura_speed_mult: f32,
+    pub commander_pulse_interval: f32,
+    pub commander_shield_duration: f32,
+    pub commander_shield_radius: f32,
+    pub commander_shield_multiplier: f32,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -353,6 +361,8 @@ pub struct MapDef {
 pub struct SectionDef {
     pub id: String,
     pub label: String,
+    #[serde(default = "default_depth")]
+    pub depth: u32,
     pub core_building: String,
     #[serde(default)]
     pub buildings: Vec<String>,
@@ -362,6 +372,10 @@ pub struct SectionDef {
     pub unlock_entrance: Option<String>,
     #[serde(default)]
     pub visible_at_start: bool,
+}
+
+fn default_depth() -> u32 {
+    1
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
