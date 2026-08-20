@@ -102,27 +102,27 @@ fn commander_pulse_shields_nearby_escort() {
     let data = GameData::load();
     let mut manager = WaveManager::new(test_tuning(&data));
     let tuning = manager.enemy_tuning.clone();
-    let mut commander = Enemy::new(
-        EnemyType::Commander,
-        vec2(10.0, 10.0),
-        100.0,
-        0.0,
-        1.0,
-        tuning.clone(),
-        "west".to_string(),
-        Default::default(),
-    );
+    let mut commander = Enemy::from_spawn(EnemySpawn {
+        enemy_type: EnemyType::Commander,
+        position: vec2(10.0, 10.0),
+        health: 100.0,
+        speed: 0.0,
+        scrap_reward: 1.0,
+        tuning: tuning.clone(),
+        path_id: "west".to_string(),
+        damage_multipliers: Default::default(),
+    });
     commander.ability_timer = 0.0;
-    let escort = Enemy::new(
-        EnemyType::Drone,
-        vec2(40.0, 10.0),
-        100.0,
-        0.0,
-        1.0,
+    let escort = Enemy::from_spawn(EnemySpawn {
+        enemy_type: EnemyType::Drone,
+        position: vec2(40.0, 10.0),
+        health: 100.0,
+        speed: 0.0,
+        scrap_reward: 1.0,
         tuning,
-        "west".to_string(),
-        Default::default(),
-    );
+        path_id: "west".to_string(),
+        damage_multipliers: Default::default(),
+    });
     manager.enemies = vec![commander, escort];
     manager.wave_active = true;
 
@@ -141,16 +141,16 @@ fn scout_reports_and_saboteurs_strike_on_independent_timers() {
     let data = GameData::load();
     let mut manager = WaveManager::new(test_tuning(&data));
     let tuning = manager.enemy_tuning.clone();
-    let mut scout = Enemy::new(
-        EnemyType::Scout,
-        vec2(10.0, 10.0),
-        20.0,
-        0.0,
-        1.0,
-        tuning.clone(),
-        "west".to_string(),
-        Default::default(),
-    );
+    let mut scout = Enemy::from_spawn(EnemySpawn {
+        enemy_type: EnemyType::Scout,
+        position: vec2(10.0, 10.0),
+        health: 20.0,
+        speed: 0.0,
+        scrap_reward: 1.0,
+        tuning: tuning.clone(),
+        path_id: "west".to_string(),
+        damage_multipliers: Default::default(),
+    });
     scout.ability_timer = 0.0;
     manager.enemies.push(scout);
     manager.wave_active = true;
@@ -164,16 +164,16 @@ fn scout_reports_and_saboteurs_strike_on_independent_timers() {
     ));
 
     manager.enemies.clear();
-    let mut saboteur = Enemy::new(
-        EnemyType::Saboteur,
-        vec2(10.0, 10.0),
-        20.0,
-        0.0,
-        1.0,
+    let mut saboteur = Enemy::from_spawn(EnemySpawn {
+        enemy_type: EnemyType::Saboteur,
+        position: vec2(10.0, 10.0),
+        health: 20.0,
+        speed: 0.0,
+        scrap_reward: 1.0,
         tuning,
-        "west".to_string(),
-        Default::default(),
-    );
+        path_id: "west".to_string(),
+        damage_multipliers: Default::default(),
+    });
     saboteur.ability_timer = 0.0;
     manager.enemies.push(saboteur);
     manager.wave_active = true;

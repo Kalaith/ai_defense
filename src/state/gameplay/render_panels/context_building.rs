@@ -15,6 +15,7 @@ impl GameplayState {
         };
         let name = self.building_display_name(building);
         let state = building.state;
+        let unlocked = self.is_building_unlocked(building);
         let repair_cost = building.repair_cost;
         let power_cost = building.power_cost;
         let threat = building.threat_per_sec;
@@ -45,11 +46,15 @@ impl GameplayState {
             &text().panels.building_subtitle,
             dark::ACCENT,
         );
-        let (status_label, status_color) = match state {
-            BuildingState::Broken => (text().status.damaged.as_str(), dark::NEGATIVE),
-            BuildingState::Repaired => (text().status.repaired.as_str(), dark::WARNING),
-            BuildingState::Powered => (text().status.online.as_str(), dark::POSITIVE),
-            BuildingState::Disabled => (text().status.locked.as_str(), dark::TEXT_DIM),
+        let (status_label, status_color) = if !unlocked {
+            (text().status.locked.as_str(), dark::TEXT_DIM)
+        } else {
+            match state {
+                BuildingState::Broken => (text().status.damaged.as_str(), dark::NEGATIVE),
+                BuildingState::Repaired => (text().status.repaired.as_str(), dark::WARNING),
+                BuildingState::Powered => (text().status.online.as_str(), dark::POSITIVE),
+                BuildingState::Disabled => (text().status.locked.as_str(), dark::TEXT_DIM),
+            }
         };
         ui::draw_status_pill(rect.x + 62.0, rect.y + 43.0, status_label, status_color);
         ui::draw_bounded_text(
@@ -73,10 +78,14 @@ impl GameplayState {
 
         // Broken and Repaired each offer their next transition; the other two
         // states just restate the status on a dead button.
-        let cost = match state {
-            BuildingState::Broken => Some((repair_cost, text().status.repair.as_str())),
-            BuildingState::Repaired => Some((power_cost, text().status.power.as_str())),
-            BuildingState::Powered | BuildingState::Disabled => None,
+        let cost = if !unlocked {
+            None
+        } else {
+            match state {
+                BuildingState::Broken => Some((repair_cost, text().status.repair.as_str())),
+                BuildingState::Repaired => Some((power_cost, text().status.power.as_str())),
+                BuildingState::Powered | BuildingState::Disabled => None,
+            }
         };
 
         let Some((cost, verb)) = cost else {

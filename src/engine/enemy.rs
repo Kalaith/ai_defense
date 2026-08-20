@@ -42,17 +42,31 @@ pub struct Enemy {
     pub damage_multipliers: DamageMultipliers,
 }
 
+/// Complete spawn input kept together so callers cannot accidentally swap the
+/// positional values used to create an enemy.
+pub struct EnemySpawn {
+    pub enemy_type: EnemyType,
+    pub position: Vec2,
+    pub health: f32,
+    pub speed: f32,
+    pub scrap_reward: f32,
+    pub tuning: EnemyTuning,
+    pub path_id: String,
+    pub damage_multipliers: DamageMultipliers,
+}
+
 impl Enemy {
-    pub fn new(
-        enemy_type: EnemyType,
-        position: Vec2,
-        health: f32,
-        speed: f32,
-        scrap_reward: f32,
-        tuning: EnemyTuning,
-        path_id: String,
-        damage_multipliers: DamageMultipliers,
-    ) -> Self {
+    pub fn from_spawn(spawn: EnemySpawn) -> Self {
+        let EnemySpawn {
+            enemy_type,
+            position,
+            health,
+            speed,
+            scrap_reward,
+            tuning,
+            path_id,
+            damage_multipliers,
+        } = spawn;
         Self {
             enemy_type,
             position,

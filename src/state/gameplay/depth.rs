@@ -18,11 +18,14 @@ impl GameplayState {
             return 0.0;
         }
         let base = self.factory_depth().saturating_sub(1) as f32 * 0.035;
-        let directive_bonus = self
+        let directive_bonus = if self
             .depth_directive_for(self.factory_depth())
             .is_some_and(|directive| matches!(directive, DepthDirective::SalvageLifts))
-            .then_some(0.04)
-            .unwrap_or(0.0);
+        {
+            0.04
+        } else {
+            0.0
+        };
         base + directive_bonus
     }
 

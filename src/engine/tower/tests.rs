@@ -1,5 +1,5 @@
 use super::*;
-use crate::engine::enemy::EnemyTuning;
+use crate::engine::enemy::{EnemySpawn, EnemyTuning};
 use macroquad::prelude::vec2;
 
 fn test_tuning() -> TowerTuning {
@@ -16,13 +16,13 @@ fn test_tuning() -> TowerTuning {
 }
 
 fn test_enemy(enemy_type: EnemyType, position: Vec2, health: f32) -> Enemy {
-    Enemy::new(
+    Enemy::from_spawn(EnemySpawn {
         enemy_type,
         position,
         health,
-        50.0,
-        5.0,
-        EnemyTuning {
+        speed: 50.0,
+        scrap_reward: 5.0,
+        tuning: EnemyTuning {
             scout_dodge_chance: 0.0,
             scout_dodge_duration: 0.0,
             scout_report_interval: 5.0,
@@ -35,9 +35,9 @@ fn test_enemy(enemy_type: EnemyType, position: Vec2, health: f32) -> Enemy {
             commander_shield_radius: 100.0,
             commander_shield_multiplier: 0.6,
         },
-        "west".to_string(),
-        crate::data::DamageMultipliers::default(),
-    )
+        path_id: "west".to_string(),
+        damage_multipliers: crate::data::DamageMultipliers::default(),
+    })
 }
 
 fn ready_tower(tower_type: TowerType, position: Vec2, range: f32, damage: f32) -> Tower {

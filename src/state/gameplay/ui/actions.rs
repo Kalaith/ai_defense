@@ -225,6 +225,14 @@ impl GameplayState {
     }
 
     pub(crate) fn repair_building(&mut self, idx: usize) {
+        if !self
+            .map_state
+            .buildings
+            .get(idx)
+            .is_some_and(|building| self.is_building_unlocked(building))
+        {
+            return;
+        }
         if self.beacon_active {
             self.push_notification(text().notifications.repairs_locked.clone());
             return;
@@ -244,6 +252,14 @@ impl GameplayState {
     }
 
     pub(crate) fn power_building(&mut self, idx: usize) {
+        if !self
+            .map_state
+            .buildings
+            .get(idx)
+            .is_some_and(|building| self.is_building_unlocked(building))
+        {
+            return;
+        }
         if self.beacon_active {
             self.push_notification(text().notifications.repairs_locked.clone());
             return;

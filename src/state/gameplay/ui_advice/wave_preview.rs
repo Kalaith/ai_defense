@@ -24,10 +24,10 @@ impl GameplayState {
 
         let mut counts = Vec::new();
         for enemy in self.wave_manager.enemies.iter().filter(|e| e.is_alive) {
-            bump_enemy_count(&mut counts, enemy.enemy_type.clone());
+            bump_enemy_count(&mut counts, enemy.enemy_type);
         }
         for entry in &self.wave_manager.spawn_queue {
-            bump_enemy_count(&mut counts, entry.enemy_type.clone());
+            bump_enemy_count(&mut counts, entry.enemy_type);
         }
         WavePreviewCard {
             counter_hint: self.counter_hint(&counts),

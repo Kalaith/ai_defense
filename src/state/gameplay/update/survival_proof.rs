@@ -21,18 +21,10 @@ impl GameplayState {
         // disclosure would truncate enemy paths at the revealed frontier.
         self.map_state.reveal_all_sections();
         self.population.workforce_policy = WorkforcePolicy::Defense;
-        // Establish the minimum sustainable life-support loop before raising
-        // the beacon. The proof is meant to validate combat balance, not prove
-        // that a scripted commander can ignore the water system indefinitely.
-        if let Some(water_idx) = self
-            .map_state
-            .buildings
-            .iter()
-            .position(|building| building.id == "building_02")
-        {
-            self.repair_building(water_idx);
-            self.power_building(water_idx);
-        }
+        // Keep the proof focused on combat balance rather than requiring it to
+        // simulate the campaign's prerequisite chain for life-support buildings.
+        self.resources.water = self.constants.starting.water_supply * 20.0;
+        self.population.food_supply = self.constants.starting.food_supply * 20.0;
     }
 
     /// Advance the scripted run by a batch of fixed steps, returning a result

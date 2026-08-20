@@ -99,13 +99,15 @@ impl GameplayState {
     }
 
     pub fn is_building_unlocked(&self, building: &MapBuilding) -> bool {
-        let _ = building;
-        true
+        self.is_building_type_unlocked(&building.building_type)
     }
 
     pub fn is_building_type_unlocked(&self, building_type: &str) -> bool {
-        let _ = building_type;
-        true
+        self.unlocks
+            .buildings
+            .get(building_type)
+            .map(|rule| self.unlock_requires_met(&rule.requires))
+            .unwrap_or(true)
     }
 
     fn unlock_requires_met(&self, requires: &[String]) -> bool {

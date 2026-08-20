@@ -1,7 +1,7 @@
 //! Wave spawning and progression (refactored).
 
 use crate::data::{DamageMultipliers, EnemyDef};
-use crate::engine::enemy::{Enemy, EnemyTuning, EnemyType};
+use crate::engine::enemy::{Enemy, EnemySpawn, EnemyTuning, EnemyType};
 use macroquad::prelude::Vec2;
 use std::collections::HashMap;
 
@@ -155,16 +155,16 @@ impl WaveManager {
         self.spawn_timer -= dt;
         if self.spawn_timer <= 0.0 && !self.spawn_queue.is_empty() {
             let entry = self.spawn_queue.remove(0);
-            self.enemies.push(Enemy::new(
-                entry.enemy_type,
-                entry.spawn_point,
-                entry.health,
-                entry.speed,
-                entry.scrap_reward,
-                self.enemy_tuning.clone(),
-                entry.path_id,
-                entry.damage_multipliers,
-            ));
+            self.enemies.push(Enemy::from_spawn(EnemySpawn {
+                enemy_type: entry.enemy_type,
+                position: entry.spawn_point,
+                health: entry.health,
+                speed: entry.speed,
+                scrap_reward: entry.scrap_reward,
+                tuning: self.enemy_tuning.clone(),
+                path_id: entry.path_id,
+                damage_multipliers: entry.damage_multipliers,
+            }));
             self.spawn_timer = self.spawn_interval;
         }
 
@@ -220,7 +220,7 @@ impl WaveManager {
             };
             if reached {
                 enemy.is_alive = false;
-                reached_end = Some(enemy.enemy_type.clone());
+                reached_end = Some(enemy.enemy_type);
             }
         }
 
@@ -351,7 +351,7 @@ fn push_spawn(
     path_id: String,
 ) {
     queue.push(SpawnEntry {
-        enemy_type: def.enemy_type.clone(),
+        enemy_type: def.enemy_type,
         health: def.base_health * health_scale,
         speed: def.speed,
         scrap_reward: def.scrap_reward,
