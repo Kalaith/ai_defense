@@ -27,7 +27,11 @@ impl GameplayState {
 
         // The intro card and salvage report freeze the sim; each handles its own
         // buttons during draw.
-        if self.show_intro || self.show_workforce || self.salvage_report.is_some() {
+        if self.show_intro
+            || self.show_workforce
+            || self.salvage_report.is_some()
+            || self.pending_depth_directive.is_some()
+        {
             return None;
         }
 

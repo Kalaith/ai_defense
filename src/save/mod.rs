@@ -74,6 +74,8 @@ pub struct SaveData {
     pub vault_takeover_progress: f32,
     #[serde(default)]
     pub vault_upload_complete: bool,
+    #[serde(default)]
+    pub depth_directives: Vec<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

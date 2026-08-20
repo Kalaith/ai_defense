@@ -75,6 +75,7 @@ pub struct Strings {
     pub status: StatusStrings,
     pub beacon: BeaconStrings,
     pub vault: VaultStrings,
+    pub depth_directive: DepthDirectiveStrings,
     pub factory_phases: FactoryPhaseStrings,
     pub threat: ThreatStrings,
     pub enemies: EnemyStrings,
@@ -249,6 +250,22 @@ pub struct VaultStrings {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct DepthDirectiveStrings {
+    /// `{n}`.
+    pub title: String,
+    pub subtitle: String,
+    pub reinforced_routes: String,
+    pub reinforced_routes_detail: String,
+    pub salvage_lifts: String,
+    pub salvage_lifts_detail: String,
+    pub evacuation_relay: String,
+    pub evacuation_relay_detail: String,
+    pub install: String,
+    /// `{name}`.
+    pub chosen: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct BeaconPhaseStrings {
     pub warm_signal: String,
     pub sustained_call: String,
@@ -412,6 +429,8 @@ pub struct NotificationStrings {
     pub tower_sabotaged: String,
     /// `{n}`.
     pub depth_reached: String,
+    /// `{name}`.
+    pub depth_directive_chosen: String,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

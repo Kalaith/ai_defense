@@ -37,6 +37,11 @@ impl GameplayState {
             return;
         }
 
+        if self.pending_depth_directive.is_some() {
+            self.draw_depth_directive_overlay();
+            return;
+        }
+
         // When the salvage report modal is up, freeze the build UI behind it and
         // let only the modal take input.
         if self.salvage_report.is_some() {

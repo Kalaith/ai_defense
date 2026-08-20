@@ -154,6 +154,19 @@
     "alert": "VAULT TAKEOVER"
   },
 
+  "depth_directive": {
+    "title": "DEPTH {n} OPERATING DIRECTIVE",
+    "subtitle": "The wing is open. Choose what this layer is allowed to become.",
+    "reinforced_routes": "REINFORCED ROUTES",
+    "reinforced_routes_detail": "-8% enemy speed in this depth band. The crews harden the approach before production starts.",
+    "salvage_lifts": "SALVAGE LIFTS",
+    "salvage_lifts_detail": "+8% depth production. Scrap moves faster, and the extra machinery adds +0.04 assault budget.",
+    "evacuation_relay": "EVACUATION RELAY",
+    "evacuation_relay_detail": "+12% survivor evacuation while the beacon is active. The relay broadcasts a cleaner decoy.",
+    "install": "INSTALL DIRECTIVE",
+    "chosen": "Directive set: {name}"
+  },
+
   "factory_phases": {
     "dormant_ruin": "Dormant Ruin",
     "stirring_machine": "Stirring Machine",
@@ -265,7 +278,8 @@
     "scout_breach": "A scout got past. It has seen enough to report.",
     "scout_report": "Scout report transmitted. The next assault has your shape.",
     "tower_sabotaged": "SABOTEUR STRIKE — a tower is offline",
-    "depth_reached": "DEPTH {n} REACHED // SYSTEMS ONLINE"
+    "depth_reached": "DEPTH {n} REACHED // SYSTEMS ONLINE",
+    "depth_directive_chosen": "{name} directive locked into the band"
   },
 
   "alerts": {

@@ -28,8 +28,8 @@ What follows is the work the design review left open.
 - A second and third map / route layout.
 - Mission structure with the escalating framings from the design doc (start-under-assault,
   multi-beacon).
-- Optional depth directives that let a player trade production, route control, or
-  evacuation capacity at each newly reached band.
+- Additional depth directive art: replace the geometric cards with three small
+  insignia while preserving the current touch-first text and button contract.
 
 ## Presentation
 

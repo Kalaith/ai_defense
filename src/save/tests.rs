@@ -2,7 +2,7 @@ use super::*;
 
 fn sample_save() -> SaveData {
     SaveData {
-        version: 5,
+        version: 6,
         wave_reached: 7,
         resources: SavedResources {
             power: 42.5,
@@ -52,6 +52,11 @@ fn sample_save() -> SaveData {
         vault_takeover_active: true,
         vault_takeover_progress: 27.5,
         vault_upload_complete: false,
+        depth_directives: vec![
+            "reinforced_routes".to_string(),
+            String::new(),
+            "evacuation_relay".to_string(),
+        ],
     }
 }
 

@@ -22,6 +22,8 @@ You do not tell anyone that you were the lead researcher who unlocked the last A
 - Decide when to expand, when to defend, and when to shut the beacon down.
 - Push through four visible factory depths; deeper production pays more but
   broadcasts a larger assault signature.
+- Choose a permanent operating directive when each new depth opens: harden
+  routes, accelerate salvage, or relay more survivors out.
 - Read scout reports, disable saboteurs before they reach a tower, and break
   commander shield pulses with focused fire.
 - Wake every factory wing, seize the AI Vault, and survive its three-stage override.

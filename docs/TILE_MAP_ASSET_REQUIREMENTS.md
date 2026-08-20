@@ -265,6 +265,22 @@ Depth presentation requirements:
   wake-up pulse, not a repeating alert.
 - Depth progression is derived from revealed sections. Art and UI must not
   imply access to a deeper band before its frontier is powered.
+- Reaching depths 02–04 pauses the simulation until the player taps one of
+  three visible directives: Reinforced Routes, Salvage Lifts, or Evacuation
+  Relay. The directive overlay should be treated as part of the depth
+  presentation contract and must remain usable at 1280×720 and on touch.
+
+Directive presentation requirements:
+
+- Reinforced Routes uses a cool service-blue accent and communicates slower
+  enemies in the current band.
+- Salvage Lifts uses an amber industrial accent and communicates stronger
+  production with a larger assault budget.
+- Evacuation Relay uses a reclaimed green accent and communicates faster
+  survivor evacuation while the beacon is active.
+- The choice is saved with the campaign and is shown only once per band. A
+  future art pass may replace the geometric card accents with small depth
+  insignia, but the readable text and visible buttons remain mandatory.
 
 ## 8. Enemy ability readability
 

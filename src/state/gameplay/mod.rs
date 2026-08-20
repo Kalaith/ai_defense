@@ -1,8 +1,10 @@
 //! Core gameplay state: wave defense, factory management, resource loop.
 
 mod assets;
+mod depth;
 mod helpers;
 mod render;
+mod render_depth;
 mod render_hud;
 mod render_map;
 mod render_panels;
@@ -12,6 +14,7 @@ mod update;
 
 use crate::data::{EnemyDef, GameConstants, GameData, UpgradeDef};
 use crate::engine::beacon::BeaconPhase;
+use crate::engine::depth::DepthDirective;
 use crate::engine::enemy::EnemyTuning;
 use crate::engine::factory::Factory;
 use crate::engine::map::MapState;
@@ -128,6 +131,8 @@ pub struct GameplayState {
     /// visibility and is kept here only so a new depth can announce itself
     /// once instead of every frame.
     pub last_depth_level: u32,
+    pub depth_directives: Vec<Option<DepthDirective>>,
+    pub pending_depth_directive: Option<u32>,
 
     // Camera
     pub camera: ToolkitCamera2D,
@@ -353,6 +358,8 @@ impl GameplayState {
             unlocks: data.unlocks.clone(),
             enemy_defs: data.enemy_defs.clone(),
             last_depth_level: initial_depth,
+            depth_directives: vec![None; 4],
+            pending_depth_directive: None,
 
             camera: ToolkitCamera2D::with_config(
                 view_center,
@@ -442,6 +449,14 @@ impl GameplayState {
             .as_deref()
             .map(WorkforcePolicy::from_str)
             .unwrap_or_default();
+
+        for (idx, directive) in save.depth_directives.iter().enumerate() {
+            if let Some(parsed) = DepthDirective::from_str(directive) {
+                if let Some(slot) = self.depth_directives.get_mut(idx) {
+                    *slot = Some(parsed);
+                }
+            }
+        }
 
         self.threat.energy = save.threat.energy;
         self.threat.heat = save.threat.heat;
@@ -593,7 +608,7 @@ impl GameplayState {
 
     fn build_save_data(&self) -> SaveData {
         SaveData {
-            version: 5,
+            version: 6,
             wave_reached: self.current_wave,
             resources: SavedResources {
                 power: self.resources.power,
@@ -662,6 +677,13 @@ impl GameplayState {
             vault_takeover_active: self.vault_takeover.active,
             vault_takeover_progress: self.vault_takeover.progress,
             vault_upload_complete: self.vault_takeover.upload_complete,
+            depth_directives: self
+                .depth_directives
+                .iter()
+                .map(|directive| {
+                    directive.map_or_else(String::new, |value| value.as_str().to_string())
+                })
+                .collect(),
         }
     }
 
@@ -684,45 +706,6 @@ impl GameplayState {
             return;
         }
         let _ = self.build_save_data().save();
-    }
-
-    pub(crate) fn factory_depth(&self) -> u32 {
-        self.map_state.deepest_visible_depth()
-    }
-
-    /// Deeper wings expose more of the machine's old routing network. The
-    /// extra assault budget is small, visible, and paid back by the production
-    /// multiplier below once the player keeps those wings online.
-    pub(crate) fn depth_assault_bonus(&self) -> f32 {
-        if self.survival_proof_active {
-            return 0.0;
-        }
-        self.factory_depth().saturating_sub(1) as f32 * 0.035
-    }
-
-    pub(crate) fn depth_production_multiplier(&self) -> f32 {
-        if self.survival_proof_active {
-            return 1.0;
-        }
-        1.0 + self.factory_depth().saturating_sub(1) as f32 * 0.025
-    }
-
-    pub(crate) fn depth_readout(&self) -> String {
-        let depth = self.factory_depth();
-        let name = crate::data::strings::text()
-            .map
-            .depth_names
-            .get(depth.saturating_sub(1) as usize)
-            .map(String::as_str)
-            .unwrap_or("DEEP FACTORY");
-        format!(
-            "{} · {}",
-            crate::data::strings::fill(
-                &crate::data::strings::text().map.depth_label,
-                &[("n", &format!("{depth:02}")), ("name", name)],
-            ),
-            self.factory.phase.label()
-        )
     }
 }
 

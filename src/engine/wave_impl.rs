@@ -32,6 +32,7 @@ pub struct WaveManager {
     pub tier_2_awareness: f32,
     pub tier_3_awareness: f32,
     pub enemy_abilities_enabled: bool,
+    pub route_speed_multiplier: f32,
 }
 
 #[derive(Clone, Debug)]
@@ -100,11 +101,16 @@ impl WaveManager {
             tier_2_awareness: tuning.tier_2_awareness,
             tier_3_awareness: tuning.tier_3_awareness,
             enemy_abilities_enabled: true,
+            route_speed_multiplier: 1.0,
         }
     }
 
     pub fn set_enemy_abilities_enabled(&mut self, enabled: bool) {
         self.enemy_abilities_enabled = enabled;
+    }
+
+    pub fn set_route_speed_multiplier(&mut self, multiplier: f32) {
+        self.route_speed_multiplier = multiplier.clamp(0.5, 1.0);
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -191,7 +197,7 @@ impl WaveManager {
                 }
             }
 
-            let mut speed_mult = 1.0;
+            let mut speed_mult = self.route_speed_multiplier;
             if enemy.enemy_type != EnemyType::Commander {
                 for pos in &commander_positions {
                     if (enemy.position - *pos).length() <= self.commander_aura_radius {

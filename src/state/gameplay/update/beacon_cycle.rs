@@ -3,6 +3,7 @@
 
 use crate::data::strings::{fill, text};
 use crate::engine::beacon::{phase_from_strength, BeaconPhase};
+use crate::engine::depth::DepthDirective;
 use macroquad_toolkit::rng;
 
 use super::super::{GameplayState, SalvageReport};
@@ -12,11 +13,19 @@ impl GameplayState {
     /// louder beacon draws more machines away, so more people escape elsewhere.
     fn evacuation_rate(&self) -> f32 {
         let evac = &self.constants.evacuation;
-        match self.beacon_phase {
+        let base = match self.beacon_phase {
             BeaconPhase::WarmSignal => evac.warm_rate,
             BeaconPhase::SustainedCall => evac.sustained_rate,
             BeaconPhase::ScreamingBeacon => evac.screaming_rate,
             BeaconPhase::TerminalHowl => evac.terminal_rate,
+        };
+        if self
+            .depth_directive_for(self.factory_depth())
+            .is_some_and(|directive| matches!(directive, DepthDirective::EvacuationRelay))
+        {
+            base * 1.12
+        } else {
+            base
         }
     }
 

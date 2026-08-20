@@ -1,6 +1,7 @@
 //! Stateless game logic services: factory, towers, waves, enemies, threat, population.
 
 pub mod beacon;
+pub mod depth;
 pub mod enemy;
 pub mod factory;
 pub mod map;

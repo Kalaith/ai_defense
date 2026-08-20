@@ -46,6 +46,8 @@ impl GameplayState {
             + self.beacon_start_difficulty_bonus
             + self.depth_assault_bonus();
         let adaptation = self.wave_adaptation();
+        self.wave_manager
+            .set_route_speed_multiplier(self.depth_route_speed_multiplier());
         self.wave_manager.generate_wave(
             self.current_wave,
             &self.enemy_defs,
@@ -369,6 +371,9 @@ impl GameplayState {
                     Color::new(0.18, 0.85, 0.68, 0.8),
                     self.constants.tower.shot_ttl * 8.0,
                 ));
+            if depth > 1 && self.depth_directive_for(depth).is_none() {
+                self.pending_depth_directive = Some(depth);
+            }
         }
         self.sync_camera_bounds();
     }
