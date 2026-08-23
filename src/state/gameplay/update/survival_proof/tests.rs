@@ -1,17 +1,17 @@
 use super::*;
+use crate::state::gameplay::DefenseReplay;
 
-#[test]
-fn scripted_defense_can_survive_ten_waves() {
+fn assert_replay_survives_ten_waves(replay: DefenseReplay) {
     let data = GameData::load();
     let mut state = GameplayState::new(&data);
-    state.enable_survival_proof();
+    state.enable_defense_replay(replay);
 
     for _ in 0..180 {
         if let Some(StateTransition::ToResults { summary }) = state.update_survival_proof(&data) {
             let (dom, dom_val) = state.threat.dominant();
             assert!(
                 summary.shutdown_triggered,
-                "defeat instead of shutdown: wave {}, pop {}, integrity {:.1}, food {:.1}, water {:.1}, towers {}, scrap {:.1}, awareness {:.1}, loudest {} {:.1}",
+                "{replay:?} was defeated instead of shutting down: wave {}, pop {}, integrity {:.1}, food {:.1}, water {:.1}, towers {}, scrap {:.1}, awareness {:.1}, loudest {} {:.1}",
                 summary.waves_survived,
                 summary.population_surviving,
                 state.factory_integrity,
@@ -29,7 +29,7 @@ fn scripted_defense_can_survive_ten_waves() {
         }
         assert!(
             !state.is_game_over(),
-            "game over before ten waves: wave {}, population {}, integrity {:.1}, towers {}, scrap {:.1}, power {:.1}",
+            "{replay:?} ended before ten waves: wave {}, population {}, integrity {:.1}, towers {}, scrap {:.1}, power {:.1}",
             state.current_wave,
             state.population.count,
             state.factory_integrity,
@@ -39,5 +39,12 @@ fn scripted_defense_can_survive_ten_waves() {
         );
     }
 
-    panic!("survival proof did not produce a wave-10 result");
+    panic!("{replay:?} did not produce a wave-10 result");
+}
+
+#[test]
+fn scripted_common_defense_replays_survive_ten_waves() {
+    for replay in DefenseReplay::ALL {
+        assert_replay_survives_ten_waves(replay);
+    }
 }

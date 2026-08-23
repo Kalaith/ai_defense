@@ -87,6 +87,7 @@ pub struct GameplayState {
     pub factory_integrity: f32,
     pub autosave_enabled: bool,
     pub survival_proof_active: bool,
+    pub defense_replay: DefenseReplay,
 
     pub base_health_scale_per_wave: f32,
     pub base_food_per_wave: f32,
@@ -143,6 +144,19 @@ pub struct Resources {
     pub scrap: f32,
     pub data_cores: u32,
     pub water: f32,
+}
+
+/// Named, deterministic defense layouts used by the headless balance suite.
+#[derive(Clone, Copy, Debug)]
+pub enum DefenseReplay {
+    KineticLine,
+    #[cfg(test)]
+    MixedControlLine,
+}
+
+impl DefenseReplay {
+    #[cfg(test)]
+    pub const ALL: [Self; 2] = [Self::KineticLine, Self::MixedControlLine];
 }
 
 /// Cumulative run totals captured when a beacon cycle starts, so the

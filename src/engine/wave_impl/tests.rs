@@ -1,6 +1,7 @@
 use super::*;
 use crate::data::GameData;
 use macroquad::prelude::vec2;
+use std::collections::{HashMap, HashSet};
 
 fn test_tuning(data: &GameData) -> WaveTuning {
     WaveTuning {
@@ -261,5 +262,98 @@ fn preview_wave_entries_include_enemy_type_and_path_id() {
                 | EnemyType::Commander
         )),
         "preview should expose enemy types"
+    );
+}
+
+#[test]
+fn simultaneous_entrances_receive_the_full_wave_pressure() {
+    let data = GameData::load();
+    let spawn_points = vec![
+        ("west".to_string(), vec2(0.0, 0.0)),
+        ("north".to_string(), vec2(0.0, 400.0)),
+        ("south".to_string(), vec2(0.0, 800.0)),
+    ];
+    let mut manager = WaveManager::new(test_tuning(&data));
+    manager.set_enemy_abilities_enabled(false);
+    manager.generate_wave(
+        8,
+        &data.enemy_defs,
+        data.constants.waves.health_scale_per_wave,
+        65.0,
+        3,
+        data.constants.waves.budget_multiplier,
+        false,
+        &spawn_points,
+        &WaveAdaptation::default(),
+    );
+    let queued = manager.spawn_queue.len();
+    assert!(
+        queued >= spawn_points.len(),
+        "late wave must be large enough to pressure every open entrance"
+    );
+
+    let paths: HashMap<String, Vec<_>> = spawn_points
+        .iter()
+        .map(|(id, start)| (id.clone(), vec![*start, *start + vec2(10_000.0, 0.0)]))
+        .collect();
+    for _ in 0..queued {
+        manager.tick(manager.spawn_interval + 0.01, &paths);
+    }
+
+    let attacked: HashSet<&str> = manager
+        .enemies
+        .iter()
+        .filter(|enemy| enemy.is_alive)
+        .map(|enemy| enemy.path_id.as_str())
+        .collect();
+    assert_eq!(manager.enemies.len(), queued, "no spawn pressure was lost");
+    assert_eq!(
+        attacked.len(),
+        spawn_points.len(),
+        "all simultaneous entrances must receive a live attacker"
+    );
+}
+
+#[test]
+fn late_wave_spike_adds_a_commander_and_material_pressure() {
+    let data = GameData::load();
+    let tuning = test_tuning(&data);
+    let spawn_points = vec![("west".to_string(), vec2(0.0, 0.0))];
+    let early = build_spawn_queue(
+        3,
+        &data.enemy_defs,
+        data.constants.waves.health_scale_per_wave,
+        0.0,
+        1,
+        data.constants.waves.budget_multiplier,
+        false,
+        &spawn_points,
+        &tuning,
+        &WaveAdaptation::default(),
+    );
+    let late = build_spawn_queue(
+        10,
+        &data.enemy_defs,
+        data.constants.waves.health_scale_per_wave,
+        70.0,
+        3,
+        data.constants.waves.budget_multiplier,
+        true,
+        &spawn_points,
+        &tuning,
+        &WaveAdaptation::default(),
+    );
+    let early_health: f32 = early.iter().map(|entry| entry.health).sum();
+    let late_health: f32 = late.iter().map(|entry| entry.health).sum();
+
+    assert!(
+        late.iter()
+            .any(|entry| entry.enemy_type == EnemyType::Commander),
+        "the late spike must contain its commander"
+    );
+    assert!(late.len() > early.len(), "late wave lost its larger roster");
+    assert!(
+        late_health > early_health * 4.0,
+        "late spike has insufficient health pressure: early {early_health:.1}, late {late_health:.1}"
     );
 }

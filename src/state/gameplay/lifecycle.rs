@@ -11,7 +11,7 @@ use macroquad::prelude::vec2;
 use macroquad_toolkit::camera::{Camera2D as ToolkitCamera2D, Camera2DConfig, CameraBounds};
 
 use super::assets::GameplayAssets;
-use super::{Coach, CycleBaseline, GameplayState, Resources, TowerUiStats};
+use super::{Coach, CycleBaseline, DefenseReplay, GameplayState, Resources, TowerUiStats};
 use crate::engine::beacon::BeaconPhase;
 use crate::engine::population::Population;
 use crate::engine::vault::VaultTakeover;
@@ -138,6 +138,7 @@ impl GameplayState {
             factory_integrity: 100.0,
             autosave_enabled,
             survival_proof_active: false,
+            defense_replay: DefenseReplay::KineticLine,
 
             base_health_scale_per_wave: data.constants.waves.health_scale_per_wave,
             base_food_per_wave: data.constants.waves.food_per_wave,

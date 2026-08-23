@@ -15,10 +15,3 @@ and the required tile-map asset files are in place. The items below remain open.
 ## Audio
 
 - Add phase-driven beacon hum, breach alarm, tower-fire, and sector-power-up sounds.
-
-## Quality assurance
-
-- Add deterministic wave-pressure tests for simultaneous entrances and late-wave
-  spikes.
-- Add scripted scenario replays for representative defense builds to catch balance
-  regressions.

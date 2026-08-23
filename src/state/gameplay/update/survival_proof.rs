@@ -6,14 +6,45 @@ use crate::engine::map::SlotState;
 use crate::engine::population::WorkforcePolicy;
 use crate::state::StateTransition;
 
-use super::super::GameplayState;
+use super::super::{DefenseReplay, GameplayState};
+
+const KINETIC_LINE_PLAN: &[(&str, &str)] = &[
+    ("ballistic_turret", "slot_03"),
+    ("ballistic_turret", "slot_04"),
+    ("ballistic_turret", "slot_05"),
+    ("ballistic_turret", "slot_07"),
+    ("ballistic_turret", "slot_09"),
+    ("ballistic_turret", "slot_11"),
+    ("ballistic_turret", "slot_13"),
+    ("ballistic_turret", "slot_15"),
+    ("ballistic_turret", "slot_17"),
+];
+
+#[cfg(test)]
+const MIXED_CONTROL_LINE_PLAN: &[(&str, &str)] = &[
+    ("emp_pylon", "slot_03"),
+    ("ballistic_turret", "slot_04"),
+    ("ballistic_turret", "slot_05"),
+    ("ballistic_turret", "slot_07"),
+    ("ballistic_turret", "slot_09"),
+    ("ballistic_turret", "slot_11"),
+    ("ballistic_turret", "slot_13"),
+    ("ballistic_turret", "slot_15"),
+];
 
 impl GameplayState {
     /// Put the state into deterministic proof mode: no autosave, no dodge/skip
     /// rolls, and the whole map revealed.
     pub(crate) fn enable_survival_proof(&mut self) {
+        self.enable_defense_replay(DefenseReplay::KineticLine);
+    }
+
+    /// Run one named common-defense layout through the live combat systems.
+    /// These replay scripts are intentionally not player-facing automation.
+    pub(crate) fn enable_defense_replay(&mut self, replay: DefenseReplay) {
         self.autosave_enabled = false;
         self.survival_proof_active = true;
+        self.defense_replay = replay;
         self.wave_manager.set_enemy_abilities_enabled(false);
         self.wave_manager.enemy_tuning.scout_dodge_chance = 0.0;
         self.wave_manager.enemy_tuning.saboteur_skip_chance = 0.0;
@@ -81,19 +112,7 @@ impl GameplayState {
     }
 
     fn keep_building_survival_proof_defense(&mut self, data: &GameData) {
-        const BUILD_PLAN: &[(&str, &str)] = &[
-            ("ballistic_turret", "slot_03"),
-            ("ballistic_turret", "slot_04"),
-            ("ballistic_turret", "slot_05"),
-            ("ballistic_turret", "slot_07"),
-            ("ballistic_turret", "slot_09"),
-            ("ballistic_turret", "slot_11"),
-            ("ballistic_turret", "slot_13"),
-            ("ballistic_turret", "slot_15"),
-            ("ballistic_turret", "slot_17"),
-        ];
-
-        for (tower_id, slot_id) in BUILD_PLAN {
+        for (tower_id, slot_id) in replay_build_plan(self.defense_replay) {
             self.try_build_survival_proof_tower(data, tower_id, slot_id);
         }
     }
@@ -135,6 +154,14 @@ impl GameplayState {
         if self.towers.len() > before {
             self.selected_tower = None;
         }
+    }
+}
+
+fn replay_build_plan(replay: DefenseReplay) -> &'static [(&'static str, &'static str)] {
+    match replay {
+        DefenseReplay::KineticLine => KINETIC_LINE_PLAN,
+        #[cfg(test)]
+        DefenseReplay::MixedControlLine => MIXED_CONTROL_LINE_PLAN,
     }
 }
 
