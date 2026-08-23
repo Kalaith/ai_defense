@@ -174,6 +174,7 @@ impl GameplayState {
             last_depth_level: initial_depth,
             depth_directives: vec![None; 4],
             pending_depth_directive: None,
+            section_awakening: None,
 
             camera: ToolkitCamera2D::with_config(
                 view_center,

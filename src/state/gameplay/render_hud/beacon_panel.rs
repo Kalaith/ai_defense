@@ -118,6 +118,14 @@ impl GameplayState {
                 12.0,
                 dark::TEXT_BRIGHT,
             );
+            ui::draw_bounded_text(
+                &t.start_beacon_context,
+                rect.x + 14.0,
+                rect.y + 118.0,
+                rect.w - 28.0,
+                9.0,
+                dark::WARNING,
+            );
         }
 
         // Buttons behind a modal (salvage report) or the pause menu must not

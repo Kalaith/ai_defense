@@ -1,5 +1,6 @@
 use super::*;
 use crate::data::GameData;
+use crate::engine::map::BuildingState;
 use crate::engine::tower::TargetPriority;
 
 #[test]
@@ -26,4 +27,39 @@ fn building_unlock_rules_gate_dependent_building_types() {
     state.factory.unlock_from_core("building_11");
 
     assert!(state.is_building_type_unlocked("scrap_converter"));
+}
+
+#[test]
+fn powering_a_sector_core_starts_the_section_awakening_feedback() {
+    let data = GameData::load();
+    let mut state = GameplayState::new(&data);
+    let upstream = state
+        .map_state
+        .buildings
+        .iter()
+        .position(|building| building.id == "building_09")
+        .expect("power spine exists");
+    let core = state
+        .map_state
+        .buildings
+        .iter()
+        .position(|building| building.id == "building_10")
+        .expect("assembly core exists");
+    state.map_state.buildings[upstream].state = BuildingState::Powered;
+    state.map_state.buildings[core].state = BuildingState::Repaired;
+    state.resources.scrap = 100.0;
+
+    state.power_building(core);
+
+    assert_eq!(
+        state.map_state.buildings[core].state,
+        BuildingState::Powered
+    );
+    assert_eq!(
+        state
+            .section_awakening
+            .as_ref()
+            .map(|awakening| awakening.core_building.as_str()),
+        Some("building_10")
+    );
 }

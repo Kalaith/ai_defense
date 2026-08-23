@@ -279,6 +279,7 @@ impl GameplayState {
         let name = self.building_display_name(&self.map_state.buildings[idx]);
         self.push_notification(fill(&text().notifications.powered, &[("name", &name)]));
         if let Some(awakening) = self.factory.unlock_from_core(&building_id) {
+            self.begin_section_awakening(&building_id);
             self.threat.add_kind(awakening.signature, awakening.threat);
             self.push_notification(fill(
                 &text().notifications.sector_awakened,

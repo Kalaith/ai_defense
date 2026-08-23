@@ -4,15 +4,6 @@ Verified 23 August 2026 against the current game, data, assets, and recent chang
 The core campaign, four factory depths and directives, enemy abilities, AI Vault finale,
 and the required tile-map asset files are in place. The items below remain open.
 
-## Player experience
-
-- Rewrite the intro so it clearly explains the factory, the AI Vault, and why waking
-  sections increases the swarm's pressure.
-- Add a short, contextual line beside the beacon control explaining the immediate
-  trade-off before the player activates it.
-- Add awakening feedback: rust yielding to power as sections wake, high-corruption UI
-  distortion, and stronger depth-specific framing as the player moves inward.
-
 ## Content
 
 - Create two additional map/route layouts.

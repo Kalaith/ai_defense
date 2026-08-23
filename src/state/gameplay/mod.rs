@@ -6,6 +6,7 @@ mod depth;
 mod helpers;
 mod lifecycle;
 mod persistence;
+mod presentation;
 mod render;
 mod render_depth;
 mod render_hud;
@@ -131,6 +132,7 @@ pub struct GameplayState {
     pub last_depth_level: u32,
     pub depth_directives: Vec<Option<DepthDirective>>,
     pub pending_depth_directive: Option<u32>,
+    pub section_awakening: Option<SectionAwakening>,
 
     // Camera
     pub camera: ToolkitCamera2D,
@@ -180,6 +182,13 @@ pub struct SalvageReport {
 
 pub struct Notification {
     pub text: String,
+    pub ttl: f32,
+}
+
+/// Short-lived world-space feedback for a newly powered factory section.
+#[derive(Clone, Debug)]
+pub struct SectionAwakening {
+    pub core_building: String,
     pub ttl: f32,
 }
 

@@ -7,8 +7,9 @@
     debug exe and drives it through the env-var capture hook
     (LAST_ASSEMBLY_CAPTURE_*) provided by macroquad_toolkit::capture in
     src/main.rs. `menu` seeds the main menu and `gameplay` seeds a fresh
-    gameplay session; `sector` selects a repaired section core so its awakening
-    trade-off can be reviewed; `specialization` opens a max-level tower's final
+    gameplay session; `awakening` shows a section coming online and `corruption`
+    shows the high-corruption HUD treatment; `sector` selects a repaired section
+    core so its awakening trade-off can be reviewed; `specialization` opens a max-level tower's final
     branch choice; `vault` exposes the touch-started final operation and
     `victory` shows its distinct result; `workforce` opens the holdout shift
     planner in an overcrowded state (see Game::begin_capture_scene in src/game.rs).

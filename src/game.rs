@@ -72,6 +72,33 @@ impl Game {
                 gameplay.coach.active = false;
                 self.state = GameState::Gameplay(gameplay);
             }
+            "awakening" => {
+                let mut gameplay = GameplayState::new(&self.data);
+                gameplay.show_intro = false;
+                gameplay.coach.active = false;
+                for core in ["building_01", "building_02", "building_09", "building_10"] {
+                    if let Some(building) = gameplay
+                        .map_state
+                        .buildings
+                        .iter_mut()
+                        .find(|building| building.id == core)
+                    {
+                        building.state = crate::engine::map::BuildingState::Powered;
+                    }
+                }
+                gameplay.map_state.update_section_visibility();
+                gameplay.factory.unlock_from_core("building_10");
+                gameplay.last_depth_level = gameplay.factory_depth();
+                gameplay.begin_section_awakening("building_10");
+                self.state = GameState::Gameplay(gameplay);
+            }
+            "corruption" => {
+                let mut gameplay = GameplayState::new(&self.data);
+                gameplay.show_intro = false;
+                gameplay.coach.active = false;
+                gameplay.threat.corruption = 32.0;
+                self.state = GameState::Gameplay(gameplay);
+            }
             "sector" => {
                 let mut gameplay = GameplayState::new(&self.data);
                 gameplay.show_intro = false;

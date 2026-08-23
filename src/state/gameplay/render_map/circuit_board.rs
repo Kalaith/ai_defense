@@ -67,6 +67,7 @@ impl GameplayState {
     /// teaser — and everything further out is simply absent until revealed.
     pub(super) fn draw_sections_and_corridors(&self) {
         let sections = self.map_state.section_render_info();
+        let active_depth = self.factory_depth();
         let mut visible = sections.iter().filter(|section| section.visible);
         let mut previous: Option<Rect> = None;
         for section in visible.by_ref() {
@@ -78,12 +79,22 @@ impl GameplayState {
                 (section.max.y - section.min.y + pad * 2.0).max(80.0),
             );
             let accent = depth_accent(section.depth);
+            let framing_strength = if section.depth == active_depth {
+                1.0
+            } else {
+                0.58
+            };
             draw_rectangle(
                 rect.x,
                 rect.y,
                 rect.w,
                 rect.h,
-                Color::new(accent.r, accent.g, accent.b, 0.045),
+                Color::new(
+                    accent.r,
+                    accent.g,
+                    accent.b,
+                    0.035 + framing_strength * 0.025,
+                ),
             );
             draw_rectangle_lines(
                 rect.x,
@@ -91,7 +102,7 @@ impl GameplayState {
                 rect.w,
                 rect.h,
                 1.5,
-                Color::new(accent.r, accent.g, accent.b, 0.22),
+                Color::new(accent.r, accent.g, accent.b, 0.12 + framing_strength * 0.18),
             );
             draw_line(
                 rect.x,
@@ -99,7 +110,7 @@ impl GameplayState {
                 rect.x + rect.w.min(250.0),
                 rect.y,
                 3.0,
-                Color::new(accent.r, accent.g, accent.b, 0.5),
+                Color::new(accent.r, accent.g, accent.b, 0.22 + framing_strength * 0.42),
             );
 
             let depth_name = text()
@@ -120,16 +131,17 @@ impl GameplayState {
                 rect.x + 12.0,
                 rect.y + 18.0,
                 10.0,
-                Color::new(accent.r, accent.g, accent.b, 0.78),
+                Color::new(accent.r, accent.g, accent.b, 0.45 + framing_strength * 0.4),
             );
             draw_ui_text(
                 &section.label,
                 rect.x + 12.0,
                 rect.y + 34.0,
                 14.0,
-                Color::new(0.78, 0.86, 0.82, 0.48),
+                Color::new(0.78, 0.86, 0.82, 0.32 + framing_strength * 0.26),
             );
-            draw_depth_motif(rect, section.depth, accent);
+            draw_depth_motif(rect, section.depth, accent, framing_strength);
+            draw_depth_corners(rect, section.depth, accent, framing_strength);
 
             if let Some(previous) = previous {
                 let a = vec2(
@@ -500,8 +512,8 @@ fn depth_accent(depth: u32) -> Color {
 
 /// Small schematic marks make the four depth bands feel like different
 /// industrial environments while leaving the existing tiles and routes legible.
-fn draw_depth_motif(rect: Rect, depth: u32, color: Color) {
-    let alpha = 0.16;
+fn draw_depth_motif(rect: Rect, depth: u32, color: Color, strength: f32) {
+    let alpha = 0.08 + strength * 0.12;
     match depth {
         1 => {
             let mut x = rect.x + 26.0;
@@ -600,6 +612,24 @@ fn draw_depth_motif(rect: Rect, depth: u32, color: Color) {
                 Color::new(color.r, color.g, color.b, alpha),
             );
         }
+    }
+}
+
+/// Bracket the active factory band with a distinct, readable frame. The four
+/// small depth glyphs still sit in the background, while these marks make the
+/// current working layer legible at a glance and at minimum camera zoom.
+fn draw_depth_corners(rect: Rect, depth: u32, color: Color, strength: f32) {
+    let size = 12.0 + depth as f32 * 3.0;
+    let width = 1.0 + strength;
+    let color = Color::new(color.r, color.g, color.b, 0.18 + strength * 0.48);
+    for (x, y, sx, sy) in [
+        (rect.x + 6.0, rect.y + 6.0, 1.0, 1.0),
+        (rect.x + rect.w - 6.0, rect.y + 6.0, -1.0, 1.0),
+        (rect.x + 6.0, rect.y + rect.h - 6.0, 1.0, -1.0),
+        (rect.x + rect.w - 6.0, rect.y + rect.h - 6.0, -1.0, -1.0),
+    ] {
+        draw_line(x, y, x + size * sx, y, width, color);
+        draw_line(x, y, x, y + size * sy, width, color);
     }
 }
 

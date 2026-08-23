@@ -24,6 +24,7 @@ impl GameplayState {
 
         self.draw_pcb_background();
         self.draw_sections_and_corridors();
+        self.draw_section_awakening();
         self.draw_traces();
         self.draw_paths_and_entrances(max_x);
         self.draw_tower_slots(hovered_slot, max_x);

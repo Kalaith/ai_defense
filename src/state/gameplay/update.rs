@@ -42,6 +42,7 @@ impl GameplayState {
 
         let dt = get_frame_time() * self.time_scale;
         self.validate_selection();
+        self.update_presentation(dt);
 
         if self.beacon_active {
             self.update_beacon();

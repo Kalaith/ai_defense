@@ -113,8 +113,15 @@ pub struct MenuStrings {
 pub struct IntroStrings {
     pub title: String,
     pub subtitle: String,
-    /// Hand-broken lines; the card draws one per row without wrapping.
-    pub body: Vec<String>,
+    pub mission_label: String,
+    /// Hand-broken lines so the premise card stays readable on its narrowest layout.
+    pub mission: Vec<String>,
+    pub trade_label: String,
+    /// Hand-broken lines so the premise card stays readable on its narrowest layout.
+    pub trade: Vec<String>,
+    pub endgame_label: String,
+    /// Hand-broken lines so the premise card stays readable on its narrowest layout.
+    pub endgame: Vec<String>,
     pub button: String,
 }
 
@@ -184,6 +191,7 @@ pub struct HudStrings {
     /// `{n}`.
     pub teams_ready: String,
     pub start_beacon: String,
+    pub start_beacon_context: String,
     pub start_beacon_tip: String,
     pub start_beacon_tip_detail: String,
     pub recall: String,

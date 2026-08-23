@@ -22,6 +22,7 @@ impl GameplayState {
         set_default_camera();
 
         self.draw_hud(data);
+        self.draw_corruption_distortion();
         self.draw_wave_start_flash();
         self.draw_wave_status();
         self.draw_notifications();

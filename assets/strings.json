@@ -14,19 +14,22 @@
 
   "intro": {
     "title": "LAST ASSEMBLY",
-    "subtitle": "You know what's sleeping in the vault. You always did.",
-    "body": [
-      "The complex went cold the night the machines turned. What is",
-      "left of the town shelters in its depths, down near the core.",
-      "",
-      "You are working inward to wake it. Section by section, because",
-      "the vault at the centre only answers a machine that is whole,",
-      "and the thing asleep in there is what let the swarm off its",
-      "leash. Take it back and the swarm stops.",
-      "",
-      "There was never enough scrap for all of it. Send teams out for",
-      "the rest. Wake only what the grid can carry — and every machine",
-      "you leave cold, the town pays for in people."
+    "subtitle": "The town is trapped beneath a factory the swarm still owns.",
+    "mission_label": "YOUR MISSION",
+    "mission": [
+      "Power factory sections to open the route inward.",
+      "The AI Vault at the centre commands the swarm."
+    ],
+    "trade_label": "THE TRADE",
+    "trade": [
+      "Each system you wake gives the town more power,",
+      "but makes the swarm more aware. Raise the beacon to send",
+      "teams for scrap — and draw the attacks to this factory."
+    ],
+    "endgame_label": "HOW THIS ENDS",
+    "endgame": [
+      "Wake every wing, reclaim the AI Vault, and hold the line",
+      "through its override. Take the Vault back and the swarm falls silent."
     ],
     "button": "Begin the Work"
   },
@@ -92,6 +95,7 @@
     "threat_readout": "{tier} {pct}",
     "teams_ready": "Teams ready: {n}",
     "start_beacon": "START BEACON",
+    "start_beacon_context": "BEACON TRADE: teams bring scrap back; the swarm attacks here.",
     "start_beacon_tip": "Raise the beacon",
     "start_beacon_tip_detail": "Sends the teams out for scrap. Tells the swarm where you are.",
     "recall": "RECALL",

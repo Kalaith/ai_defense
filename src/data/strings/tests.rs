@@ -7,7 +7,13 @@ fn embedded_strings_load_and_are_populated() {
     let t: Strings =
         serde_json::from_str(STRINGS_JSON).expect("embedded strings.json must parse into Strings");
 
-    assert!(!t.intro.body.is_empty(), "intro card has no body lines");
+    assert!(!t.intro.mission.is_empty(), "intro card has no mission");
+    assert!(!t.intro.trade.is_empty(), "intro card has no trade-off");
+    assert!(!t.intro.endgame.is_empty(), "intro card has no endgame");
+    assert!(
+        !t.hud.start_beacon_context.is_empty(),
+        "beacon start has no visible trade-off"
+    );
     assert_eq!(t.coach.steps.len(), 4, "coach expects four steps");
     assert!(!t.entrances.is_empty(), "entrance labels are empty");
     assert!(!t.map.node_labels.is_empty(), "map node labels are empty");

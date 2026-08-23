@@ -138,8 +138,8 @@ impl GameplayState {
         let sh = screen_height();
         draw_rectangle(0.0, 0.0, sw, sh, Color::new(0.0, 0.0, 0.0, 0.82));
 
-        let pw = 620.0_f32.min(sw - 40.0);
-        let ph = 470.0_f32.min(sh - 40.0);
+        let pw = 660.0_f32.min(sw - 40.0);
+        let ph = 430.0_f32.min(sh - 40.0);
         let px = (sw - pw) * 0.5;
         let py = (sh - ph) * 0.5;
         let surface = macroquad_toolkit::ui::SurfaceStyle::new(Color::new(0.04, 0.06, 0.07, 0.98))
@@ -151,10 +151,20 @@ impl GameplayState {
         centered(&t.title, cx, py + 46.0, 28.0, dark::NEGATIVE);
         centered(&t.subtitle, cx, py + 74.0, 14.0, dark::TEXT_DIM);
 
+        let sections = [
+            (t.mission_label.as_str(), &t.mission, dark::ACCENT),
+            (t.trade_label.as_str(), &t.trade, dark::WARNING),
+            (t.endgame_label.as_str(), &t.endgame, dark::POSITIVE),
+        ];
         let mut y = py + 108.0;
-        for line in &t.body {
-            draw_ui_text(line, px + 40.0, y, 15.0, dark::TEXT);
-            y += 24.0;
+        for (label, lines, color) in sections {
+            draw_ui_text(label, px + 42.0, y, 11.0, color);
+            y += 22.0;
+            for line in lines {
+                draw_ui_text(line, px + 42.0, y, 14.0, dark::TEXT);
+                y += 20.0;
+            }
+            y += 10.0;
         }
 
         let bw = 220.0;
