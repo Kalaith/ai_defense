@@ -1,6 +1,6 @@
 # Last Assembly concept art
 
-This folder contains a nine-piece visual direction pack for the current game.
+This folder contains a twelve-piece visual direction pack for the current game.
 The images are exploratory reference art, not runtime assets. They are intended to guide future map layouts, narrative panels, enemy silhouettes, and finale presentation.
 
 ## Visual language
@@ -24,6 +24,9 @@ The images are exploratory reference art, not runtime assets. They are intended 
 | `factory_depths_sheet.png` | Six core-building silhouettes and interior studies | Sector art, awakening cards, depth-specific environment passes |
 | `directive_insignia_sheet.png` | Three emblem families for harden, salvage, and relay directives | Depth-directive cards, compact UI accents, route doctrine identity |
 | `lead_researcher.png` | The hidden lead researcher facing the awakened complex | Intro/outro key art, narrative panels, protagonist silhouette |
+| `defense_line_action.png` | All five tower roles holding one live assault lane | Combat readability, tutorial art, wave-pressure presentation |
+| `route_layout_asymmetric.png` | A branching salvage-and-research route toward the vault | Alternate map layouts, lane splits, chokepoint tuning |
+| `vault_override_triptych.png` | The Vault moving from alarm through severance to human control | Finale staging, takeover phases, victory-state transitions |
 
 ## Palette anchors
 
