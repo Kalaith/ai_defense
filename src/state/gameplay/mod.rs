@@ -121,6 +121,9 @@ pub struct GameplayState {
     pub settings: Settings,
     pub show_intro: bool,
     pub show_workforce: bool,
+    pub show_build_panel: bool,
+    pub show_sector_panel: bool,
+    pub show_beacon_panel: bool,
 
     pub upgrade_defs: Vec<UpgradeDef>,
     pub beacon_start_difficulty_bonus: f32,

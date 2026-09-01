@@ -104,6 +104,8 @@ impl GameplayState {
                 self.show_settings = false;
             } else if self.placing_tower.is_some() {
                 self.placing_tower = None;
+            } else if self.any_dock_panel_open() {
+                self.close_dock_panels();
             } else {
                 self.paused = !self.paused;
             }
@@ -119,6 +121,7 @@ impl GameplayState {
 
         if is_mouse_button_pressed(MouseButton::Right) {
             self.placing_tower = None;
+            self.close_dock_panels();
             self.selected_tower = None;
             self.selected_slot = None;
             self.selected_building = None;

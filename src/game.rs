@@ -72,6 +72,27 @@ impl Game {
                 gameplay.coach.active = false;
                 self.state = GameState::Gameplay(gameplay);
             }
+            "build_panel" => {
+                let mut gameplay = GameplayState::new(&self.data);
+                gameplay.show_intro = false;
+                gameplay.coach.active = false;
+                gameplay.show_build_panel = true;
+                self.state = GameState::Gameplay(gameplay);
+            }
+            "systems_panel" => {
+                let mut gameplay = GameplayState::new(&self.data);
+                gameplay.show_intro = false;
+                gameplay.coach.active = false;
+                gameplay.show_sector_panel = true;
+                self.state = GameState::Gameplay(gameplay);
+            }
+            "beacon_panel" => {
+                let mut gameplay = GameplayState::new(&self.data);
+                gameplay.show_intro = false;
+                gameplay.coach.active = false;
+                gameplay.show_beacon_panel = true;
+                self.state = GameState::Gameplay(gameplay);
+            }
             "awakening" => {
                 let mut gameplay = GameplayState::new(&self.data);
                 gameplay.show_intro = false;

@@ -10,7 +10,8 @@
     gameplay session; `awakening` shows a section coming online and `corruption`
     shows the high-corruption HUD treatment; `sector` selects a repaired section
     core so its awakening trade-off can be reviewed; `specialization` opens a max-level tower's final
-    branch choice; `vault` exposes the touch-started final operation and
+    branch choice; `build_panel`, `systems_panel`, and `beacon_panel` show the
+    on-demand consoles; `vault` exposes the touch-started final operation and
     `victory` shows its distinct result; `workforce` opens the holdout shift
     planner in an overcrowded state (see Game::begin_capture_scene in src/game.rs).
 

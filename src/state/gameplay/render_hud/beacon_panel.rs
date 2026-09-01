@@ -14,7 +14,7 @@ use super::super::GameplayState;
 use super::draw_button_hint;
 
 impl GameplayState {
-    pub(super) fn draw_beacon_panel(&mut self, rect: Rect) {
+    pub(crate) fn draw_beacon_panel(&mut self, rect: Rect) {
         let t = &text().hud;
         let phase_color = beacon_color(&self.beacon_phase);
         let danger = match self.beacon_phase {

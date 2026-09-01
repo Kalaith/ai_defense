@@ -52,7 +52,10 @@ impl GameplayState {
         // Frame the camera on the currently-revealed area so the map opens small
         // and grows as sections are powered back online (see sync_camera_bounds).
         let (vmin, vmax) = map_state.visible_bounds();
-        let view_center = (vmin + vmax) * 0.5;
+        // The old sidebars masked the empty world margin to the left of the
+        // first revealed wing. With the map now occupying the full viewport,
+        // frame the first live section near the left edge instead.
+        let view_center = (vmin + vmax) * 0.5 + vec2((vmin.x + 20.0).max(0.0), 0.0);
         let content_w = (vmax.x - vmin.x).max(1.0) + 360.0;
         let content_h = (vmax.y - vmin.y).max(1.0) + 320.0;
         let init_zoom = (900.0 / content_w).min(560.0 / content_h).clamp(0.6, 1.7);
@@ -167,6 +170,9 @@ impl GameplayState {
             // Fresh runs open on the premise card; continuing a save skips it.
             show_intro: true,
             show_workforce: false,
+            show_build_panel: false,
+            show_sector_panel: false,
+            show_beacon_panel: false,
 
             upgrade_defs: data.upgrade_defs.clone(),
             beacon_start_difficulty_bonus: 0.0,

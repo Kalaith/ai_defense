@@ -56,8 +56,21 @@ impl GameplayState {
             return;
         }
 
-        self.draw_build_panel(data);
-        self.draw_sector_panel();
+        self.draw_edge_controls();
+        if self.paused {
+            self.draw_pause_menu();
+            return;
+        }
+
+        if self.show_build_panel {
+            self.draw_build_panel(data);
+        }
+        if self.show_sector_panel {
+            self.draw_sector_panel();
+        }
+        if self.show_beacon_panel {
+            self.draw_beacon_panel(self.beacon_panel_rect());
+        }
         self.draw_slot_panel(data);
         self.draw_hover_tooltip(data);
         self.draw_coach();

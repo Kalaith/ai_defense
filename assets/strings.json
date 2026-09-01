@@ -40,19 +40,19 @@
     "steps": [
       {
         "title": "Start with what's nearest",
-        "body": "The Scrap Converter by the core still turns. Repair it — the way inward runs through every machine between here and the vault."
+        "body": "Tap the Scrap Converter by the core, then tap REPAIR in its context console — the way inward runs through every machine between here and the vault."
       },
       {
         "title": "Give it power",
-        "body": "A repaired machine is still a dead one until it draws. Power it, and the section behind it wakes with it."
+        "body": "A repaired machine is still a dead one until it draws. Tap POWER in its context console, and the section behind it wakes with it."
       },
       {
         "title": "Cover the route",
-        "body": "A Ballistic Turret and Laser Emitter still guard the intake. Tap EMP Pylon, then tap a lit pad to add a third tower."
+        "body": "A Ballistic Turret and Laser Emitter still guard the intake. Tap TOWERS, choose EMP Pylon, then tap a lit pad to add a third tower."
       },
       {
         "title": "Raise the beacon",
-        "body": "The scrap is out there, not in here. START BEACON sends the teams — and tells the swarm exactly where you are."
+        "body": "The scrap is out there, not in here. Tap BEACON, then tap START BEACON to send the teams — and tell the swarm exactly where you are."
       }
     ]
   },
@@ -73,6 +73,9 @@
     "water": "WATER",
     "morale": "MORALE",
     "health": "HEALTH",
+    "scrap": "SCRAP",
+    "power": "POWER",
+    "condition": "MOR / HP",
     "power_grid": "POWER GRID",
     "gen": "GEN",
     "used": "USED",
@@ -87,6 +90,11 @@
     "adaptation_composition": "{note} · {composition}",
     "next_step": "NEXT STEP",
     "focus": "FOCUS",
+    "edge_build": "TOWERS",
+    "edge_systems": "SYSTEMS",
+    "edge_shift": "SHIFT",
+    "edge_beacon": "BEACON",
+    "edge_pause": "PAUSE",
     "cost_risk": "{cost}    {risk}",
     "beacon_control": "BEACON CONTROL",
     "evac": "EVAC {n}",

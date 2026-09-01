@@ -1,4 +1,4 @@
-//! The bottom context panel and the hover tooltip.
+//! The on-selection bottom context panel and the hover tooltip.
 //!
 //! The panel shows exactly one context, keyed off the current selection; each
 //! `context_*` module owns one of them.
@@ -20,6 +20,10 @@ use super::GameplayState;
 
 impl GameplayState {
     pub(super) fn draw_slot_panel(&mut self, data: &GameData) {
+        if self.any_dock_panel_open() {
+            return;
+        }
+
         // Only show the context panel when something is actually selected.
         // With nothing selected it used to repeat the NEXT STEP strip's advice
         // (with a second FOCUS button) — pure duplication that also hid ~130px
@@ -32,15 +36,7 @@ impl GameplayState {
             return;
         }
 
-        let play_x = self.constants.ui.build_panel_w + 8.0;
-        let play_w =
-            (screen_width() - self.constants.ui.build_panel_w - self.constants.ui.sector_panel_w)
-                .max(360.0)
-                - 16.0;
-        let panel_h = self.constants.ui.bottom_context_h;
-        let panel_y = screen_height() - panel_h - 8.0;
-
-        let rect = Rect::new(play_x, panel_y, play_w, panel_h);
+        let rect = self.context_panel_rect();
         ui::draw_console_panel(rect, Color::new(0.22, 0.42, 0.45, 0.86));
 
         // Selection is mutually exclusive; core wins if somehow both are set.

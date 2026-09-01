@@ -15,6 +15,6 @@ pub use icons::{draw_icon, icon_for_boon, ConsoleIcon};
 pub use settings::{draw_settings_overlay, SettingsAction};
 pub use text::draw_bounded_text;
 pub use widgets::{
-    draw_console_button, draw_console_header, draw_console_panel, draw_resource_bar,
-    draw_status_pill, ConsoleButtonState,
+    draw_console_button, draw_console_header, draw_console_panel, draw_edge_button,
+    draw_resource_bar, draw_status_pill, ConsoleButtonState,
 };

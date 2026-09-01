@@ -193,27 +193,6 @@ impl GameplayState {
         }
     }
 
-    /// The loudest signature's name, once it is loud enough to matter — what is
-    /// currently drawing the most machine attention. `None` while quiet.
-    pub fn loudest_threat_label(&self) -> Option<&'static str> {
-        let (kind, value) = self.threat.dominant();
-        (value >= 1.0).then(|| kind.label())
-    }
-
-    /// Short "the machines are adapting" line for the wave readout, when a
-    /// dominant signature is actively reshaping the roster.
-    pub fn adaptation_incoming_label(&self) -> Option<&'static str> {
-        let adaptation = self.wave_adaptation();
-        let adapting = &text().threat.adapting;
-        adaptation.preferred.map(|enemy| match enemy {
-            EnemyType::Scout => adapting.scout.as_str(),
-            EnemyType::Drone => adapting.drone.as_str(),
-            EnemyType::HeavyUnit => adapting.heavy.as_str(),
-            EnemyType::Saboteur => adapting.saboteur.as_str(),
-            EnemyType::Commander => adapting.commander.as_str(),
-        })
-    }
-
     pub fn compute_beacon_start_difficulty_bonus(&self) -> f32 {
         let unlocked_sectors = self.factory.sectors.iter().filter(|s| s.unlocked).count() as f32;
         let unlocked_towers = self

@@ -1,4 +1,4 @@
-//! Left sidebar: the tower build list and the map glyph legend.
+//! Floating tower build console and the map glyph legend.
 
 use crate::data::strings::{fill, text};
 use crate::data::TowerDef;
@@ -18,12 +18,13 @@ pub struct TowerButtonInfo {
     pub requirement: String,
 }
 
-/// Draw the tower build panel on the left sidebar. Returns the tower id if one
-/// was clicked.
+/// Draw the tower build panel as a floating console. Returns the tower id if
+/// one was clicked.
 pub fn draw_build_panel(
     x: f32,
     y: f32,
     w: f32,
+    h: f32,
     tower_defs: &[TowerDef],
     infos: &[TowerButtonInfo],
     scrap: f32,
@@ -31,7 +32,7 @@ pub fn draw_build_panel(
 ) -> Option<String> {
     let mut clicked_id = None;
 
-    let sidebar = Rect::new(x, y, w, screen_height() - y);
+    let sidebar = Rect::new(x, y, w, h);
     let sidebar_surface = macroquad_toolkit::ui::SurfaceStyle::new(Color::new(0.1, 0.1, 0.12, 0.9));
     macroquad_toolkit::ui::draw_surface(sidebar, &sidebar_surface);
     let t = &text().build_panel;
@@ -218,8 +219,8 @@ fn draw_locked_row(x: f32, btn_y: f32, w: f32, name: &str, requirement: &str) ->
 }
 
 /// Legend for the map's glyph vocabulary, anchored to the bottom of the build
-/// panel's otherwise-empty space. New players had no way to know what the
-/// circles, crosses, and boxes on the circuit board meant.
+/// console. New players had no way to know what the circles, crosses, and boxes
+/// on the circuit board meant.
 fn draw_map_key(x: f32, list_bottom: f32, w: f32) {
     const ROW_H: f32 = 22.0;
     const ROWS: usize = 6;

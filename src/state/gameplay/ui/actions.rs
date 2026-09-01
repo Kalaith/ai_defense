@@ -56,37 +56,30 @@ impl GameplayState {
     /// True when the click landed on a docked panel rather than the map, so the
     /// map picker must ignore it and let the panel's own hit-testing win.
     fn click_is_over_ui(&self, mx: f32, my: f32) -> bool {
-        if mx < self.constants.ui.build_panel_w
-            || mx > screen_width() - self.constants.ui.sector_panel_w
-            || my < self.constants.ui.hud_height
+        if my < self.constants.ui.hud_height
+            || mx
+                <= crate::state::gameplay::ui::EDGE_RAIL_MARGIN
+                    + crate::state::gameplay::ui::EDGE_RAIL_W
+            || mx
+                >= screen_width()
+                    - crate::state::gameplay::ui::EDGE_RAIL_MARGIN
+                    - crate::state::gameplay::ui::EDGE_RAIL_W
         {
             return true;
         }
 
-        let panel_x = self.constants.ui.build_panel_w + 8.0;
-        let panel_w =
-            (screen_width() - self.constants.ui.build_panel_w - self.constants.ui.sector_panel_w)
-                .max(360.0)
-                - 16.0;
-        let panel_h = self.constants.ui.bottom_context_h;
-        let panel_y = screen_height() - panel_h - 8.0;
-        if my >= panel_y && my <= panel_y + panel_h && mx >= panel_x && mx <= panel_x + panel_w {
+        let inside = |rect: Rect| {
+            mx >= rect.x && mx <= rect.x + rect.w && my >= rect.y && my <= rect.y + rect.h
+        };
+        if self.show_build_panel && inside(self.build_panel_rect())
+            || self.show_sector_panel && inside(self.sector_panel_rect())
+            || self.show_beacon_panel && inside(self.beacon_panel_rect())
+        {
             return true;
         }
 
-        // The factory console grows upward out of the bottom context panel, so
-        // it claims a taller strip while the core is selected.
-        if self.selected_core {
-            let core_panel_x = panel_x - 10.0;
-            let core_panel_w = panel_w + 20.0;
-            let core_panel_top = panel_y - 160.0;
-            if mx >= core_panel_x
-                && mx <= core_panel_x + core_panel_w
-                && my >= core_panel_top
-                && my <= panel_y + panel_h
-            {
-                return true;
-            }
+        if !self.any_dock_panel_open() && inside(self.context_panel_rect()) {
+            return true;
         }
 
         false

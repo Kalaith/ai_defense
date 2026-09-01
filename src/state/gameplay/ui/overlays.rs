@@ -270,11 +270,8 @@ impl GameplayState {
             return;
         };
 
-        let bx = self.constants.ui.build_panel_w + 20.0;
-        let bw = (screen_width()
-            - self.constants.ui.build_panel_w
-            - self.constants.ui.sector_panel_w
-            - 40.0)
+        let bx = super::EDGE_RAIL_MARGIN + super::EDGE_RAIL_W + 18.0;
+        let bw = (screen_width() - (super::EDGE_RAIL_MARGIN + super::EDGE_RAIL_W + 18.0) * 2.0)
             .max(320.0);
         let by = self.constants.ui.hud_height + 10.0;
         let bh = 74.0;

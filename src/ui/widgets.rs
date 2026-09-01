@@ -5,6 +5,7 @@ use macroquad_toolkit::colors::dark;
 use macroquad_toolkit::math::pulse_range;
 use macroquad_toolkit::ui::{draw_ui_text, measure_ui_text};
 
+use super::icons::{draw_icon, ConsoleIcon};
 use super::text::truncate_text;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -197,6 +198,88 @@ pub fn draw_console_button(
     // — these are high-stakes console actions (start/shutdown beacon, place
     // tower) where instant feedback on press reads as more responsive, and
     // there's no drag-to-cancel gesture in this UI to protect against.
+    hovered && is_mouse_button_pressed(MouseButton::Left)
+}
+
+/// Small touch-friendly controls that keep the world view available while
+/// exposing the larger consoles only when requested.
+pub fn draw_edge_button(
+    rect: Rect,
+    icon: ConsoleIcon,
+    label: &str,
+    active: bool,
+    accent: Color,
+) -> bool {
+    let (mx, my) = mouse_position();
+    let hovered = mx >= rect.x && mx <= rect.x + rect.w && my >= rect.y && my <= rect.y + rect.h;
+    let glow = if active {
+        0.16
+    } else if hovered {
+        0.1
+    } else {
+        0.0
+    };
+    draw_rectangle(
+        rect.x,
+        rect.y,
+        rect.w,
+        rect.h,
+        Color::new(
+            (0.03 + accent.r * glow).min(1.0),
+            (0.045 + accent.g * glow).min(1.0),
+            (0.055 + accent.b * glow).min(1.0),
+            0.96,
+        ),
+    );
+    draw_rectangle_lines(
+        rect.x,
+        rect.y,
+        rect.w,
+        rect.h,
+        if active { 2.0 } else { 1.4 },
+        Color::new(
+            accent.r,
+            accent.g,
+            accent.b,
+            if active { 0.95 } else { 0.72 },
+        ),
+    );
+    draw_rectangle(
+        rect.x,
+        rect.y,
+        4.0,
+        rect.h,
+        Color::new(accent.r, accent.g, accent.b, if active { 0.9 } else { 0.5 }),
+    );
+    draw_icon(
+        icon,
+        rect.x + (rect.w - 22.0) * 0.5,
+        rect.y + 5.0,
+        22.0,
+        Color::new(accent.r, accent.g, accent.b, 0.95),
+    );
+    let dims = measure_ui_text(label, None, 9, 1.0);
+    draw_ui_text(
+        label,
+        rect.x + (rect.w - dims.width) * 0.5,
+        rect.y + rect.h - 8.0,
+        9.0,
+        if active {
+            dark::TEXT_BRIGHT
+        } else {
+            dark::TEXT_DIM
+        },
+    );
+    if hovered {
+        draw_rectangle_lines(
+            rect.x - 2.0,
+            rect.y - 2.0,
+            rect.w + 4.0,
+            rect.h + 4.0,
+            1.0,
+            Color::new(accent.r, accent.g, accent.b, 0.4),
+        );
+    }
     hovered && is_mouse_button_pressed(MouseButton::Left)
 }
 

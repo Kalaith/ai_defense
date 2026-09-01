@@ -1,4 +1,4 @@
-//! Docked side panels: the tower build list and the SYSTEMS console.
+//! On-demand side consoles: the tower build list and the SYSTEMS console.
 
 use crate::data::strings::{fill, text};
 use crate::data::GameData;
@@ -27,10 +27,12 @@ impl GameplayState {
                 }
             })
             .collect();
+        let rect = self.build_panel_rect();
         let build_clicked = ui::draw_build_panel(
-            0.0,
-            self.constants.ui.hud_height,
-            self.constants.ui.build_panel_w,
+            rect.x,
+            rect.y,
+            rect.w,
+            rect.h,
             &data.tower_defs,
             &infos,
             self.resources.scrap,
@@ -38,6 +40,9 @@ impl GameplayState {
         );
         if let Some(tower_id) = build_clicked {
             self.placing_tower = Some(tower_id);
+            // Arm placement, then get the console out of the way so the player
+            // can reach pads that sit beneath the left side of the map.
+            self.show_build_panel = false;
         }
     }
 
@@ -68,10 +73,11 @@ impl GameplayState {
     }
 
     pub fn draw_sector_panel(&mut self) {
-        let sector_x = screen_width() - self.constants.ui.sector_panel_w;
-        let panel_y = self.constants.ui.hud_height;
-        let panel_w = self.constants.ui.sector_panel_w;
-        let panel_h = screen_height() - panel_y;
+        let panel = self.sector_panel_rect();
+        let sector_x = panel.x;
+        let panel_y = panel.y;
+        let panel_w = panel.w;
+        let panel_h = panel.h;
 
         ui::draw_console_panel(
             Rect::new(sector_x, panel_y, panel_w, panel_h),

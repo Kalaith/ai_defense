@@ -15,6 +15,7 @@ pub enum ConsoleIcon {
     People,
     Morale,
     Health,
+    Pause,
 }
 
 /// Pick the glyph that represents a building's headline output, falling back to
@@ -170,6 +171,22 @@ pub fn draw_icon(icon: ConsoleIcon, x: f32, y: f32, size: f32, color: Color) {
                 cy - size * 0.08,
                 size * 0.64,
                 size * 0.16,
+                color,
+            );
+        }
+        ConsoleIcon::Pause => {
+            draw_rectangle(
+                cx - size * 0.28,
+                y + size * 0.18,
+                size * 0.16,
+                size * 0.64,
+                color,
+            );
+            draw_rectangle(
+                cx + size * 0.12,
+                y + size * 0.18,
+                size * 0.16,
+                size * 0.64,
                 color,
             );
         }
