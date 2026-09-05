@@ -122,7 +122,7 @@ impl GameplayState {
 
             notifications: Vec::new(),
 
-            particles: Vec::new(),
+            particles: macroquad_toolkit::fx::ParticleSystem::with_capacity(usize::MAX),
             wave_flash_timer: 0.0,
             last_wave_started: 0,
             time_scale: start_time_scale,

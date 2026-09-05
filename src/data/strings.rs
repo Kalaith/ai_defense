@@ -26,32 +26,15 @@ pub fn text() -> &'static Strings {
 }
 
 fn load() -> Strings {
-    if let Some(disk) = load_from_disk() {
-        return disk;
-    }
-    serde_json::from_str(STRINGS_JSON)
-        .expect("embedded strings.json must be valid; the game cannot render text without it")
+    macroquad_toolkit::data_loader::load_json_file_with_fallback_sync(
+        "assets/strings.json",
+        STRINGS_JSON,
+        macroquad_toolkit::data_loader::JsonFallbackPolicy::ReadOrParseError,
+    )
+    .expect(
+        "strings.json or its embedded copy must be valid; the game cannot render text without it",
+    )
 }
-
-/// Read `assets/strings.json` from disk so prose can be edited without a
-/// rebuild. Any failure falls through to the embedded copy.
-#[cfg(not(target_arch = "wasm32"))]
-fn load_from_disk() -> Option<Strings> {
-    let raw = std::fs::read_to_string("assets/strings.json").ok()?;
-    match serde_json::from_str(&raw) {
-        Ok(parsed) => Some(parsed),
-        Err(e) => {
-            eprintln!("assets/strings.json is invalid ({e}); using the embedded copy");
-            None
-        }
-    }
-}
-
-#[cfg(target_arch = "wasm32")]
-fn load_from_disk() -> Option<Strings> {
-    None
-}
-
 /// Substitute `{name}` placeholders in a template loaded from JSON.
 ///
 /// `format!` only accepts compile-time literals, so runtime templates need

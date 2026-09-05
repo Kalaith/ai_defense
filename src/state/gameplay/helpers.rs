@@ -13,7 +13,8 @@ use macroquad::prelude::*;
 use macroquad_toolkit::colors::dark;
 use macroquad_toolkit::rng;
 
-use super::{GameplayState, Particle};
+use super::GameplayState;
+use macroquad_toolkit::fx::Particle;
 
 /// Route ids double as entrance labels on the map. Unknown ids fall back to the
 /// raw id so a new path is still identifiable before it is given a name.
@@ -236,22 +237,20 @@ impl GameplayState {
                     self.constants.particles.speed_max,
                 );
                 let velocity = vec2(angle.cos(), angle.sin()) * speed;
-                self.particles.push(Particle {
-                    position: *pos,
+                self.particles.spawn(Particle::new(
+                    *pos,
                     velocity,
-                    ttl: self.constants.particles.ttl,
-                });
+                    self.constants.particles.ttl,
+                    self.constants.particles.size,
+                    WHITE,
+                ));
             }
         }
     }
 
     pub fn update_particles(&mut self, dt: f32) {
-        for p in &mut self.particles {
-            p.position += p.velocity * dt;
-            p.velocity *= self.constants.particles.drag;
-            p.ttl -= dt;
-        }
-        self.particles.retain(|p| p.ttl > 0.0);
+        self.particles
+            .update_frame_drag(dt, self.constants.particles.drag);
     }
 
     pub fn damage_random_sector(&mut self, amount: f32) {

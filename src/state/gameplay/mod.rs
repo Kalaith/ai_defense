@@ -27,7 +27,6 @@ use crate::engine::tower::{ShotEffect, Tower};
 use crate::engine::vault::VaultTakeover;
 use crate::engine::wave::WaveManager;
 use crate::save::Settings;
-use macroquad::prelude::Vec2;
 use macroquad_toolkit::camera::Camera2D as ToolkitCamera2D;
 
 pub struct GameplayState {
@@ -65,7 +64,7 @@ pub struct GameplayState {
 
     pub notifications: Vec<Notification>,
 
-    pub particles: Vec<Particle>,
+    pub particles: macroquad_toolkit::fx::ParticleSystem,
     pub wave_flash_timer: f32,
     pub last_wave_started: u32,
     pub time_scale: f32,
@@ -215,12 +214,6 @@ pub struct SectionAwakening {
 pub struct Coach {
     pub active: bool,
     pub step: usize,
-}
-
-pub struct Particle {
-    pub position: Vec2,
-    pub velocity: Vec2,
-    pub ttl: f32,
 }
 
 #[derive(Clone, Debug, Default)]

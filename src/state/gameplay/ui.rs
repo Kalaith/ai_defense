@@ -118,10 +118,6 @@ impl GameplayState {
     }
 }
 
-/// Geometry and visibility helpers for the compact edge rails. The larger
-/// consoles are intentionally exclusive so a selected world object can use
-/// the bottom context panel without competing with another dock.
-
 /// Exactly one thing is selected at a time, and each selection clears the rest.
 /// These keep that invariant in one place instead of repeating five assignments
 /// at every call site.

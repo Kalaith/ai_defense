@@ -106,8 +106,8 @@ impl GameplayState {
     }
 
     pub(super) fn draw_particles(&self) {
-        for p in &self.particles {
-            let alpha = (p.ttl / self.constants.particles.ttl).clamp(0.0, 1.0);
+        for p in self.particles.particles() {
+            let alpha = (p.life / self.constants.particles.ttl).clamp(0.0, 1.0);
             let col = Color::new(1.0, 1.0, 1.0, alpha);
             draw_rectangle(
                 p.position.x,

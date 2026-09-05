@@ -29,10 +29,7 @@ impl GameplayState {
             .collect();
         let rect = self.build_panel_rect();
         let build_clicked = ui::draw_build_panel(
-            rect.x,
-            rect.y,
-            rect.w,
-            rect.h,
+            rect,
             &data.tower_defs,
             &infos,
             self.resources.scrap,

@@ -21,10 +21,7 @@ pub struct TowerButtonInfo {
 /// Draw the tower build panel as a floating console. Returns the tower id if
 /// one was clicked.
 pub fn draw_build_panel(
-    x: f32,
-    y: f32,
-    w: f32,
-    h: f32,
+    sidebar: Rect,
     tower_defs: &[TowerDef],
     infos: &[TowerButtonInfo],
     scrap: f32,
@@ -32,7 +29,7 @@ pub fn draw_build_panel(
 ) -> Option<String> {
     let mut clicked_id = None;
 
-    let sidebar = Rect::new(x, y, w, h);
+    let Rect { x, y, w, .. } = sidebar;
     let sidebar_surface = macroquad_toolkit::ui::SurfaceStyle::new(Color::new(0.1, 0.1, 0.12, 0.9));
     macroquad_toolkit::ui::draw_surface(sidebar, &sidebar_surface);
     let t = &text().build_panel;
